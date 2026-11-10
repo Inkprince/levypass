@@ -1,0 +1,67 @@
+# The LevyPass app: Service `app` on port 80 (the one public Service), pod on 0.0.0.0:8080.
+# Budget (tasks/plan.md): 100m / 192Mi requests, 500m / 512Mi limits; one surge pod during a rollout.
+# IMAGE is replaced by scripts/deploy.sh with <repo>:<git sha>. Never `latest`.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app
+  labels: { app: levypass }
+spec:
+  replicas: 1
+  revisionHistoryLimit: 5
+  strategy:
+    type: RollingUpdate
+    rollingUpdate: { maxSurge: 1, maxUnavailable: 0 }
+  selector:
+    matchLabels: { app: levypass }
+  template:
+    metadata:
+      labels: { app: levypass }
+    spec:
+      imagePullSecrets: [{ name: ghcr-pull }]
+      securityContext: { runAsUser: 1000, runAsGroup: 1000, runAsNonRoot: true }
+      initContainers:
+        # Applies pending migrations before the app starts (advisory-locked, safe to repeat).
+        - name: migrate
+          image: IMAGE
+          command: ["node", "dist/migrate.mjs"]
+          envFrom:
+            - secretRef: { name: levypass-app }
+          resources:
+            requests: { cpu: 50m, memory: 128Mi }
+            limits: { cpu: 500m, memory: 256Mi }
+          securityContext: { allowPrivilegeEscalation: false }
+      containers:
+        - name: app
+          image: IMAGE
+          ports: [{ containerPort: 8080 }]
+          env:
+            - { name: NODE_ENV, value: production }
+            - { name: PORT, value: "8080" }
+            - { name: HOSTNAME, value: 0.0.0.0 }
+            - { name: PUBLIC_BASE_URL, value: https://team13.xtradot.co }
+            - { name: BANK_ADAPTER, value: fake } # switches to xtradot when T7 lands
+            - { name: NODE_OPTIONS, value: --max-old-space-size=384 }
+          envFrom:
+            - secretRef: { name: huawei-gateway } # GATEWAY_KEY; never printed or logged
+            - secretRef: { name: levypass-app }
+          readinessProbe:
+            httpGet: { path: /readyz, port: 8080 }
+            periodSeconds: 5
+            timeoutSeconds: 3
+          livenessProbe:
+            httpGet: { path: /healthz, port: 8080 }
+            initialDelaySeconds: 15
+            periodSeconds: 15
+          resources:
+            requests: { cpu: 100m, memory: 192Mi }
+            limits: { cpu: 500m, memory: 512Mi }
+          securityContext: { allowPrivilegeEscalation: false }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app
+spec:
+  selector: { app: levypass }
+  ports: [{ port: 80, targetPort: 8080 }]

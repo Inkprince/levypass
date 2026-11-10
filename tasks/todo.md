@@ -31,6 +31,7 @@ M = 3 to 5, L = 5 to 8.
   - `deploy/Dockerfile` (multi-stage, `node:22-alpine`, non-root, port 8080); `deploy/postgres.yaml` (Deployment, PVC, Service, secret); `deploy/app.yaml` (from the guide's reference manifest, with the budget from the plan and `envFrom` `huawei-gateway`).
   - `npm run deploy` builds `linux/amd64`, tags with the Git SHA, pushes, applies, waits for rollout, runs migrations.
   - Verify: `curl -I https://team13.xtradot.co/healthz` is 200; `kubectl describe resourcequota team-quota` is within budget.
+  - 10 Nov, not yet deployed: image builds for linux/amd64 (86 MB, runs as uid 1000); locally the bundled migrate ran twice, the production seed ran, `/healthz` and `/readyz` were 200 on 8080. Manifests pass `kubectl apply --dry-run=server`. Waiting on `scripts/create-secrets.sh` (the agent may not write cluster secrets) and on image pull access (`ghcr-pull` secret or a public package). The public URL is behind Cloudflare Access, so the outside `curl` check will show 302 until the organisers open it.
 - [x] **T4 Probe the sandbox.** (S, needs H1)
   - `scripts/probe-sandbox.sh` runs in a throwaway pod and exercises: balance, `POST /virtual-accounts`, `simulate-inflow`, `POST /payments/checkout`, `simulate-ussd`, `verify`, `POST /webhooks`, `POST /webhooks/test`, `GET /settlements`, `POST /reconciliation`, `POST /admin/settlements/run`, one Huawei MaaS chat call.
   - `docs/bank-api-notes.md` records each real request and response (key redacted) and answers the T4 questions in the plan.

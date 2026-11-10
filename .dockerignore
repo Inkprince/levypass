@@ -1,0 +1,15 @@
+node_modules
+.next
+.git
+.env
+.env.*
+!.env.example
+coverage
+docs
+tasks
+*.pdf
+*.yml
+*.yaml
+!deploy/*.yaml
+.claude
+.DS_Store

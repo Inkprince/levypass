@@ -1,0 +1,61 @@
+# Postgres 16 on the namespace's one allowed volume. Budget (tasks/plan.md): 100m / 192Mi requests,
+# 500m / 512Mi limits. Credentials come from secret `levypass-db` (scripts/create-secrets.sh).
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-data
+spec:
+  accessModes: [ReadWriteOnce]
+  resources:
+    requests: { storage: 2Gi }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  labels: { app: postgres }
+spec:
+  replicas: 1
+  strategy: { type: Recreate } # one writer on a ReadWriteOnce volume
+  selector:
+    matchLabels: { app: postgres }
+  template:
+    metadata:
+      labels: { app: postgres }
+    spec:
+      securityContext: { runAsUser: 70, runAsGroup: 70, fsGroup: 70, runAsNonRoot: true }
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+          args: ["-c", "shared_buffers=64MB", "-c", "max_connections=30", "-c", "timezone=UTC"]
+          env:
+            - { name: POSTGRES_USER, value: levypass }
+            - { name: POSTGRES_DB, value: levypass }
+            - { name: PGDATA, value: /var/lib/postgresql/data/pgdata }
+            - name: POSTGRES_PASSWORD
+              valueFrom: { secretKeyRef: { name: levypass-db, key: POSTGRES_PASSWORD } }
+          ports: [{ containerPort: 5432 }]
+          readinessProbe:
+            exec: { command: ["pg_isready", "-U", "levypass", "-d", "levypass"] }
+            periodSeconds: 5
+          livenessProbe:
+            exec: { command: ["pg_isready", "-U", "levypass", "-d", "levypass"] }
+            initialDelaySeconds: 20
+            periodSeconds: 15
+          resources:
+            requests: { cpu: 100m, memory: 192Mi }
+            limits: { cpu: 500m, memory: 512Mi }
+          securityContext: { allowPrivilegeEscalation: false }
+          volumeMounts:
+            - { name: data, mountPath: /var/lib/postgresql/data }
+      volumes:
+        - name: data
+          persistentVolumeClaim: { claimName: postgres-data }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+spec:
+  selector: { app: postgres }
+  ports: [{ port: 5432, targetPort: 5432 }]
