@@ -57,13 +57,16 @@ M = 3 to 5, L = 5 to 8.
 - [ ] **T7 BankPort and adapters.** (M, after T4 and T6)
   - `BankPort` interface; `fake` adapter with deterministic behaviour and trigger amounts; `xtradot` adapter with one shared rate limiter, timeouts, `Idempotency-Key` persisted in `bank_calls` before the call, Zod-parsed responses, `request_id` logged, 504 mapped to `unknown` and never retried as a new POST.
   - Verify: tests show a replayed key returns the original result, a timeout leads to requery, and the limiter never exceeds 60 a minute; in the cluster, a balance call succeeds through the adapter.
+  - 10 Nov: built. Schemas parse every captured sandbox response (6 tests); limiter, Idempotency-Key in bank_calls before the call, 504 or timeout to unknown. Cluster balance check pending deploy.
 - [ ] **T8 Webhook to ledger.** (M, after T5 and T7)
   - `POST /api/webhooks/bank`: raw-body HMAC check, 5-minute timestamp window, dedupe on `event_id`, fast 2xx.
   - `settlePayment()` verifies with the bank, then in one transaction allocates, writes ledger entries (including the fee entry), marks obligations, creates the receipt and queues the SMS. Unmatched money goes to `review_items`.
   - Verify: tests for bad signature, stale timestamp, duplicate event, unknown account; in the cluster, `simulate-inflow` on a seeded trader turns today's obligation to paid and the ledger balances to zero.
+  - 10 Nov: built. DB tests cover bad signature, stale timestamp, duplicate event, unknown reference, overpayment, double charge and a balanced trader account. Cluster `simulate-inflow` check replaced by checkout + simulate-ussd (virtual accounts never settle, see bank notes); pending deploy.
 - [ ] **T9 Trader registration.** (M, after T7)
   - Web form (name, phone, market, stall or vehicle, business type) → OTP through the outbox → trader created with trader ID, virtual account and signed QR. Pass page shows the QR, the account number and what is due (TR-01 to TR-03, LV-02).
   - Verify: register a new trader on the live URL, see the QR, see a virtual account number that exists in the sandbox.
+  - 10 Nov: built (no virtual account, see bank notes). OTP and trader creation covered by a DB test; pages render. Live-URL check pending deploy and Cloudflare Access.
 
 ### Checkpoint B
 
@@ -75,19 +78,24 @@ M = 3 to 5, L = 5 to 8.
   - Login with staff ID and PIN. Camera scan and manual ID entry. Full-screen **PAID** or **NOT PAID** with icon, name, stall and period; pay-now code when unpaid. Every scan logged with officer, time and GPS when granted (OF-01 to OF-03, OF-06). Installable PWA manifest.
   - `GET /api/verify/trader` responds in under 5 KB.
   - Verify: on the real demo phone over mobile data, scan to result is under 3 seconds, timed; a scan row appears in the database.
+  - 10 Nov: built. Verify API answers PAID or NOT PAID in 19 to 42 ms locally and logs each scan. Real-phone timing pending. No fallback decoder library added (manual ID or stall entry instead).
 - [ ] **T11 Public verification pages.** (M, after T6) Lane B
   - `/v/t/<token>`: limited public view of a trader's status for any phone camera. `/v/o/<token>`: officer name, area and active or suspended (OF-07). `/r/<number>`: receipt check; an unknown or reused number raises a fraud flag (RC-03, FR-02).
   - Rate limit on all three.
   - Verify: scan each QR with a stock phone camera; a made-up receipt number shows "not genuine" and creates a flag.
+  - 10 Nov: built. Genuine and made-up receipt numbers checked by curl; the fake one shows NOT GENUINE and raises a flag. Stock-camera check pending the public URL.
 - [ ] **T12 Notifier and phone simulator.** (M, after T5) Lane D
   - `Notifier` port with an outbox adapter; poller delivers. `/sim` shows a feature phone with an SMS inbox per number. Receipt SMS carries number, amount, levy, period and link (RC-01, NT-01). Messages come from the `en`, `pcm`, `yo` dictionary.
   - Verify: after a payment the receipt appears in `/sim` within 60 seconds, and its link opens the receipt page.
+  - 10 Nov: built. USSD payment to receipt SMS in the simulator inbox in about 4 s locally.
 - [ ] **T13 USSD.** (M, after T8 and T12) Lane D
   - `POST /api/ussd` in the Africa's Talking shape (`sessionId`, `phoneNumber`, `text` → `CON` or `END`). Menu: pay levy, what I owe, last receipt, check an officer, report a collector, change language. Pay creates a reference and completes through `simulate-ussd` (PY-03). Keypad UI in `/sim`.
   - Verify: tests walk each menu branch; on the live URL, paying by USSD produces the SMS receipt and the officer scan flips to PAID.
+  - 10 Nov: built. Menu walked by curl: menu, owe, pay, last receipt. Live-URL check pending.
 - [ ] **T14 Hosted checkout.** (S, after T8) Lane A
   - Pay-now link → `POST /payments/checkout` → hosted page → callback → verify → settle (PY-02). The callback alone never marks anything paid.
   - Verify: pay with test card `5399830000000008` and OTP `123456`; the declining card leaves the obligation due.
+  - 10 Nov: built into T9: pay page links the hosted checkout; the callback verifies before settling. Sandbox accepts `callback_url`. Test-card run pending deploy.
 
 ### Checkpoint C
 
@@ -98,15 +106,19 @@ M = 3 to 5, L = 5 to 8.
 - [ ] **T15 Admin dashboard.** (M, after T5) Lane C
   - Admin login. Totals for today, this week and this month, by market and by levy; compliance rate per market; recent payments; refreshes without a reload (AD-01, AD-02). Reads our database only.
   - Verify: totals equal a hand SQL sum over `ledger_entries`; a new payment appears within 5 seconds.
+  - 10 Nov: built. Dashboard and summary API render from the ledger, refresh every 3 s. Hand-SQL comparison pending on the cluster data.
 - [ ] **T16 Manage levies and officers.** (M, after T15) Lane C
   - Suspend and reinstate an officer at once (OF-08). Create and edit levy types with amount, period, market and legal basis (LV-01, LV-06). Register an officer (AD-03). Every action writes `audit_log`.
   - Verify: suspend an officer, then their login and their ID page both show suspended within one request.
+  - 10 Nov: built. Suspend revokes sessions; ID page then shows SUSPENDED and flags. Audited.
 - [ ] **T17 Fraud and complaints queue.** (M, after T8, T10, T11) Lane C
   - Flags raised for a double charge (FR-01), an unknown or reused receipt (FR-02) and a scan by a suspended or unknown officer (FR-03). Queue with resolve and dismiss, each audited (AD-04). Complaint form on the officer ID page and in USSD.
   - Verify: trigger each of the three flags by hand and see it in the queue.
+  - 10 Nov: built. Flags for double charge, unknown receipt and suspended officer; queue with audited resolve and dismiss.
 - [ ] **T18 Reconciliation and safety net.** (M, after T8) Lane A
   - Poller requeries payments in `pending` or `unknown` and settles them. Reconciliation page: run settlement, pull `GET /settlements`, compare with the ledger by day, list any gap with its references (AD-05, PY-05).
   - Verify: pay with the withheld-webhook trigger and watch the poller settle it; the reconciliation page shows ledger equal to settlement, gap ₦0.00.
+  - 10 Nov: built. Poller requery proven by the withheld-webhook DB test. Reconciliation page uses the bank's reconciliation and settlements; gap ₦0.00 check pending on the cluster.
 
 ### Checkpoint D
 
@@ -117,15 +129,19 @@ M = 3 to 5, L = 5 to 8.
 - [ ] **T19 Failure panel.** (M, after T18) Lane A
   - Admin-only page with four buttons: withheld webhook, replayed webhook, forged signature, second payment for a paid day. Each shows what the bank did and what LevyPass did.
   - Verify: each button ends in the correct state with no duplicate ledger entry.
+  - 10 Nov: built. All four drills covered by DB tests (no duplicate ledger entry).
 - [ ] **T20 AI complaint triage.** (S, after T17) Lane D
   - On a new complaint, a queued job asks Huawei MaaS (thinking off, timeout set) for an English summary, category and severity from free text in English, Pidgin or Yoruba. A keyword fallback fills the same fields if the call fails. Result cached on the complaint.
   - Verify: a Pidgin complaint shows a sensible English summary; with the model URL blanked, the complaint still lands with fallback fields.
+  - 10 Nov: built. Keyword fallback tested on Pidgin, Yoruba and violence. Model path blocked by the MaaS 401.
 - [ ] **T21 Demo hardening.** (M, after checkpoint D)
   - `npm run demo:reset` restores seed data and re-provisions the webhook and virtual accounts. Self-heal runs on start. `/demo` page lists the script with one-tap entry to each role. Printable QR sticker sheet (TR-07). Admin and officer routes are gated.
   - Verify: call the sandbox reset, run `demo:reset`, then run the full script cleanly; an unauthenticated request to `/admin` redirects to login.
+  - 10 Nov: built. `demo:reset`, `/demo`, sticker sheet, route gate. Run after a sandbox reset pending deploy.
 - [ ] **T22 Pitch pack.** (M, after H3)
   - README with a one-paragraph pitch, architecture diagram, how to run, and the money rules. Five-minute script mapped to the rubric. Recorded backup video of the full demo. Slides content: problem, live demo, integrity, legal basis (PRD section 9), business model, Access Bank upside.
   - Verify: a teammate who has not seen the build runs the script from the README without help.
+  - 10 Nov: README written. Rubric mapping, slides and backup video pending H3 and rehearsal.
 
 ### Checkpoint E
 

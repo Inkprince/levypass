@@ -40,7 +40,10 @@ spec:
             - { name: PORT, value: "8080" }
             - { name: HOSTNAME, value: 0.0.0.0 }
             - { name: PUBLIC_BASE_URL, value: https://team13.xtradot.co }
-            - { name: BANK_ADAPTER, value: fake } # switches to xtradot when T7 lands
+            - { name: BANK_ADAPTER, value: xtradot }
+            - { name: BANK_MERCHANT_ID, value: mer_204 } # stands in for the authority's collection merchant (T4)
+            - { name: WEBHOOK_URL, value: http://app.team13.svc.cluster.local/api/webhooks/bank }
+            - { name: MAAS_BASE_URL, value: http://huawei-maas.ingress-apisix.svc.cluster.local/openai/v1 }
             - { name: NODE_OPTIONS, value: --max-old-space-size=384 }
           envFrom:
             - secretRef: { name: huawei-gateway } # GATEWAY_KEY; never printed or logged
