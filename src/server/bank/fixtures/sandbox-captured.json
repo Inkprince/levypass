@@ -1,0 +1,496 @@
+{
+  "balance": {
+    "status": 200,
+    "body": {
+      "status": "success",
+      "message": "Request completed",
+      "data": {
+        "account_number": "0123456789",
+        "account_name": "ADAEZE CHIAMAKA OKONKWO",
+        "available_balance": 1500000.0,
+        "ledger_balance": 1500000.0,
+        "currency": "NGN",
+        "kyc_level": 3,
+        "status": "active"
+      },
+      "meta": null,
+      "request_id": "req_17b170b2"
+    }
+  },
+  "va_created": {
+    "status": 201,
+    "body": {
+      "status": "success",
+      "message": "Virtual account created",
+      "data": {
+        "account_number": "9900445566",
+        "account_name": "FORGE / ADAEZE CHIAMAKA OKONKWO",
+        "bank_name": "Xtradot Bank",
+        "nip_code": "000014",
+        "type": "dedicated",
+        "reference": "LPPROBE-VA-003",
+        "status": "active",
+        "created_at": "2026-11-10T16:35:36Z",
+        "customer_name": "Adaeze Chiamaka Okonkwo",
+        "total_received": 0.0,
+        "expected_amount": null,
+        "expires_at": null
+      },
+      "meta": null,
+      "request_id": "req_e9b815a4"
+    }
+  },
+  "va_bvn_mismatch": {
+    "status": 422,
+    "body": {
+      "status": "error",
+      "error": {
+        "code": "BVN_MISMATCH",
+        "message": "customer_name does not match the BVN record"
+      },
+      "request_id": "req_bdd3b7e6"
+    }
+  },
+  "inflow": {
+    "status": 200,
+    "body": {
+      "status": "success",
+      "message": "Inflow received",
+      "data": {
+        "session_id": "100004261110173636701939241561",
+        "amount": 500.0,
+        "sender": {
+          "name": "IFEOLUWA GRACE ADEBAYO",
+          "account_number": "8031234506",
+          "bank_name": "OPay"
+        },
+        "narration": "",
+        "received_at": "2026-11-10T16:36:36Z",
+        "account_number": "9900445566",
+        "reference": "LPPROBE-VA-003"
+      },
+      "meta": null,
+      "request_id": "req_a30b592f"
+    }
+  },
+  "va_with_inflows": {
+    "status": 200,
+    "body": {
+      "status": "success",
+      "message": "Request completed",
+      "data": {
+        "account_number": "9900445566",
+        "account_name": "FORGE / ADAEZE CHIAMAKA OKONKWO",
+        "bank_name": "Xtradot Bank",
+        "nip_code": "000014",
+        "type": "dedicated",
+        "reference": "LPPROBE-VA-003",
+        "status": "active",
+        "created_at": "2026-11-10T16:35:36Z",
+        "customer_name": "Adaeze Chiamaka Okonkwo",
+        "total_received": 500.0,
+        "expected_amount": null,
+        "expires_at": null,
+        "inflows": [
+          {
+            "session_id": "100004261110173636701939241561",
+            "amount": 500.0,
+            "sender": {
+              "name": "IFEOLUWA GRACE ADEBAYO",
+              "account_number": "8031234506",
+              "bank_name": "OPay"
+            },
+            "narration": "",
+            "received_at": "2026-11-10T16:36:36Z"
+          }
+        ]
+      },
+      "meta": null,
+      "request_id": "req_66906bb3"
+    }
+  },
+  "checkout_created": {
+    "status": 201,
+    "body": {
+      "status": "success",
+      "message": "Checkout created",
+      "data": {
+        "reference": "LPPROBE-PAY-001",
+        "amount": 500.0,
+        "currency": "NGN",
+        "status": "pending",
+        "payment_url": "https://pay.xtradot.co/pay/QNVqK8sxAY9-T2ON",
+        "expires_at": "2026-11-10T17:07:24Z",
+        "ussd": {
+          "code": "*7272*000*8455#",
+          "bank": "Xtradot Bank"
+        },
+        "qr": {
+          "payload": "0002010102122678A8CF52457351134E4FA7CFBDD0FB8B630449A8",
+          "image": null
+        },
+        "bank_transfer": {
+          "account_number": "9900445568",
+          "account_name": "FORGE / MAMA NKECHI PROVISIONS LTD",
+          "bank_name": "Xtradot Bank",
+          "amount": 500.0,
+          "expires_at": "2026-11-10T17:07:24Z"
+        }
+      },
+      "meta": null,
+      "request_id": "req_9663e460"
+    }
+  },
+  "verify_pending": {
+    "status": 200,
+    "body": {
+      "status": "success",
+      "message": "Request completed",
+      "data": {
+        "reference": "LPPROBE-PAY-001",
+        "status": "pending",
+        "amount": 500.0,
+        "amount_paid": 0.0,
+        "currency": "NGN",
+        "channel": null,
+        "merchant_id": "mer_204",
+        "customer": {
+          "name": "Probe Trader One",
+          "email": null
+        },
+        "merchant_fee": 0.0,
+        "settlement_amount": 0.0,
+        "paid_at": null,
+        "card": null,
+        "metadata": null
+      },
+      "meta": null,
+      "request_id": "req_4c80a294"
+    }
+  },
+  "verify_successful_ussd": {
+    "status": 200,
+    "body": {
+      "status": "success",
+      "message": "Request completed",
+      "data": {
+        "reference": "LPPROBE-PAY-002",
+        "status": "successful",
+        "amount": 500.0,
+        "amount_paid": 500.0,
+        "currency": "NGN",
+        "channel": "ussd",
+        "merchant_id": "mer_204",
+        "customer": {
+          "name": "Probe Trader One",
+          "email": null
+        },
+        "merchant_fee": 50.0,
+        "settlement_amount": 450.0,
+        "paid_at": "2026-11-10T16:37:57Z",
+        "card": null,
+        "metadata": null
+      },
+      "meta": null,
+      "request_id": "req_d9c50562"
+    }
+  },
+  "verify_not_found": {
+    "status": 404,
+    "body": {
+      "status": "error",
+      "error": {
+        "code": "NOT_FOUND",
+        "message": "No payment with reference LPPROBE-NOPE",
+        "nip_response_code": "25"
+      },
+      "request_id": "req_cb5904ae"
+    }
+  },
+  "partial": {
+    "status": 200,
+    "body": {
+      "status": "success",
+      "message": "Partial payment received; payment stays pending",
+      "data": {
+        "reference": "LPPROBE-PAY-010",
+        "status": "pending",
+        "amount": 500.0,
+        "amount_paid": 300.0,
+        "currency": "NGN",
+        "channel": "bank_transfer",
+        "merchant_id": "mer_204",
+        "customer": {
+          "name": "Probe Trader One",
+          "email": null
+        },
+        "merchant_fee": 0.0,
+        "settlement_amount": 0.0,
+        "paid_at": null,
+        "card": null,
+        "metadata": null
+      },
+      "meta": null,
+      "request_id": "req_f6bafec9"
+    }
+  },
+  "overpaid": {
+    "status": 200,
+    "body": {
+      "status": "success",
+      "message": "Payment successful",
+      "data": {
+        "reference": "LPPROBE-PAY-011",
+        "status": "successful",
+        "amount": 500.0,
+        "amount_paid": 800.0,
+        "currency": "NGN",
+        "channel": "bank_transfer",
+        "merchant_id": "mer_204",
+        "customer": {
+          "name": "Probe Trader One",
+          "email": null
+        },
+        "merchant_fee": 50.0,
+        "settlement_amount": 450.0,
+        "paid_at": "2026-11-10T16:41:55Z",
+        "card": null,
+        "metadata": null
+      },
+      "meta": null,
+      "request_id": "req_e4439a5a"
+    }
+  },
+  "card_success": {
+    "status": 200,
+    "body": {
+      "status": "success",
+      "message": "Payment successful",
+      "data": {
+        "reference": "LPPROBE-PAY-006",
+        "status": "successful",
+        "amount": 2000.0,
+        "amount_paid": 2000.0,
+        "currency": "NGN",
+        "channel": "card",
+        "merchant_id": "mer_204",
+        "customer": {
+          "name": "Probe Trader One",
+          "email": null
+        },
+        "merchant_fee": 30.0,
+        "settlement_amount": 1970.0,
+        "paid_at": "2026-11-10T16:41:24Z",
+        "card": {
+          "last4": "0008",
+          "scheme": "mastercard",
+          "issuer": "Xtradot Bank"
+        },
+        "metadata": null
+      },
+      "meta": null,
+      "request_id": "req_41053b01"
+    }
+  },
+  "settlements": {
+    "status": 200,
+    "body": {
+      "status": "success",
+      "message": "Request completed",
+      "data": [
+        {
+          "settlement_id": "stl_0091",
+          "merchant_id": "mer_204",
+          "merchant_name": "Mama Nkechi Provisions Ltd",
+          "sales_date": "2026-11-10",
+          "settled_at": "2026-11-10T16:40:21Z",
+          "settlement_account": "0123456793",
+          "transaction_count": 3,
+          "gross_amount": 1500.05,
+          "fees": 150.0,
+          "net_amount": 1350.05,
+          "status": "settled",
+          "transactions": [
+            {
+              "reference": "LPPROBE-PAY-001",
+              "channel": "ussd",
+              "amount": 500.0,
+              "fee": 50.0,
+              "customer": "Probe Trader One"
+            },
+            {
+              "reference": "LPPROBE-PAY-002",
+              "channel": "ussd",
+              "amount": 500.0,
+              "fee": 50.0,
+              "customer": "Probe Trader One"
+            },
+            {
+              "reference": "LPPROBE-PAY-005",
+              "channel": "ussd",
+              "amount": 500.05,
+              "fee": 50.0,
+              "customer": "Probe Trader One"
+            }
+          ]
+        },
+        {
+          "settlement_id": null,
+          "merchant_id": "mer_204",
+          "merchant_name": "Mama Nkechi Provisions Ltd",
+          "sales_date": "2026-11-10",
+          "settled_at": null,
+          "status": "pending",
+          "scheduled_for": "2026-11-10T22:00:00Z",
+          "settlement_account": "0123456793",
+          "transaction_count": 5,
+          "gross_amount": 4000.0,
+          "fees": 230.0,
+          "net_amount": 3770.0,
+          "transactions": [
+            {
+              "reference": "LPPROBE-PAY-007",
+              "channel": "bank_transfer",
+              "amount": 500.0,
+              "fee": 50.0,
+              "customer": "Probe Trader One"
+            },
+            {
+              "reference": "LPPROBE-PAY-006",
+              "channel": "card",
+              "amount": 2000.0,
+              "fee": 30.0,
+              "customer": "Probe Trader One"
+            },
+            {
+              "reference": "LPPROBE-PAY-008",
+              "channel": "bank_transfer",
+              "amount": 500.0,
+              "fee": 50.0,
+              "customer": "Probe Trader One"
+            },
+            {
+              "reference": "LPPROBE-PAY-009",
+              "channel": "bank_transfer",
+              "amount": 500.0,
+              "fee": 50.0,
+              "customer": "Probe Trader One"
+            },
+            {
+              "reference": "LPPROBE-PAY-011",
+              "channel": "bank_transfer",
+              "amount": 500.0,
+              "fee": 50.0,
+              "customer": "Probe Trader One"
+            }
+          ]
+        }
+      ],
+      "meta": null,
+      "request_id": "req_6a532249"
+    }
+  },
+  "settlement_run": {
+    "status": 200,
+    "body": {
+      "status": "success",
+      "message": "1 settlement batch(es) paid",
+      "data": [
+        {
+          "settlement_id": "stl_0091",
+          "merchant_id": "mer_204",
+          "merchant_name": "Mama Nkechi Provisions Ltd",
+          "sales_date": "2026-11-10",
+          "settled_at": "2026-11-10T16:40:21Z",
+          "settlement_account": "0123456793",
+          "transaction_count": 3,
+          "gross_amount": 1500.05,
+          "fees": 150.0,
+          "net_amount": 1350.05,
+          "status": "settled",
+          "transactions": [
+            {
+              "reference": "LPPROBE-PAY-001",
+              "channel": "ussd",
+              "amount": 500.0,
+              "fee": 50.0,
+              "customer": "Probe Trader One"
+            },
+            {
+              "reference": "LPPROBE-PAY-002",
+              "channel": "ussd",
+              "amount": 500.0,
+              "fee": 50.0,
+              "customer": "Probe Trader One"
+            },
+            {
+              "reference": "LPPROBE-PAY-005",
+              "channel": "ussd",
+              "amount": 500.05,
+              "fee": 50.0,
+              "customer": "Probe Trader One"
+            }
+          ]
+        }
+      ],
+      "meta": null,
+      "request_id": "req_ac29ddeb"
+    }
+  },
+  "reconciliation": {
+    "status": 200,
+    "body": {
+      "status": "success",
+      "message": "Request completed",
+      "data": {
+        "merchant_id": "mer_204",
+        "date": "2026-11-10",
+        "matched": [
+          {
+            "reference": "LPPROBE-PAY-001",
+            "amount": 500.0
+          }
+        ],
+        "amount_mismatch": [
+          {
+            "reference": "LPPROBE-PAY-002",
+            "yours": 700.0,
+            "ours": 500.0
+          }
+        ],
+        "missing_in_ledger": [
+          {
+            "reference": "LPPROBE-GHOST",
+            "amount": 500.0
+          }
+        ],
+        "missing_in_yours": [
+          {
+            "reference": "LPPROBE-PAY-005",
+            "amount": 500.05
+          }
+        ]
+      },
+      "meta": null,
+      "request_id": "req_995edc9c"
+    }
+  },
+  "idempotency_conflict": {
+    "status": 409,
+    "body": {
+      "status": "error",
+      "error": {
+        "code": "DUPLICATE_REQUEST",
+        "message": "Idempotency-Key was already used with a different body",
+        "nip_response_code": "26"
+      },
+      "request_id": "req_1f2021ef"
+    }
+  },
+  "webhooks": {
+    "payment.successful": "{\"event\":\"payment.successful\",\"event_id\":\"evt_6D52B774B3\",\"created_at\":\"2026-11-10T16:37:57Z\",\"data\":{\"reference\":\"LPPROBE-PAY-002\",\"amount\":500.0,\"amount_paid\":500.0,\"currency\":\"NGN\",\"status\":\"successful\",\"channel\":\"ussd\",\"merchant_id\":\"mer_204\",\"metadata\":null},\"attempt\":2}",
+    "webhook.test": "{\"event\":\"webhook.test\",\"event_id\":\"evt_28CDFAD33F\",\"created_at\":\"2026-11-10T16:39:47Z\",\"data\":{\"message\":\"Signed sample event from the Forge sandbox\"},\"attempt\":1}",
+    "virtual_account.credited": "{\"event\":\"virtual_account.credited\",\"event_id\":\"evt_AE1E7BA754\",\"created_at\":\"2026-11-10T16:39:48Z\",\"data\":{\"session_id\":\"100004261110173948422348465407\",\"amount\":700.0,\"sender\":{\"name\":\"IFEOLUWA GRACE ADEBAYO\",\"account_number\":\"8031234506\",\"bank_name\":\"OPay\"},\"narration\":\"\",\"received_at\":\"2026-11-10T16:39:48Z\",\"account_number\":\"9900445566\",\"reference\":\"LPPROBE-VA-003\"},\"attempt\":1}",
+    "payment.pending": "{\"event\":\"payment.pending\",\"event_id\":\"evt_1D0FB67F6C\",\"created_at\":\"2026-11-10T16:39:50Z\",\"data\":{\"reference\":\"LPPROBE-PAY-005\",\"amount\":500.05,\"amount_paid\":0.0,\"currency\":\"NGN\",\"status\":\"pending\",\"channel\":null,\"merchant_id\":\"mer_204\",\"metadata\":null},\"attempt\":1}"
+  }
+}
