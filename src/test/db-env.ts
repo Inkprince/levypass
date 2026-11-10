@@ -2,4 +2,4 @@
 process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
 process.env.BANK_ADAPTER = "fake";
 process.env.POLLER = "off";
-process.env.LOG_LEVEL = "warn";
+process.env.LOG_LEVEL = process.env.TEST_LOG_LEVEL ?? "warn";

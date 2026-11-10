@@ -11,8 +11,9 @@ export type Db = NodePgDatabase<typeof schema>;
 const globalForDb = globalThis as unknown as { levypassPool?: Pool };
 
 export function pool(): Pool {
-  globalForDb.levypassPool ??= createPool(env().DATABASE_URL);
-  return globalForDb.levypassPool;
+  const current = globalForDb.levypassPool;
+  if (!current || current.ending || current.ended) globalForDb.levypassPool = createPool(env().DATABASE_URL);
+  return globalForDb.levypassPool!;
 }
 
 export function db(): Db {

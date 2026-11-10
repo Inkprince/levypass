@@ -37,10 +37,12 @@ export function Phone() {
   }, [phone]);
 
   useEffect(() => {
-    setInbox([]);
-    void load();
+    const first = setTimeout(load, 0);
     const t = setInterval(load, 1500);
-    return () => clearInterval(t);
+    return () => {
+      clearTimeout(first);
+      clearInterval(t);
+    };
   }, [load]);
 
   const send = async (trail: string[], session: string) => {

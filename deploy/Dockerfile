@@ -13,7 +13,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
 # Bundle the database scripts so the runtime image needs neither tsx nor dev dependencies.
-RUN node_modules/.bin/esbuild scripts/migrate.ts scripts/seed.ts \
+RUN node_modules/.bin/esbuild scripts/migrate.ts scripts/seed.ts scripts/demo-reset.ts \
       --bundle --platform=node --format=esm --target=node22 --outdir=dist \
       --alias:server-only=./src/test/server-only-stub.ts --external:pg-native --out-extension:.js=.mjs \
       --banner:js="import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);"

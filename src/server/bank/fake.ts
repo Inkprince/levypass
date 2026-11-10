@@ -1,8 +1,10 @@
 import "server-only";
 import { createHmac, randomBytes } from "node:crypto";
+import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import path from "node:path";
 import { lagosDate } from "@/core/periods";
 import type { Kobo } from "@/core/money";
-import { log } from "@/server/log";
+import { errorFields, log } from "@/server/log";
 import { BankError, type BankPort, type Settlement, type VerifiedPayment } from "./port";
 
 // Deterministic stand-in for the sandbox, used locally and in tests. Behaviour copies what T4
@@ -28,11 +30,38 @@ type FakeState = {
 };
 
 const g = globalThis as unknown as { levypassFakeBank?: FakeState };
-const state = (): FakeState => (g.levypassFakeBank ??= { payments: new Map(), settled: [], seq: 0 });
+
+// Local demos survive a dev-server restart: the fake bank keeps its state in .data/ (ignored by Git).
+// Tests never touch the file.
+const file = path.join(process.cwd(), ".data", "fake-bank.json");
+const persist = process.env.NODE_ENV !== "test" && !process.env.VITEST;
+const reviveDate = (_: string, v: unknown) => (typeof v === "string" && /^\d{4}-\d{2}-\d{2}T/.test(v) ? new Date(v) : v);
+
+function load(): FakeState {
+  if (persist) {
+    try {
+      const raw = JSON.parse(readFileSync(file, "utf8"), reviveDate) as { payments: FakePayment[]; settled: Settlement[]; webhook?: FakeState["webhook"]; seq: number };
+      return { payments: new Map(raw.payments.map((p) => [p.reference, p])), settled: raw.settled, webhook: raw.webhook, seq: raw.seq };
+    } catch {
+      // first run
+    }
+  }
+  return { payments: new Map(), settled: [], seq: 0 };
+}
+
+function save(): void {
+  if (!persist) return;
+  const st = state();
+  mkdirSync(path.dirname(file), { recursive: true });
+  writeFileSync(file, JSON.stringify({ payments: [...st.payments.values()], settled: st.settled, webhook: st.webhook, seq: st.seq }));
+}
+
+const state = (): FakeState => (g.levypassFakeBank ??= load());
 
 /** Test helper: start from an empty bank. */
 export function resetFakeBank(): void {
   g.levypassFakeBank = { payments: new Map(), settled: [], seq: 0 };
+  save();
 }
 
 const fee = (channel: string, amount: Kobo) => (channel === "card" ? Math.min(Math.round(amount * 0.015), 200_000) : 5_000);
@@ -46,13 +75,15 @@ function eventData(p: FakePayment) {
 function deliver(event: string, data: Record<string, unknown>): void {
   const hook = state().webhook;
   if (!hook) return;
-  const body = JSON.stringify({ event, event_id: `evt_FAKE${(++state().seq).toString().padStart(6, "0")}`, created_at: new Date().toISOString(), data, attempt: 1 });
-  setTimeout(async () => {
-    const ts = String(Math.floor(Date.now() / 1000));
-    const sig = `sha256=${createHmac("sha256", hook.secret).update(`${ts}.${body}`).digest("hex")}`;
-    const { handleBankWebhook } = await import("@/server/payments/webhook");
-    const res = await handleBankWebhook(body, new Headers({ "x-forge-event": event, "x-forge-timestamp": ts, "x-forge-signature": sig }));
-    log("debug", "fakebank.delivered", { event, status: res.status });
+  const body = JSON.stringify({ event, event_id: `evt_F${randomBytes(5).toString("hex").toUpperCase()}${(++state().seq).toString(36).toUpperCase()}`, created_at: new Date().toISOString(), data, attempt: 1 });
+  setTimeout(() => {
+    void (async () => {
+      const ts = String(Math.floor(Date.now() / 1000));
+      const sig = `sha256=${createHmac("sha256", hook.secret).update(`${ts}.${body}`).digest("hex")}`;
+      const { handleBankWebhook } = await import("@/server/payments/webhook");
+      const res = await handleBankWebhook(body, new Headers({ "x-forge-event": event, "x-forge-timestamp": ts, "x-forge-signature": sig }));
+      log(res.status === 200 ? "debug" : "warn", "fakebank.delivered", { event, status: res.status, body: res.body });
+    })().catch((error) => log("error", "fakebank.deliver_failed", { event, ...errorFields(error) }));
   }, 250);
 }
 
@@ -71,6 +102,7 @@ function pay(reference: string, channel: string, paidKobo?: Kobo): FakePayment {
   } else {
     deliver("payment.partial", eventData(p));
   }
+  save();
   return p;
 }
 
@@ -107,6 +139,7 @@ export function fakeBank(): BankPort {
       if (req.reference.startsWith("DUP-") || state().payments.has(req.reference)) throw new BankError("DUPLICATE_REQUEST", 409, `Reference ${req.reference} has already been used`);
       const p: FakePayment = { reference: req.reference, amountKobo: req.amountKobo, paidKobo: 0, status: "pending", channel: null, feeKobo: 0, paidAt: null, createdAt: new Date() };
       state().payments.set(req.reference, p);
+      save();
       deliver("payment.pending", eventData(p));
       const code = String(1000 + (state().payments.size % 9000));
       return {
@@ -136,6 +169,7 @@ export function fakeBank(): BankPort {
       const now = new Date();
       const batches = pendingSettlements().map((s) => ({ ...s, settlementId: `stl_fake${String(state().settled.length + 1).padStart(3, "0")}`, status: "settled", settledAt: now }));
       state().settled.push(...batches);
+      save();
       for (const b of batches) deliver("settlement.completed", { settlement_id: b.settlementId, sales_date: b.salesDate, gross_amount: naira(b.grossKobo), fees: naira(b.feesKobo), net_amount: naira(b.netKobo) });
       return batches;
     },
@@ -153,10 +187,12 @@ export function fakeBank(): BankPort {
     async registerWebhook(url) {
       const hook = { id: `whk_fake${randomBytes(3).toString("hex")}`, secret: randomBytes(24).toString("hex"), url };
       state().webhook = hook;
+      save();
       return { id: hook.id, secret: hook.secret };
     },
     async deleteWebhook(id) {
       if (state().webhook?.id === id) state().webhook = undefined;
+      save();
     },
     async replayDelivery() {
       throw new BankError("NOT_SUPPORTED", 400, "The fake bank replays through the failure panel instead");
