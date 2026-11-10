@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { Summary } from "@/server/admin/summary";
 
 const naira = (k: number) => `₦${(k / 100).toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-const nairaShort = (k: number) => (k >= 100_000_00 ? `₦${(k / 100_000_00).toFixed(1)}m` : k >= 1_000_00 ? `₦${(k / 1_000_00).toFixed(1)}k` : `₦${(k / 100).toFixed(0)}`);
+const nairaShort = (k: number) => (k >= 1_000_000_00 ? `₦${(k / 1_000_000_00).toFixed(1)}m` : k >= 1_000_00 ? `₦${(k / 1_000_00).toFixed(1)}k` : `₦${(k / 100).toFixed(0)}`);
 const time = (iso: string) => new Date(iso).toLocaleTimeString("en-NG", { timeZone: "Africa/Lagos", hour: "2-digit", minute: "2-digit", second: "2-digit" });
 
 function Tile({ label, value, sub, flash }: { label: string; value: string; sub?: string; flash?: boolean }) {
