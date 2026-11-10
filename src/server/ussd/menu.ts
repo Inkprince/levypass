@@ -37,7 +37,7 @@ export async function ussdReply(input: { phoneNumber: string; text: string }): P
       if (rest[0] === undefined) return CON(t(L, "ussd.pay_choose", { amount: formatNaira(amount), what }));
       if (rest[0] !== "1") return END(t(L, "ussd.cancelled"));
       try {
-        const p = await startPayment({ traderId: trader.id, channel: "ussd", amountKobo: amount });
+        const p = await startPayment({ traderId: trader.id, channel: "ussd", amountKobo: amount, purpose: owed.totalKobo > 0 ? "owed" : "ahead" });
         // Sandbox: the bank's USSD approval is simulated (PY-03). Real life: the bank prompts for the PIN.
         if (p.status === "pending") await getBank().simulateUssd(p.reference);
         return END(t(L, "ussd.pay_started", { amount: formatNaira(amount) }));

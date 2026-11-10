@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 
 export default async function OfficersPage() {
   const officers = await db()
-    .select({ id: s.officers.id, name: s.officers.name, staffId: s.officers.staffId, status: s.officers.status, scans: sql<number>`(SELECT count(*)::int FROM scans WHERE officer_id = ${s.officers.id} AND scanned_at > now() - interval '1 day')` })
+    .select({ id: s.officers.id, name: s.officers.name, staffId: s.officers.staffId, status: s.officers.status, scans: sql<number>`(SELECT count(*)::int FROM scans WHERE scans.officer_id = "officers"."id" AND scans.scanned_at > now() - interval '1 day')` })
     .from(s.officers)
     .orderBy(desc(s.officers.status), s.officers.staffId);
   const markets = await db().select({ id: s.markets.id, name: s.markets.name }).from(s.markets);

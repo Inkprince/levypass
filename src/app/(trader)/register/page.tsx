@@ -21,7 +21,7 @@ export default async function RegisterPage() {
               </option>
             ))}
           </Select>
-          <Field label="Stall or vehicle number" name="stallOrVehicle" required placeholder="B-14" />
+          <Field label="Stall or vehicle number" name="stallOrVehicle" required placeholder="E-07" />
           <Field label="Type of business" name="businessType" required placeholder="Fabrics" />
           <Select label="Language for SMS" name="locale" defaultValue="en">
             <option value="en">English</option>

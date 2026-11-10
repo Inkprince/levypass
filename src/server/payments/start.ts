@@ -33,7 +33,11 @@ export type StartedPayment = { paymentId: string; reference: string; amountKobo:
  * Creates a checkout at the bank for a trader (PY-02, PY-03). The payment row exists before the
  * bank call, its ID is the bank reference, and the bank call itself carries an Idempotency-Key.
  */
-export async function startPayment(input: { traderId: string; amountKobo?: Kobo; channel: "ussd" | "bank_transfer" | "card"; demoWithholdWebhook?: boolean }): Promise<StartedPayment> {
+/**
+ * `purpose: "ahead"` marks a payment the trader chose to make for a future period while owing nothing.
+ * It is recorded on the payment so settlement does not mistake it for a double charge (FR-01).
+ */
+export async function startPayment(input: { traderId: string; amountKobo?: Kobo; channel: "ussd" | "bank_transfer" | "card"; purpose?: "owed" | "ahead"; demoWithholdWebhook?: boolean }): Promise<StartedPayment> {
   await ensureWebhook();
   const [trader] = await db().select({ id: s.traders.id, name: s.traders.name }).from(s.traders).where(eq(s.traders.id, input.traderId));
   if (!trader) throw new Error("Unknown trader");
@@ -46,6 +50,7 @@ export async function startPayment(input: { traderId: string; amountKobo?: Kobo;
 
   const bank = getBank();
   const paymentId = newId("pay");
+  const flags = { ...(input.demoWithholdWebhook ? { demoWithholdWebhook: true } : {}), ...(input.purpose === "ahead" ? { purpose: "ahead" } : {}) };
   await db().insert(s.payments).values({
     id: paymentId,
     traderId: trader.id,
@@ -54,7 +59,7 @@ export async function startPayment(input: { traderId: string; amountKobo?: Kobo;
     channel: input.channel,
     status: "initiated",
     amountKobo: amount,
-    providerData: input.demoWithholdWebhook ? { demoWithholdWebhook: true } : {},
+    providerData: flags,
   });
   try {
     const c = await bank.createCheckout(
@@ -63,7 +68,7 @@ export async function startPayment(input: { traderId: string; amountKobo?: Kobo;
     );
     await db()
       .update(s.payments)
-      .set({ status: "pending", providerData: { ...(input.demoWithholdWebhook ? { demoWithholdWebhook: true } : {}), checkout: { paymentUrl: c.paymentUrl, ussdCode: c.ussdCode, transferAccount: c.transferAccount, expiresAt: c.expiresAt.toISOString() } } })
+      .set({ status: "pending", providerData: { ...flags, checkout: { paymentUrl: c.paymentUrl, ussdCode: c.ussdCode, transferAccount: c.transferAccount, expiresAt: c.expiresAt.toISOString() } } })
       .where(eq(s.payments.id, paymentId));
     return { paymentId, reference: paymentId, amountKobo: amount, ussdCode: c.ussdCode, paymentUrl: c.paymentUrl, transferAccount: c.transferAccount, expiresAt: c.expiresAt, status: "pending" };
   } catch (error) {

@@ -54,6 +54,7 @@ export default async function PassPage({ searchParams }: { searchParams: Promise
             <p className="mt-1 text-slate-600">Nothing is due right now. Thank you.</p>
             <form action={payNow} className="mt-4">
               <input type="hidden" name="amountKobo" value={status.nextKobo} />
+              <input type="hidden" name="purpose" value="ahead" />
               <Button variant="secondary" className="w-full" type="submit">
                 Pay ahead {formatNaira(status.nextKobo)}
               </Button>

@@ -1,6 +1,6 @@
 import "server-only";
 import { createHmac, randomBytes } from "node:crypto";
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { z } from "zod";
 import { newId } from "@/core/ids";
 import { lagosDate } from "@/core/periods";
@@ -37,6 +37,16 @@ export function openRegistration(cookie: string | undefined): RegistrationInput 
 
 export async function phoneTaken(phone: string): Promise<boolean> {
   return (await db().select({ id: s.traders.id }).from(s.traders).where(eq(s.traders.phone, phone))).length > 0;
+}
+
+/** A stall or vehicle number identifies one trader in a market (officers look traders up by it). */
+export async function stallTaken(marketId: string, stall: string): Promise<boolean> {
+  const rows = await db()
+    .select({ id: s.traders.id })
+    .from(s.traders)
+    .where(and(eq(s.traders.marketId, marketId), sql`upper(${s.traders.stallOrVehicle}) = ${stall.trim().toUpperCase()}`))
+    .limit(1);
+  return rows.length > 0;
 }
 
 /** TR-01 to TR-03: creates the trader, assigns the market's levies from today, sends the welcome SMS. */

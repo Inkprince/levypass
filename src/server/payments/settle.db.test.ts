@@ -98,6 +98,16 @@ describe("webhook to ledger (fake bank)", () => {
     expect(o).toMatchObject({ status: "paid", amountPaidKobo: 50_000 });
   });
 
+  it("does not flag a payment the trader chose as pay-ahead", async () => {
+    const ahead = await startPayment({ traderId, channel: "ussd", amountKobo: 50_000, purpose: "ahead" });
+    await getBank().simulateUssd(ahead.reference);
+    await waitFor(settled(ahead.paymentId));
+    const flags = await db().select().from(s.fraudFlags).where(and(eq(s.fraudFlags.paymentId, ahead.paymentId), eq(s.fraudFlags.type, "double_charge")));
+    expect(flags).toHaveLength(0);
+    const sms = await db().select().from(s.outbox).where(eq(s.outbox.dedupeKey, `receipt:${ahead.paymentId}`));
+    expect(String((sms[0]?.payload as { text?: string }).text)).not.toMatch(/already paid/i);
+  });
+
   it("books only the settled amount of an overpayment and sends the excess to review", async () => {
     const p = await startPayment({ traderId, channel: "bank_transfer", amountKobo: 50_000 });
     await getBank().simulateTransfer(p.reference, 80_000);

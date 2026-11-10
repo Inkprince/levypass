@@ -146,7 +146,7 @@ export function Scanner() {
           if (manual.trim()) void check({ id: manual.trim() }, performance.now());
         }}
       >
-        <input value={manual} onChange={(e) => setManual(e.target.value)} placeholder="Trader ID or stall (B-14)" className="min-h-12 min-w-0 flex-1 rounded-xl border border-slate-300 px-4" aria-label="Trader ID or stall number" />
+        <input value={manual} onChange={(e) => setManual(e.target.value)} placeholder="Trader ID or stall (E-07)" className="min-h-12 min-w-0 flex-1 rounded-xl border border-slate-300 px-4" aria-label="Trader ID or stall number" />
         <button disabled={busy} className="rounded-xl bg-ink px-5 font-semibold text-white">
           Check
         </button>

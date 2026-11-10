@@ -125,7 +125,9 @@ async function settleVerified(tx: Tx, paymentId: string, v: VerifiedPayment, now
     .select()
     .from(s.obligations)
     .where(and(eq(s.obligations.traderId, traderId), lte(s.obligations.periodStart, now), gt(s.obligations.periodEnd, now)));
-  const double = detectDoubleCharge({ amountKobo: amount, now, open, current: currentRows });
+  // A pay-ahead the trader chose is not a double charge, even when it matches a paid period's amount.
+  const chosenAhead = (p.providerData as { purpose?: string } | null)?.purpose === "ahead";
+  const double = chosenAhead ? null : detectDoubleCharge({ amountKobo: amount, now, open, current: currentRows });
 
   // Future periods that do not exist yet (existing unpaid future ones are already in `open`).
   const existingFuture = await tx
