@@ -1,0 +1,22 @@
+# Local Postgres for development. `npm run db:up` starts it; data persists in the named volume.
+# Mapped to 5433 so it does not clash with a Postgres already running on the host.
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: levypass
+      POSTGRES_PASSWORD: levypass
+      POSTGRES_DB: levypass
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./scripts/db-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U levypass -d levypass"]
+      interval: 2s
+      timeout: 3s
+      retries: 15
+
+volumes:
+  pgdata:

@@ -12,3 +12,15 @@ export function log(level: Level, msg: string, fields: Record<string, unknown> =
   if (level === "error" || level === "warn") console.error(line);
   else console.log(line);
 }
+
+/** Loggable summary of an unknown error: name, message and code (pg and Node set `code`). */
+export function errorFields(error: unknown): Record<string, string> {
+  if (!(error instanceof Error)) return { error: String(error) };
+  const code = (error as { code?: unknown }).code;
+  const nested = error instanceof AggregateError ? error.errors.map((e: unknown) => (e instanceof Error ? e.message : String(e))).join("; ") : "";
+  return {
+    error_name: error.name,
+    error: error.message || nested || "(no message)",
+    ...(typeof code === "string" ? { error_code: code } : {}),
+  };
+}

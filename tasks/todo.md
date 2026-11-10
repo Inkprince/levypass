@@ -20,9 +20,10 @@ M = 3 to 5, L = 5 to 8.
   - Every script in `AGENTS.md` exists. `GET /healthz` returns 200. Env parsed by a Zod schema (`src/server/env.ts`); `.env.example` committed.
   - Verify: `npm run typecheck && npm run lint && npm test && npm run build` pass; `curl -i localhost:3000/healthz` is 200.
   - Verified 10 Nov: typecheck, lint, 7 tests and build pass; `/healthz` 200 on `next dev` :3000 and on the standalone server at `0.0.0.0:8080`. TypeScript pinned to 5.9 and ESLint to 9 (typescript-eslint does not support TS 7 yet). `db:*` and `deploy` are placeholders until T2 and T3.
-- [ ] **T2 Database baseline.** (S, after T1)
+- [x] **T2 Database baseline.** (S, after T1)
   - `docker-compose.yml` with Postgres 16; Drizzle configured; `db:up`, `db:migrate`, `db:seed` run; `/healthz` stays cheap and a separate `/readyz` checks the database.
   - Verify: `npm run db:up && npm run db:migrate` succeed twice in a row; `/readyz` is 200.
+  - Verified 10 Nov against Homebrew Postgres 16 (Docker Desktop not running, so `db:up` itself is untested; `docker compose config` is valid): `db:migrate` and `db:seed` twice each, one migration row; `/readyz` 200 with the database, 503 in 0.3 s with a bad URL while `/healthz` stays 200.
 - [ ] **T3 Deploy pipeline.** (M, after T1, needs H1 and H2)
   - `deploy/Dockerfile` (multi-stage, `node:22-alpine`, non-root, port 8080); `deploy/postgres.yaml` (Deployment, PVC, Service, secret); `deploy/app.yaml` (from the guide's reference manifest, with the budget from the plan and `envFrom` `huawei-gateway`).
   - `npm run deploy` builds `linux/amd64`, tags with the Git SHA, pushes, applies, waits for rollout, runs migrations.
