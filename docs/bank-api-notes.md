@@ -250,7 +250,7 @@ Payment webhooks carry no fee: the fee comes only from verify.
 Same result with `Authorization: Bearer unused` added and for models `glm-5.3`, `glm-5.2`, `deepseek-v4.1-flash`.
 See finding 8.
 
-**Update 10 Nov, 21:40 Lagos: the organisers fixed the key.** From the app pod, `GET /models` is 200 and lists
+**Update 10 Nov, 22:40 Lagos: the organisers fixed the key.** From the app pod, `GET /models` is 200 and lists
 `deepseek-v4-flash`, `glm-5.1`, `glm-5.2`, `glm-5.3`, `deepseek-v4.1-flash`, `deepseek-v4.1-flash-1017`.
 
 - `glm-5.3` rejects `chat_template_kwargs: { thinking: false }` with 400 `ModelArts.81001 unsupported thinking
