@@ -6,10 +6,12 @@ M = 3 to 5, L = 5 to 8.
 
 ## Phase 0: Unblock (people, in parallel with phase 1)
 
-- [ ] **H1 Kubeconfig.** Get the real `team13` kubeconfig (the copy in this folder is 0 bytes), save it as `~/forge/team13.yaml`, `chmod 600`.
+- [x] **H1 Kubeconfig.** Get the real `team13` kubeconfig (the copy in this folder is 0 bytes), save it as `~/forge/team13.yaml`, `chmod 600`.
   - Verify: `KUBECONFIG=~/forge/team13.yaml kubectl auth can-i create deployments` prints `yes`.
+  - Verified 10 Nov: installed from `~/Downloads/team13.yml` (2,760 bytes, namespace `team13`, context `team13@sandbox`); `can-i create deployments` is `yes`; secret `huawei-gateway` exists; quota unused (0 of 400m / 768Mi).
 - [ ] **H2 Docker and registry.** Start Docker Desktop. Choose GHCR or Docker Hub, log in, write the image name in `.env.example` as `IMAGE_REPO`.
   - Verify: `docker info` works; `docker login` succeeds.
+  - 10 Nov: Docker Desktop started; `docker info` works and buildx lists `linux/amd64`. Registry still to choose; no `docker login` yet.
 - [ ] **H3 Rules of the game.** Get the judging rubric, submission format, freeze time and the Sandbox API Mock Specification v2. Put them in `docs/`.
 - [ ] **H4 Owners.** Assign lanes A to D from the plan.
 
@@ -24,6 +26,7 @@ M = 3 to 5, L = 5 to 8.
   - `docker-compose.yml` with Postgres 16; Drizzle configured; `db:up`, `db:migrate`, `db:seed` run; `/healthz` stays cheap and a separate `/readyz` checks the database.
   - Verify: `npm run db:up && npm run db:migrate` succeed twice in a row; `/readyz` is 200.
   - Verified 10 Nov against Homebrew Postgres 16 (Docker Desktop not running, so `db:up` itself is untested; `docker compose config` is valid): `db:migrate` and `db:seed` twice each, one migration row; `/readyz` 200 with the database, 503 in 0.3 s with a bad URL while `/healthz` stays 200.
+  - Re-verified 10 Nov on Docker: `npm run db:up && npm run db:migrate` twice, second seed inserted 0, `levypass_test` created by the init script, 123 tests pass against it.
 - [ ] **T3 Deploy pipeline.** (M, after T1, needs H1 and H2)
   - `deploy/Dockerfile` (multi-stage, `node:22-alpine`, non-root, port 8080); `deploy/postgres.yaml` (Deployment, PVC, Service, secret); `deploy/app.yaml` (from the guide's reference manifest, with the budget from the plan and `envFrom` `huawei-gateway`).
   - `npm run deploy` builds `linux/amd64`, tags with the Git SHA, pushes, applies, waits for rollout, runs migrations.

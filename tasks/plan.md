@@ -205,7 +205,7 @@ T1 to T13, T15, T17, T18, T21, T22.
 
 ## Open questions
 
-- [ ] H1: Is the team ID `team13`? The file `Forge_2026_Sandbox_Participant_Platform_Guide.pdf team13 (1).yml` is 0 bytes. We need the real kubeconfig.
+- [x] H1: Team ID is `team13`. The real kubeconfig was `~/Downloads/team13.yml`; it is now at `~/forge/team13.yaml`.
 - [ ] H2: Which registry (GHCR or Docker Hub) and whose account?
 - [ ] H3: What are the judging criteria, the submission format, and the exact freeze time? Can we get the Sandbox API Mock Specification v2?
 - [ ] H4: Who is on the team and which lane does each person take?

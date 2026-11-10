@@ -5,7 +5,7 @@ The PDF wins on any conflict. The request and response bodies of the bank API ar
 guide; they are in the *Sandbox API Mock Specification v2* (we do not have it yet) and in
 `docs/bank-api-notes.md`, which task T4 fills from real calls. Never guess a body shape.
 
-Team ID: `team13` (inferred from the kubeconfig file name; confirm with the team lead).
+Team ID: `team13` (confirmed 10 Nov: the kubeconfig's namespace and context are `team13` / `team13@sandbox`).
 
 ## Topology
 
