@@ -1,0 +1,38 @@
+# Temporary (T4 only): logs each request's headers and raw body so real webhook payloads can be
+# recorded. Exposed as Service `app` until T3 deploys the real app under the same name.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: webhook-capture
+  labels: { app: levypass-capture }
+spec:
+  restartPolicy: Never
+  activeDeadlineSeconds: 7200
+  containers:
+    - name: capture
+      image: node:22-alpine
+      command: ["node", "-e"]
+      args:
+        - |
+          require("http").createServer((req, res) => {
+            const chunks = [];
+            req.on("data", (c) => chunks.push(c));
+            req.on("end", () => {
+              const body = Buffer.concat(chunks).toString("utf8");
+              if (req.url !== "/healthz") console.log(JSON.stringify({ at: new Date().toISOString(), method: req.method, url: req.url, headers: req.headers, body }));
+              res.writeHead(200, { "content-type": "application/json" }); res.end('{"ok":true}');
+            });
+          }).listen(8080, "0.0.0.0");
+      ports: [{ containerPort: 8080 }]
+      resources:
+        requests: { cpu: 50m, memory: 64Mi }
+        limits: { cpu: 100m, memory: 96Mi }
+      securityContext: { runAsNonRoot: true, runAsUser: 1000, allowPrivilegeEscalation: false }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app
+spec:
+  selector: { app: levypass-capture }
+  ports: [{ port: 80, targetPort: 8080 }]

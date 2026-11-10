@@ -209,5 +209,8 @@ T1 to T13, T15, T17, T18, T21, T22.
 - [ ] H2: Which registry (GHCR or Docker Hub) and whose account?
 - [ ] H3: What are the judging criteria, the submission format, and the exact freeze time? Can we get the Sandbox API Mock Specification v2?
 - [ ] H4: Who is on the team and which lane does each person take?
-- [ ] T4 answers: which merchant or account represents the government collection account; where virtual-account inflows settle; which trigger amounts apply to collections; whether pods have internet egress.
+- [x] T4 answers (details in `docs/bank-api-notes.md`): merchant `mer_204` settling to `0123456793` stands in for the collection account; virtual-account inflows do not appear in any settlement; no triggers fired on collections; pods have egress.
+- [ ] New from T4: `team13.xtradot.co` is behind Cloudflare Access (302 to a login page). Ask the organisers to open it before the demo; the judge-scans-a-QR moment depends on it.
+- [ ] New from T4: Huawei MaaS returns 401 `ModelArts.81003` for the team key. Report with the request IDs in the notes.
+- [ ] New from T4: settle the collection rail (checkout under `mer_204` versus per-trader virtual accounts); see "Design consequences" in the notes.
 - [ ] Languages: who on the team writes the Pidgin and Yoruba strings? They are hand-written, not machine-translated.
