@@ -262,3 +262,8 @@ See finding 8.
   settled", or drop them in favour of checkouts.
 - **Fees:** book `merchant_fee` from verify as its own ledger entry; book no fee for virtual-account inflows.
 - **Overpayment:** allocate `amount` (what settles), send `amount_paid - amount` to review.
+
+## Addendum (10 Nov, 19:35 UTC)
+
+- `POST /payments/checkout` accepts `callback_url` (201, `LPPROBE-PAY-CB1`). The response shape is unchanged.
+- References in our own format (`pay_` plus 20 lower-case characters) work for checkout and verify (201, then 200).
