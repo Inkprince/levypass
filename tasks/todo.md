@@ -1,0 +1,130 @@
+# LevyPass task list
+
+Work top to bottom. Tick a task only when its verification has been run; add one line saying what
+you saw. Plan and decisions: `tasks/plan.md`. Rules: `AGENTS.md`. Sizes: S = 1 to 2 files,
+M = 3 to 5, L = 5 to 8.
+
+## Phase 0: Unblock (people, in parallel with phase 1)
+
+- [ ] **H1 Kubeconfig.** Get the real `team13` kubeconfig (the copy in this folder is 0 bytes), save it as `~/forge/team13.yaml`, `chmod 600`.
+  - Verify: `KUBECONFIG=~/forge/team13.yaml kubectl auth can-i create deployments` prints `yes`.
+- [ ] **H2 Docker and registry.** Start Docker Desktop. Choose GHCR or Docker Hub, log in, write the image name in `.env.example` as `IMAGE_REPO`.
+  - Verify: `docker info` works; `docker login` succeeds.
+- [ ] **H3 Rules of the game.** Get the judging rubric, submission format, freeze time and the Sandbox API Mock Specification v2. Put them in `docs/`.
+- [ ] **H4 Owners.** Assign lanes A to D from the plan.
+
+## Phase 1: Walking skeleton
+
+- [x] **T1 Scaffold the app.** (M, no dependencies)
+  - Next.js App Router, TypeScript strict, Tailwind, ESLint, Vitest; `output: "standalone"`.
+  - Every script in `AGENTS.md` exists. `GET /healthz` returns 200. Env parsed by a Zod schema (`src/server/env.ts`); `.env.example` committed.
+  - Verify: `npm run typecheck && npm run lint && npm test && npm run build` pass; `curl -i localhost:3000/healthz` is 200.
+  - Verified 10 Nov: typecheck, lint, 7 tests and build pass; `/healthz` 200 on `next dev` :3000 and on the standalone server at `0.0.0.0:8080`. TypeScript pinned to 5.9 and ESLint to 9 (typescript-eslint does not support TS 7 yet). `db:*` and `deploy` are placeholders until T2 and T3.
+- [ ] **T2 Database baseline.** (S, after T1)
+  - `docker-compose.yml` with Postgres 16; Drizzle configured; `db:up`, `db:migrate`, `db:seed` run; `/healthz` stays cheap and a separate `/readyz` checks the database.
+  - Verify: `npm run db:up && npm run db:migrate` succeed twice in a row; `/readyz` is 200.
+- [ ] **T3 Deploy pipeline.** (M, after T1, needs H1 and H2)
+  - `deploy/Dockerfile` (multi-stage, `node:22-alpine`, non-root, port 8080); `deploy/postgres.yaml` (Deployment, PVC, Service, secret); `deploy/app.yaml` (from the guide's reference manifest, with the budget from the plan and `envFrom` `huawei-gateway`).
+  - `npm run deploy` builds `linux/amd64`, tags with the Git SHA, pushes, applies, waits for rollout, runs migrations.
+  - Verify: `curl -I https://team13.xtradot.co/healthz` is 200; `kubectl describe resourcequota team-quota` is within budget.
+- [ ] **T4 Probe the sandbox.** (S, needs H1)
+  - `scripts/probe-sandbox.sh` runs in a throwaway pod and exercises: balance, `POST /virtual-accounts`, `simulate-inflow`, `POST /payments/checkout`, `simulate-ussd`, `verify`, `POST /webhooks`, `POST /webhooks/test`, `GET /settlements`, `POST /reconciliation`, `POST /admin/settlements/run`, one Huawei MaaS chat call.
+  - `docs/bank-api-notes.md` records each real request and response (key redacted) and answers the T4 questions in the plan.
+  - Verify: the notes file exists with a captured response for every call above; no key in it (`grep` for the key prefix returns nothing).
+
+### Checkpoint A
+
+- [ ] Live URL answers; database runs in the cluster; real bank shapes are written down. Commit and tag `checkpoint-a`.
+
+## Phase 2: Money core
+
+- [ ] **T5 Schema and seed.** (M, after T2)
+  - Tables from PRD 7.2 plus those in the plan. Unique indexes: obligation `(trader_id, levy_type_id, period_start)`; payment `(provider, provider_ref)`; `webhook_events.event_id`; receipt number.
+  - A trigger rejects `UPDATE` and `DELETE` on `ledger_entries`.
+  - Seed: one authority, one market, two levy types (daily ₦500, weekly ₦2,000), 40 synthetic traders with mixed payment history, 3 officers, 1 admin.
+  - Verify: a test proves the trigger rejects an update; `npm run db:seed` is repeatable.
+- [ ] **T6 Core domain, test first.** (M, after T1)
+  - `src/core`: money (kobo ↔ NGN string), periods in Africa/Lagos, obligation generation, allocation (oldest unpaid first, overpayment to future periods, part payment), double-charge detection, receipt numbers, Ed25519 token sign and verify.
+  - Verify: `npm test` covers exact pay, part pay, overpay, pay ahead, second payment for a paid period, the 23:30 and 00:30 Lagos boundary, and a tampered token.
+- [ ] **T7 BankPort and adapters.** (M, after T4 and T6)
+  - `BankPort` interface; `fake` adapter with deterministic behaviour and trigger amounts; `xtradot` adapter with one shared rate limiter, timeouts, `Idempotency-Key` persisted in `bank_calls` before the call, Zod-parsed responses, `request_id` logged, 504 mapped to `unknown` and never retried as a new POST.
+  - Verify: tests show a replayed key returns the original result, a timeout leads to requery, and the limiter never exceeds 60 a minute; in the cluster, a balance call succeeds through the adapter.
+- [ ] **T8 Webhook to ledger.** (M, after T5 and T7)
+  - `POST /api/webhooks/bank`: raw-body HMAC check, 5-minute timestamp window, dedupe on `event_id`, fast 2xx.
+  - `settlePayment()` verifies with the bank, then in one transaction allocates, writes ledger entries (including the fee entry), marks obligations, creates the receipt and queues the SMS. Unmatched money goes to `review_items`.
+  - Verify: tests for bad signature, stale timestamp, duplicate event, unknown account; in the cluster, `simulate-inflow` on a seeded trader turns today's obligation to paid and the ledger balances to zero.
+- [ ] **T9 Trader registration.** (M, after T7)
+  - Web form (name, phone, market, stall or vehicle, business type) → OTP through the outbox → trader created with trader ID, virtual account and signed QR. Pass page shows the QR, the account number and what is due (TR-01 to TR-03, LV-02).
+  - Verify: register a new trader on the live URL, see the QR, see a virtual account number that exists in the sandbox.
+
+### Checkpoint B
+
+- [ ] In the cluster: register → simulate inflow → obligation paid → ledger entries → receipt row. Deploy, tag `checkpoint-b`.
+
+## Phase 3: Front doors
+
+- [ ] **T10 Officer app.** (L, after T6 and T5) Lane B
+  - Login with staff ID and PIN. Camera scan and manual ID entry. Full-screen **PAID** or **NOT PAID** with icon, name, stall and period; pay-now code when unpaid. Every scan logged with officer, time and GPS when granted (OF-01 to OF-03, OF-06). Installable PWA manifest.
+  - `GET /api/verify/trader` responds in under 5 KB.
+  - Verify: on the real demo phone over mobile data, scan to result is under 3 seconds, timed; a scan row appears in the database.
+- [ ] **T11 Public verification pages.** (M, after T6) Lane B
+  - `/v/t/<token>`: limited public view of a trader's status for any phone camera. `/v/o/<token>`: officer name, area and active or suspended (OF-07). `/r/<number>`: receipt check; an unknown or reused number raises a fraud flag (RC-03, FR-02).
+  - Rate limit on all three.
+  - Verify: scan each QR with a stock phone camera; a made-up receipt number shows "not genuine" and creates a flag.
+- [ ] **T12 Notifier and phone simulator.** (M, after T5) Lane D
+  - `Notifier` port with an outbox adapter; poller delivers. `/sim` shows a feature phone with an SMS inbox per number. Receipt SMS carries number, amount, levy, period and link (RC-01, NT-01). Messages come from the `en`, `pcm`, `yo` dictionary.
+  - Verify: after a payment the receipt appears in `/sim` within 60 seconds, and its link opens the receipt page.
+- [ ] **T13 USSD.** (M, after T8 and T12) Lane D
+  - `POST /api/ussd` in the Africa's Talking shape (`sessionId`, `phoneNumber`, `text` → `CON` or `END`). Menu: pay levy, what I owe, last receipt, check an officer, report a collector, change language. Pay creates a reference and completes through `simulate-ussd` (PY-03). Keypad UI in `/sim`.
+  - Verify: tests walk each menu branch; on the live URL, paying by USSD produces the SMS receipt and the officer scan flips to PAID.
+- [ ] **T14 Hosted checkout.** (S, after T8) Lane A
+  - Pay-now link → `POST /payments/checkout` → hosted page → callback → verify → settle (PY-02). The callback alone never marks anything paid.
+  - Verify: pay with test card `5399830000000008` and OTP `123456`; the declining card leaves the obligation due.
+
+### Checkpoint C
+
+- [ ] Demo steps 1 to 3 run on the live URL from a phone, twice in a row. Deploy, tag `checkpoint-c`.
+
+## Phase 4: Admin and fraud
+
+- [ ] **T15 Admin dashboard.** (M, after T5) Lane C
+  - Admin login. Totals for today, this week and this month, by market and by levy; compliance rate per market; recent payments; refreshes without a reload (AD-01, AD-02). Reads our database only.
+  - Verify: totals equal a hand SQL sum over `ledger_entries`; a new payment appears within 5 seconds.
+- [ ] **T16 Manage levies and officers.** (M, after T15) Lane C
+  - Suspend and reinstate an officer at once (OF-08). Create and edit levy types with amount, period, market and legal basis (LV-01, LV-06). Register an officer (AD-03). Every action writes `audit_log`.
+  - Verify: suspend an officer, then their login and their ID page both show suspended within one request.
+- [ ] **T17 Fraud and complaints queue.** (M, after T8, T10, T11) Lane C
+  - Flags raised for a double charge (FR-01), an unknown or reused receipt (FR-02) and a scan by a suspended or unknown officer (FR-03). Queue with resolve and dismiss, each audited (AD-04). Complaint form on the officer ID page and in USSD.
+  - Verify: trigger each of the three flags by hand and see it in the queue.
+- [ ] **T18 Reconciliation and safety net.** (M, after T8) Lane A
+  - Poller requeries payments in `pending` or `unknown` and settles them. Reconciliation page: run settlement, pull `GET /settlements`, compare with the ledger by day, list any gap with its references (AD-05, PY-05).
+  - Verify: pay with the withheld-webhook trigger and watch the poller settle it; the reconciliation page shows ledger equal to settlement, gap ₦0.00.
+
+### Checkpoint D
+
+- [ ] Demo steps 1 to 6 and 8 run on the live URL. Feature freeze for the core. Deploy, tag `checkpoint-d`.
+
+## Phase 5: Edge and hardening
+
+- [ ] **T19 Failure panel.** (M, after T18) Lane A
+  - Admin-only page with four buttons: withheld webhook, replayed webhook, forged signature, second payment for a paid day. Each shows what the bank did and what LevyPass did.
+  - Verify: each button ends in the correct state with no duplicate ledger entry.
+- [ ] **T20 AI complaint triage.** (S, after T17) Lane D
+  - On a new complaint, a queued job asks Huawei MaaS (thinking off, timeout set) for an English summary, category and severity from free text in English, Pidgin or Yoruba. A keyword fallback fills the same fields if the call fails. Result cached on the complaint.
+  - Verify: a Pidgin complaint shows a sensible English summary; with the model URL blanked, the complaint still lands with fallback fields.
+- [ ] **T21 Demo hardening.** (M, after checkpoint D)
+  - `npm run demo:reset` restores seed data and re-provisions the webhook and virtual accounts. Self-heal runs on start. `/demo` page lists the script with one-tap entry to each role. Printable QR sticker sheet (TR-07). Admin and officer routes are gated.
+  - Verify: call the sandbox reset, run `demo:reset`, then run the full script cleanly; an unauthenticated request to `/admin` redirects to login.
+- [ ] **T22 Pitch pack.** (M, after H3)
+  - README with a one-paragraph pitch, architecture diagram, how to run, and the money rules. Five-minute script mapped to the rubric. Recorded backup video of the full demo. Slides content: problem, live demo, integrity, legal basis (PRD section 9), business model, Access Bank upside.
+  - Verify: a teammate who has not seen the build runs the script from the README without help.
+
+### Checkpoint E
+
+- [ ] Three clean full run-throughs on the demo devices. Backup video saved off the cluster. No deploys after this except a fix for a failed run-through.
+
+## Stretch (only after checkpoint E)
+
+- [ ] **S1 Offline officer mode.** Cache the day's paid list and the public key; verify tokens offline; sync scans through `POST /api/scans/sync` (OF-05).
+- [ ] **S2 Credit pre-offer.** With recorded consent, turn a trader's payment streak into a loan application through `POST /loans/applications` (FN-01, FN-02).
+- [ ] **S3 Hausa and Igbo strings** (NT-03).

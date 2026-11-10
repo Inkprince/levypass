@@ -1,0 +1,32 @@
+# Credentials: never commit. The kubeconfig lives in ~/forge/, not in this repo.
+*team[0-9][0-9]*.yml
+*team[0-9][0-9]*.yaml
+kubeconfig*
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+dist/
+coverage/
+*.tsbuildinfo
+next-env.d.ts
+
+# Local data
+.data/
+*.sqlite
+*.db
+
+# OS / editor
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# Claude Code local settings
+.claude/settings.local.json
