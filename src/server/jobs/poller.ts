@@ -6,6 +6,7 @@ import { errorFields, log } from "@/server/log";
 import { settlePayment } from "@/server/payments/settle";
 import { ensureWebhook } from "@/server/payments/webhook-setup";
 import { triageComplaint } from "@/server/ai/triage";
+import { ensureObligations } from "@/server/levy/obligations";
 
 // In-process poller (plan: no Redis). One replica, so one loop. Every tick:
 // 1. self-heal the webhook, 2. requery payments still pending or unknown (PY-04, rule 5),
@@ -28,6 +29,7 @@ export async function tick(): Promise<void> {
   try {
     await ensureWebhook().catch((e) => log("warn", "poller.webhook_heal_failed", errorFields(e)));
     await requeryPayments();
+    await refreshObligations();
     await deliverSms();
     await runJobs();
   } catch (error) {
@@ -63,6 +65,15 @@ export async function requeryPayments(limit = 4): Promise<number> {
     }
   }
   return due.length;
+}
+
+let lastRefresh = 0;
+/** Keeps every active trader's obligations current (new Lagos day), so compliance is accurate. */
+async function refreshObligations(): Promise<void> {
+  if (Date.now() - lastRefresh < 5 * 60_000) return;
+  lastRefresh = Date.now();
+  const traders = await db().select({ id: s.traders.id }).from(s.traders).where(eq(s.traders.status, "active"));
+  for (const t of traders) await ensureObligations(db(), t.id);
 }
 
 async function deliverSms(): Promise<void> {
