@@ -131,10 +131,11 @@ M = 3 to 5, L = 5 to 8.
   - Admin-only page with four buttons: withheld webhook, replayed webhook, forged signature, second payment for a paid day. Each shows what the bank did and what LevyPass did.
   - Verify: each button ends in the correct state with no duplicate ledger entry.
   - 10 Nov: built. All four drills covered by DB tests (no duplicate ledger entry).
-- [ ] **T20 AI complaint triage.** (S, after T17) Lane D
+- [x] **T20 AI complaint triage.** (S, after T17) Lane D
   - On a new complaint, a queued job asks Huawei MaaS (thinking off, timeout set) for an English summary, category and severity from free text in English, Pidgin or Yoruba. A keyword fallback fills the same fields if the call fails. Result cached on the complaint.
   - Verify: a Pidgin complaint shows a sensible English summary; with the model URL blanked, the complaint still lands with fallback fields.
   - 10 Nov: built. Keyword fallback tested on Pidgin, Yoruba and violence. Model path blocked by the MaaS 401.
+  - Verified 10 Nov, 22:50 Lagos, after the organisers fixed the key: on the cluster, a Pidgin complaint filed by USSD was triaged by `deepseek-v4.1-flash` (maas.call 200) as fake_collector, high, "A man without identification collected 2000 naira at Gate 3 without issuing a receipt." `glm-5.3` cannot turn thinking off (notes, Huawei MaaS).
 - [ ] **T21 Demo hardening.** (M, after checkpoint D)
   - `npm run demo:reset` restores seed data and re-provisions the webhook and virtual accounts. Self-heal runs on start. `/demo` page lists the script with one-tap entry to each role. Printable QR sticker sheet (TR-07). Admin and officer routes are gated.
   - Verify: call the sandbox reset, run `demo:reset`, then run the full script cleanly; an unauthenticated request to `/admin` redirects to login.
