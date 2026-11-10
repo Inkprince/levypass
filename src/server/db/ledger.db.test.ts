@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { newId } from "@/core/ids";
+import { parseReceiptNumber } from "@/core/receipts";
 import { testDb } from "@/test/db";
 import { seed } from "./seed";
 import * as s from "./schema";
@@ -35,6 +36,12 @@ describe("seed", () => {
   it("is repeatable: a second run inserts nothing", async () => {
     const second = await seed(db, { now });
     expect(Object.values(second).every((n) => n === 0)).toBe(true);
+  });
+
+  it("issues receipt numbers in the checkable format", async () => {
+    const rows = await db.select({ number: s.receipts.number }).from(s.receipts);
+    expect(rows.length).toBeGreaterThan(0);
+    expect(rows.filter((r) => parseReceiptNumber(r.number) !== r.number)).toEqual([]);
   });
 
   it("has a mix of paid, due and part-paid obligations today", async () => {

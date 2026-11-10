@@ -1,6 +1,10 @@
 import "server-only";
 import { createHash } from "node:crypto";
 import { encodeIdBody, type IdPrefix } from "@/core/ids";
+import { accounts } from "@/core/ledger";
+import { nairaToKobo } from "@/core/money";
+import { addDays, lagosDate, lagosMidnight, periodForDate } from "@/core/periods";
+import { newReceiptNumber } from "@/core/receipts";
 import { hashSecret } from "@/server/auth/password";
 import type { Db } from "./client";
 import * as s from "./schema";
@@ -11,21 +15,14 @@ import * as s from "./schema";
 // Repeatable: every row has a deterministic ID and is inserted with ON CONFLICT DO NOTHING, so a
 // second run adds nothing. Run on a later day, it adds that day's obligations as due.
 
-// --- Temporary period helpers. T6 replaces these with src/core/periods (tested). -------------
-const lagosOffsetMs = 60 * 60 * 1000; // Africa/Lagos is UTC+1 all year, no daylight saving
-const dayMs = 24 * 60 * 60 * 1000;
-const lagosDateOf = (instant: Date): string => new Date(instant.getTime() + lagosOffsetMs).toISOString().slice(0, 10);
-const lagosMidnight = (date: string): Date => new Date(Date.parse(`${date}T00:00:00Z`) - lagosOffsetMs);
-const addDays = (date: string, n: number): string => new Date(Date.parse(`${date}T00:00:00Z`) + n * dayMs).toISOString().slice(0, 10);
-const mondayOf = (date: string): string => addDays(date, -((new Date(`${date}T00:00:00Z`).getUTCDay() + 6) % 7));
-// ---------------------------------------------------------------------------------------------
-
 /** Deterministic ID in the normal format, so seeded IDs look and validate like real ones. */
 export function seedId(prefix: IdPrefix, key: string): string {
   return `${prefix}_${encodeIdBody(createHash("sha256").update(`levypass-seed:${key}`).digest())}`;
 }
 
-const seedHex = (key: string, length: number) => createHash("sha256").update(`levypass-seed:${key}`).digest("hex").slice(0, length);
+const seedHash = (key: string) => createHash("sha256").update(`levypass-seed:${key}`).digest();
+const seedHex = (key: string, length: number) => seedHash(key).toString("hex").slice(0, length);
+const mondayOf = (date: string) => periodForDate("weekly", date).startDate;
 
 const firstNames = ["Adaku", "Bolaji", "Chidinma", "Damilola", "Emeka", "Funmilayo", "Garba", "Halima", "Ifeoma", "Jide",
   "Kehinde", "Ladi", "Maryam", "Nnamdi", "Olamide", "Patience", "Rukayat", "Segun", "Taiwo", "Uche"];
@@ -56,22 +53,22 @@ export async function seed(db: Db, options: SeedOptions = {}): Promise<SeedSumma
   const adminPassword = options.adminPassword ?? "levypass-admin";
   const officerPin = options.officerPin ?? "1357";
 
-  const today = lagosDateOf(now);
+  const today = lagosDate(now);
   const windowStart = mondayOf(addDays(today, -13)); // two to three weeks of history
 
   const authorityId = seedId("aut", "authority");
   const marketId = seedId("mkt", "market");
   const dailyId = seedId("lvt", "levy:daily");
   const weeklyId = seedId("lvt", "levy:weekly");
-  const collection = `collection:${authorityId}`;
-  const revenue = `levy_revenue:${authorityId}`;
+  const collection = accounts.collection(authorityId);
+  const revenue = accounts.levyRevenue(authorityId);
   // The sandbox's published flat merchant fee for transfer and USSD (docs/forge-platform.md).
   // Seeded history only: live payments read the fee from the bank response (money rule 9).
-  const seededFeeKobo = 5_000;
+  const seededFeeKobo = nairaToKobo(50);
 
   const levies = [
-    { id: dailyId, name: "Daily market levy", amountKobo: 50_000, period: "daily" as const },
-    { id: weeklyId, name: "Weekly sanitation levy", amountKobo: 200_000, period: "weekly" as const },
+    { id: dailyId, name: "Daily market levy", amountKobo: nairaToKobo(500), period: "daily" as const },
+    { id: weeklyId, name: "Weekly sanitation levy", amountKobo: nairaToKobo(2_000), period: "weekly" as const },
   ];
 
   const [adminHash, pinHash] = await Promise.all([hashSecret(adminPassword), hashSecret(officerPin)]);
@@ -127,7 +124,7 @@ export async function seed(db: Db, options: SeedOptions = {}): Promise<SeedSumma
         case "arrears":
           return p.date < addDays(today, -5) && !isCurrent(p) ? p.levy.amountKobo : 0;
         case "part_today":
-          return isCurrent(p) && p.levy.period === "daily" ? 20_000 : p.levy.amountKobo;
+          return isCurrent(p) && p.levy.period === "daily" ? nairaToKobo(200) : p.levy.amountKobo;
       }
     };
 
@@ -180,19 +177,18 @@ export async function seed(db: Db, options: SeedOptions = {}): Promise<SeedSumma
       });
       const entry = (k: string, e: Omit<typeof s.ledgerEntries.$inferInsert, "id" | "journalId" | "paymentId" | "createdAt">) =>
         ledger.push({ id: seedId("led", `${p.key}:${k}`), journalId, paymentId, createdAt: at, ...e });
-      entry("inflow", { kind: "inflow", debitAccount: collection, creditAccount: `trader:${traderId}`, amountKobo: amount });
-      entry("fee", { kind: "fee", debitAccount: "bank_fees", creditAccount: collection, amountKobo: seededFeeKobo });
+      entry("inflow", { kind: "inflow", debitAccount: collection, creditAccount: accounts.trader(traderId), amountKobo: amount });
+      entry("fee", { kind: "fee", debitAccount: accounts.bankFees, creditAccount: collection, amountKobo: seededFeeKobo });
       for (const c of covers) {
         entry(`alloc:${c.key}`, {
           kind: "allocation",
-          debitAccount: `trader:${traderId}`,
+          debitAccount: accounts.trader(traderId),
           creditAccount: revenue,
           amountKobo: c === ahead ? c.levy.amountKobo : paid,
           obligationId: seedId("obl", c.key),
         });
       }
-      // Temporary receipt number; T6 replaces it with src/core/receipts.
-      const number = `LP-${seedHex(`receipt:${p.key}`, 8).toUpperCase()}`;
+      const number = newReceiptNumber(() => seedHash(`receipt:${p.key}`));
       receipts.push({
         id: seedId("rcp", p.key),
         number,

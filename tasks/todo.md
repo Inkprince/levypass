@@ -45,9 +45,10 @@ M = 3 to 5, L = 5 to 8.
   - Seed: one authority, one market, two levy types (daily ₦500, weekly ₦2,000), 40 synthetic traders with mixed payment history, 3 officers, 1 admin.
   - Verify: a test proves the trigger rejects an update; `npm run db:seed` is repeatable.
   - Verified 10 Nov: `ledger.db.test.ts` (13 tests) shows UPDATE, DELETE and TRUNCATE rejected, the four unique indexes enforced, a second seed inserting 0 rows, and ledger revenue equal to obligations paid. Dev DB: second `db:seed` inserted 0; a hand `UPDATE` failed with "append-only". Seed period maths is inline until T6.
-- [ ] **T6 Core domain, test first.** (M, after T1)
+- [x] **T6 Core domain, test first.** (M, after T1)
   - `src/core`: money (kobo ↔ NGN string), periods in Africa/Lagos, obligation generation, allocation (oldest unpaid first, overpayment to future periods, part payment), double-charge detection, receipt numbers, Ed25519 token sign and verify.
   - Verify: `npm test` covers exact pay, part pay, overpay, pay ahead, second payment for a paid period, the 23:30 and 00:30 Lagos boundary, and a tampered token.
+  - Verified 10 Nov: tests written first and seen failing; now 123 pass (99 in `src/core`), covering every case listed. Swapping `lagosDate` to UTC fails 6 tests. Seed now uses `src/core` periods, receipt numbers and account names; dev DB rebuilt and reseeded twice (second run inserted 0).
 - [ ] **T7 BankPort and adapters.** (M, after T4 and T6)
   - `BankPort` interface; `fake` adapter with deterministic behaviour and trigger amounts; `xtradot` adapter with one shared rate limiter, timeouts, `Idempotency-Key` persisted in `bank_calls` before the call, Zod-parsed responses, `request_id` logged, 504 mapped to `unknown` and never retried as a new POST.
   - Verify: tests show a replayed key returns the original result, a timeout leads to requery, and the limiter never exceeds 60 a minute; in the cluster, a balance call succeeds through the adapter.
