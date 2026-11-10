@@ -39,11 +39,12 @@ M = 3 to 5, L = 5 to 8.
 
 ## Phase 2: Money core
 
-- [ ] **T5 Schema and seed.** (M, after T2)
+- [x] **T5 Schema and seed.** (M, after T2)
   - Tables from PRD 7.2 plus those in the plan. Unique indexes: obligation `(trader_id, levy_type_id, period_start)`; payment `(provider, provider_ref)`; `webhook_events.event_id`; receipt number.
   - A trigger rejects `UPDATE` and `DELETE` on `ledger_entries`.
   - Seed: one authority, one market, two levy types (daily ₦500, weekly ₦2,000), 40 synthetic traders with mixed payment history, 3 officers, 1 admin.
   - Verify: a test proves the trigger rejects an update; `npm run db:seed` is repeatable.
+  - Verified 10 Nov: `ledger.db.test.ts` (13 tests) shows UPDATE, DELETE and TRUNCATE rejected, the four unique indexes enforced, a second seed inserting 0 rows, and ledger revenue equal to obligations paid. Dev DB: second `db:seed` inserted 0; a hand `UPDATE` failed with "append-only". Seed period maths is inline until T6.
 - [ ] **T6 Core domain, test first.** (M, after T1)
   - `src/core`: money (kobo ↔ NGN string), periods in Africa/Lagos, obligation generation, allocation (oldest unpaid first, overpayment to future periods, part payment), double-charge detection, receipt numbers, Ed25519 token sign and verify.
   - Verify: `npm test` covers exact pay, part pay, overpay, pay ahead, second payment for a paid period, the 23:30 and 00:30 Lagos boundary, and a tampered token.
