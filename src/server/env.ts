@@ -17,6 +17,9 @@ export const envSchema = z
     GATEWAY_KEY: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
     QR_SIGNING_KEY: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
     SESSION_SECRET: z.preprocess(emptyToUndefined, z.string().min(32).optional()),
+    BANK_MERCHANT_ID: z.string().min(1).default("mer_204"),
+    WEBHOOK_URL: z.url().default("http://app.team13.svc.cluster.local/api/webhooks/bank"),
+    POLLER: z.enum(["on", "off"]).default("on"),
   })
   .superRefine((env, ctx) => {
     if (env.BANK_ADAPTER === "xtradot" && !env.GATEWAY_KEY) {

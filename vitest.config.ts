@@ -33,6 +33,7 @@ export default defineConfig({
           include: ["src/**/*.db.test.ts", "scripts/**/*.db.test.ts"],
           environment: "node",
           globalSetup: ["src/test/db-global-setup.ts"],
+          setupFiles: ["src/test/db-env.ts"],
           // One database: run files one after another.
           fileParallelism: false,
           testTimeout: 20_000,

@@ -28,9 +28,13 @@ describe("seed", () => {
     first = await seed(db, { now });
   });
 
-  it("creates the demo data set", () => {
-    expect(first).toMatchObject({ authorities: 1, markets: 1, levy_types: 2, traders: 40, officers: 3, admins: 1 });
-    expect(first.ledger_entries).toBeGreaterThan(0);
+  it("creates the demo data set", async () => {
+    expect(first).toBeDefined(); // other test files may have seeded first, so count the tables instead
+    const counts = await db.execute<{ t: string; n: number }>(sql`
+      SELECT 'authorities' AS t, count(*)::int AS n FROM authorities UNION ALL SELECT 'markets', count(*)::int FROM markets
+      UNION ALL SELECT 'levy_types', count(*)::int FROM levy_types UNION ALL SELECT 'officers', count(*)::int FROM officers
+      UNION ALL SELECT 'admins', count(*)::int FROM admins UNION ALL SELECT 'seeded_traders', count(*)::int FROM traders WHERE phone LIKE '+234700000%'`);
+    expect(Object.fromEntries(counts.rows.map((r) => [r.t, r.n]))).toEqual({ authorities: 1, markets: 1, levy_types: 2, officers: 3, admins: 1, seeded_traders: 40 });
   });
 
   it("is repeatable: a second run inserts nothing", async () => {
@@ -47,7 +51,8 @@ describe("seed", () => {
   it("has a mix of paid, due and part-paid obligations today", async () => {
     const rows = await db.execute<{ status: string; n: number }>(sql`
       SELECT o.status, count(*)::int AS n FROM obligations o JOIN levy_types l ON l.id = o.levy_type_id
-      WHERE l.period = 'daily' AND o.period_start <= ${now} AND o.period_end > ${now} GROUP BY o.status`);
+      JOIN traders t ON t.id = o.trader_id
+      WHERE l.period = 'daily' AND t.phone LIKE '+234700000%' AND o.period_start <= ${now} AND o.period_end > ${now} GROUP BY o.status`);
     const byStatus = Object.fromEntries(rows.rows.map((r) => [r.status, r.n]));
     expect(byStatus).toEqual({ paid: 24, due: 12, part_paid: 4 });
   });

@@ -555,3 +555,10 @@ export const sessions = pgTable(
   },
   (t) => [index().on(t.subjectType, t.subjectId)],
 );
+
+/** Small key-value store for runtime settings, such as the bank webhook secret (shown once at registration). */
+export const appSettings = pgTable("app_settings", {
+  key: text().primaryKey(),
+  value: text().notNull(),
+  updatedAt: tstz().notNull().defaultNow(),
+});
