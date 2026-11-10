@@ -13,7 +13,7 @@ export const envSchema = z
     BANK_ADAPTER: z.enum(["fake", "xtradot"]).default("fake"),
     BANK_API_BASE_URL: z.url().default("http://bank-api.ingress-apisix.svc.cluster.local/v1"),
     MAAS_BASE_URL: z.preprocess(emptyToUndefined, z.url().optional()),
-    MAAS_MODEL: z.string().min(1).default("glm-5.3"),
+    MAAS_MODEL: z.string().min(1).default("deepseek-v4.1-flash"),
     GATEWAY_KEY: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
     QR_SIGNING_KEY: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
     SESSION_SECRET: z.preprocess(emptyToUndefined, z.string().min(32).optional()),

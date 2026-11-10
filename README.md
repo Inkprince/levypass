@@ -90,7 +90,7 @@ with PIN `1357`. Seeded traders use phone numbers `+2347000000101` to `+23470000
 - Synthetic data only. The authority, market and people are invented.
 - The collection merchant is the sandbox's `mer_204`. Per-trader virtual accounts work in the sandbox but their
   money never reaches settlement, so payments go through checkouts (details in `docs/bank-api-notes.md`).
-- Huawei MaaS rejected our team key during the build. Complaint triage falls back to keyword rules and says so.
+- Complaint triage uses Huawei MaaS `deepseek-v4.1-flash` (about 1 s). If a model call fails, keyword rules take over and the screen says so.
 - SMS and USSD run through the built-in simulator. Going live is an adapter swap (Africa's Talking shape).
 
 Plan and decisions: `tasks/plan.md`. Sandbox facts: `docs/forge-platform.md`. Recorded bank shapes:

@@ -40,7 +40,7 @@ Base URL `http://bank-api.ingress-apisix.svc.cluster.local/v1`, header `x-api-ke
    302 to `centrictech.cloudflareaccess.com/.../login/team13.xtradot.co`, from a Mac and from a pod. The guide
    says the URL is public. Until the organisers open it, a judge's phone cannot reach `/v/t/<token>` and T3's
    check (`/healthz` 200 from outside) cannot pass. **Raise with the organisers.**
-8. **Huawei MaaS rejects the team key.** Every call returns 401 `ModelArts.81003 Invalid authorization header`
+8. **Huawei MaaS rejected the team key (fixed 10 Nov evening, see Huawei MaaS below).** Every call returns 401 `ModelArts.81003 Invalid authorization header`
    from upstream, for `glm-5.3`, `glm-5.2` and `deepseek-v4.1-flash`, with or without `Authorization: Bearer
    unused`, while the same key works for the bank. The gateway does not seem to inject our Huawei key.
    Request IDs for support: `bbaf024510284f7abd97421d2ef91f1b`, `c046b2c2ca81541e28f8703d72ce1708`,
@@ -249,6 +249,16 @@ Payment webhooks carry no fee: the fee comes only from verify.
 
 Same result with `Authorization: Bearer unused` added and for models `glm-5.3`, `glm-5.2`, `deepseek-v4.1-flash`.
 See finding 8.
+
+**Update 10 Nov, 21:40 Lagos: the organisers fixed the key.** From the app pod, `GET /models` is 200 and lists
+`deepseek-v4-flash`, `glm-5.1`, `glm-5.2`, `glm-5.3`, `deepseek-v4.1-flash`, `deepseek-v4.1-flash-1017`.
+
+- `glm-5.3` rejects `chat_template_kwargs: { thinking: false }` with 400 `ModelArts.81001 unsupported thinking
+  type for the current model: disabled` (also for `thinking: {type: "disabled"}`). Without it, it always returns
+  `reasoning_content`. It cannot meet the "thinking off" rule.
+- Every other listed model accepts `thinking: false` and returns `content` with no `reasoning_content`.
+- With our triage prompt, `deepseek-v4.1-flash` took 0.8 to 1.3 s and classified English, Pidgin and Yoruba
+  complaints correctly. `glm-5.2` gave the same answers in 4 to 5 s. **We use `deepseek-v4.1-flash`.**
 
 ## Design consequences (for the team to confirm)
 
