@@ -20,6 +20,11 @@ export const envSchema = z
     BANK_MERCHANT_ID: z.string().min(1).default("mer_204"),
     WEBHOOK_URL: z.url().default("http://app.team13.svc.cluster.local/api/webhooks/bank"),
     POLLER: z.enum(["on", "off"]).default("on"),
+    // Rebuild schema and synthetic seed when the database is found empty (cluster only, see jobs/self-heal.ts).
+    AUTO_SEED: z.enum(["on", "off"]).default("off"),
+    MIGRATIONS_DIR: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
+    SEED_ADMIN_PASSWORD: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
+    SEED_OFFICER_PIN: z.preprocess(emptyToUndefined, z.string().min(1).optional()),
   })
   .superRefine((env, ctx) => {
     if (env.BANK_ADAPTER === "xtradot" && !env.GATEWAY_KEY) {

@@ -45,6 +45,7 @@ spec:
             - { name: WEBHOOK_URL, value: http://app.team13.svc.cluster.local/api/webhooks/bank }
             - { name: MAAS_BASE_URL, value: http://huawei-maas.ingress-apisix.svc.cluster.local/openai/v1 }
             - { name: NODE_OPTIONS, value: --max-old-space-size=384 }
+            - { name: AUTO_SEED, value: "on" } # Postgres has no volume yet: rebuild demo data if it comes back empty
           envFrom:
             - secretRef: { name: huawei-gateway } # GATEWAY_KEY; never printed or logged
             - secretRef: { name: levypass-app }

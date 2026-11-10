@@ -1,15 +1,17 @@
 import "server-only";
 import { and, asc, eq, gt, inArray, isNull, lt, sql } from "drizzle-orm";
-import { db } from "@/server/db/client";
+import { db, pool } from "@/server/db/client";
 import * as s from "@/server/db/schema";
 import { errorFields, log } from "@/server/log";
 import { settlePayment } from "@/server/payments/settle";
 import { ensureWebhook } from "@/server/payments/webhook-setup";
 import { triageComplaint } from "@/server/ai/triage";
 import { ensureObligations } from "@/server/levy/obligations";
+import { env } from "@/server/env";
+import { ensureDemoData } from "./self-heal";
 
 // In-process poller (plan: no Redis). One replica, so one loop. Every tick:
-// 1. self-heal the webhook, 2. requery payments still pending or unknown (PY-04, rule 5),
+// 0. with AUTO_SEED=on, rebuild an emptied database, 1. self-heal the webhook, 2. requery payments still pending or unknown (PY-04, rule 5),
 // 3. deliver queued SMS to the simulator inbox, 4. run queued jobs (AI triage).
 
 const g = globalThis as unknown as { levypassPoller?: { timer: NodeJS.Timeout; running: boolean } };
@@ -27,6 +29,7 @@ export async function tick(): Promise<void> {
   if (state?.running) return;
   if (state) state.running = true;
   try {
+    await healDemoData();
     await ensureWebhook().catch((e) => log("warn", "poller.webhook_heal_failed", errorFields(e)));
     await requeryPayments();
     await refreshObligations();
@@ -37,6 +40,18 @@ export async function tick(): Promise<void> {
   } finally {
     if (state) state.running = false;
   }
+}
+
+async function healDemoData(): Promise<void> {
+  const e = env();
+  if (e.AUTO_SEED !== "on") return;
+  await ensureDemoData(pool(), {
+    migrationsFolder: e.MIGRATIONS_DIR,
+    adminPassword: e.SEED_ADMIN_PASSWORD,
+    officerPin: e.SEED_OFFICER_PIN,
+    publicBaseUrl: e.PUBLIC_BASE_URL,
+    production: e.NODE_ENV === "production",
+  });
 }
 
 export async function requeryPayments(limit = 4): Promise<number> {
