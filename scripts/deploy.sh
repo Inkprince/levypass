@@ -22,7 +22,14 @@ echo "==> Building $image (linux/amd64)"
 docker buildx build --platform linux/amd64 -f deploy/Dockerfile -t "$image" --push .
 
 echo "==> Postgres"
-kubectl apply -f deploy/postgres.yaml
+if [[ "${PG_EPHEMERAL:-}" == 1 ]]; then
+  # Fallback while the cluster cannot provision volumes: data lives on the pod's scratch disk and is
+  # lost when the Postgres pod restarts. Re-seed afterwards (kubectl exec deploy/app -- node dist/seed.mjs).
+  echo "WARNING: PG_EPHEMERAL=1, Postgres data is lost if its pod restarts." >&2
+  sed 's|persistentVolumeClaim: { claimName: postgres-data }|emptyDir: { sizeLimit: 1Gi }|' deploy/postgres.yaml | kubectl apply -f -
+else
+  kubectl apply -f deploy/postgres.yaml
+fi
 kubectl rollout status deployment/postgres --timeout=180s
 
 echo "==> App"
