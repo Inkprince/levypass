@@ -39,7 +39,7 @@ export default async function ReconciliationPage({ searchParams }: { searchParam
         actions={
           <>
             <form className="flex items-center gap-2">
-              <input type="date" name="date" defaultValue={date} aria-label="Day" className={`${inputClass} min-h-11 w-auto rounded-full px-4 text-[14px]`} />
+              <input type="date" name="date" defaultValue={date} aria-label="Day" className={`${inputClass} min-h-11 w-auto px-4 text-[14px]`} />
               <button className={buttonClass("outline")}>Show</button>
             </form>
             <form action={runSettlement}>

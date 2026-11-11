@@ -29,18 +29,18 @@ function Settled({ id }: { id: string }) {
     return () => clearInterval(t);
   }, [id]);
   return done ? (
-    <li className="animate-pop flex gap-2.5 rounded-xl bg-go-bg px-3 py-2.5 font-semibold text-go-fg">
+    <li className="animate-pop flex gap-2.5 bg-go-bg px-3 py-2.5 font-semibold text-go-fg">
       <Icon name="check" size={16} stroke={2.6} className="mt-0.5" /> LevyPass: the poller asked the bank, verified the payment and settled it after {secs} s. No webhook needed.
     </li>
   ) : (
-    <li className="flex items-center gap-2.5 rounded-xl bg-warn-bg px-3 py-2.5 text-warn-fg">
+    <li className="flex items-center gap-2.5 bg-warn-bg px-3 py-2.5 text-warn-fg">
       <span className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-warn-fg/30 border-t-warn-fg" aria-hidden="true" /> Waiting for the safety net... {secs} s
     </li>
   );
 }
 
 const whoStyle: Record<string, string> = {
-  bank: "bg-mist-2 text-ink-2",
+  bank: "bg-paper text-ink-2",
   levypass: "bg-forest text-lime",
 };
 
@@ -51,9 +51,9 @@ export function Drills() {
       {scenarios.map(([key, title, blurb, icon]) => {
         const run = runs[key];
         return (
-          <section key={key} className="flex flex-col gap-5 rounded-[var(--radius-card)] border border-line bg-paper p-6">
+          <section key={key} className="flex flex-col gap-5 bg-mist-2 p-6">
             <div className="flex items-start gap-4">
-              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-mist-2 text-forest">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center border-[1.5px] border-ink bg-paper text-ink">
                 <Icon name={icon} size={20} />
               </span>
               <div>
@@ -82,7 +82,7 @@ export function Drills() {
               )}
             </button>
             {run && run !== "running" ? (
-              <ol className="flex flex-col gap-2.5 border-t border-line pt-5 text-[14px]">
+              <ol className="flex flex-col gap-2.5 border-t border-ink/15 pt-5 text-[14px]">
                 {run.steps.map((s, i) => (
                   <li key={i} className="animate-fadein flex gap-3" style={{ animationDelay: `${i * 150}ms` }}>
                     <span className={`mt-px h-fit shrink-0 rounded-md px-1.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ${whoStyle[s.who] ?? "bg-warn-bg text-warn-fg"}`}>{s.who}</span>

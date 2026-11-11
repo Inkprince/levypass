@@ -8,6 +8,10 @@
 @theme inline {
   --font-sans: var(--font-jakarta), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: ui-monospace, "SFMono-Regular", "SF Mono", Menlo, Consolas, monospace;
+}
+
+/* Colours are real CSS variables so a scope (the desk) can re-tint them. */
+@theme static {
 
   --color-ink: #0c1c15;
   --color-ink-2: #4a5952;
@@ -51,6 +55,28 @@
 
 :root {
   color-scheme: light;
+  /* Shape and surface knobs. Public pages are soft and rounded; staff desks override them. */
+  --radius-btn: 9999px;
+  --radius-input: 12px;
+  --radius-chip: 9999px;
+  --card-bg: var(--color-paper);
+  --card-border: var(--color-line);
+}
+
+/*
+ * The desk: revenue office and officer screens, after the Kalimo dashboard.
+ * Cream ground, sand panels without borders, square corners, ink type.
+ */
+.desk {
+  --radius-card: 0px;
+  --radius-btn: 0px;
+  --radius-input: 0px;
+  --radius-chip: 0px;
+  --card-bg: var(--color-mist-2);
+  --card-border: transparent;
+  --color-line: #ddd3bd;
+  --color-line-2: #c9bda3;
+  background: var(--color-mist);
 }
 
 html {

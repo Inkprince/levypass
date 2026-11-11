@@ -16,15 +16,18 @@ export const adminNav: [string, string, IconName][] = [
 
 const isActive = (path: string, href: string) => (href === "/admin" ? path === "/admin" : path.startsWith(href));
 
+/** Kalimo sidebar: roomy rows, forest icons; the current page gets a lime square and bold label. */
 export function SideNav() {
   const path = usePathname();
   return (
-    <nav className="flex flex-col gap-0.5">
+    <nav className="flex flex-col gap-1">
       {adminNav.map(([href, label, icon]) => {
         const on = isActive(path, href);
         return (
-          <Link key={href} href={href} aria-current={on ? "page" : undefined} className={`flex items-center gap-3 rounded-xl px-3 py-2 text-[14px] font-medium transition-colors ${on ? "bg-fill text-ink" : "text-ink-2 hover:bg-fill hover:text-ink"}`}>
-            <Icon name={icon} size={18} className={on ? "text-forest" : "text-ink-3"} />
+          <Link key={href} href={href} aria-current={on ? "page" : undefined} className={`-mx-2 flex items-center gap-3.5 px-2 py-2.5 text-[15px] transition-colors ${on ? "font-semibold text-ink" : "text-ink-2 hover:text-ink"}`}>
+            <span className={`flex h-8 w-8 items-center justify-center ${on ? "border-2 border-ink bg-lime text-ink" : "text-forest"}`}>
+              <Icon name={icon} size={18} stroke={on ? 2.2 : 1.8} />
+            </span>
             {label}
           </Link>
         );
@@ -40,7 +43,7 @@ export function TabNav() {
       {adminNav.map(([href, label]) => {
         const on = isActive(path, href);
         return (
-          <Link key={href} href={href} aria-current={on ? "page" : undefined} className={`shrink-0 rounded-full px-3.5 py-1.5 text-[13px] font-semibold ${on ? "bg-forest text-white" : "bg-fill text-ink-2"}`}>
+          <Link key={href} href={href} aria-current={on ? "page" : undefined} className={`shrink-0 px-3.5 py-2 text-[13px] font-semibold ${on ? "bg-forest text-white" : "bg-mist-2 text-ink-2"}`}>
             {label}
           </Link>
         );

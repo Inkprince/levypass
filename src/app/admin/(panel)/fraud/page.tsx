@@ -62,7 +62,7 @@ export default async function FraudPage() {
             <Card key={f.id} className="animate-fadein flex flex-col gap-3">
               <div className="flex items-start justify-between gap-3">
                 <span className="flex items-center gap-3">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-warn-bg text-warn-fg">
+                  <span className="flex h-10 w-10 items-center justify-center border-[1.5px] border-ink bg-paper text-ink">
                     <Icon name={flagIcon[f.type] ?? "flag"} size={17} />
                   </span>
                   <span className="font-semibold">{label[f.type] ?? f.type}</span>
@@ -88,7 +88,7 @@ export default async function FraudPage() {
                       ? "Someone checked a receipt number that LevyPass never issued."
                       : ""}
               </p>
-              <div className="mt-auto border-t border-line pt-3">
+              <div className="mt-auto border-t border-ink/15 pt-3">
                 <Close kind="flag" id={f.id} />
               </div>
             </Card>
@@ -115,7 +115,7 @@ export default async function FraudPage() {
                 {officer ? `About officer ${officer}. ` : ""}
                 {c.triageSource ? `Summary by ${c.triageSource === "model" ? "Huawei MaaS" : "keyword rules (model unavailable)"}, language: ${c.triageLanguage}.` : ""}
               </p>
-              <div className="mt-auto border-t border-line pt-3">
+              <div className="mt-auto border-t border-ink/15 pt-3">
                 <Close kind="complaint" id={c.id} />
               </div>
             </Card>
@@ -157,9 +157,9 @@ export default async function FraudPage() {
 
 function SectionTitle({ children, count }: { children: React.ReactNode; count: number }) {
   return (
-    <h2 className="mb-4 flex items-center gap-2 text-[17px] font-semibold tracking-[-0.02em]">
+    <h2 className="mb-5 flex items-center gap-3 border-t border-line pt-8 text-[28px] font-medium tracking-[-0.045em]">
       {children}
-      <span className="rounded-full bg-mist-2 px-2 py-0.5 text-[12px] font-semibold text-ink-2 tnum">{count}</span>
+      <span className="bg-mist-2 px-2 py-0.5 text-[12px] font-semibold text-ink-2 tnum">{count}</span>
     </h2>
   );
 }

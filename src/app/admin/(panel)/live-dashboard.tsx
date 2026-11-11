@@ -1,26 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useRef, useState } from "react";
-import { Icon, type IconName, PageHeader, channelLabel } from "@/app/_ui/kit";
+import { useEffect, useRef, useState, type ReactNode } from "react";
+import { IlloBadge, IlloCoins, IlloStall } from "@/app/_ui/illustrations";
+import { Icon, type IconName, Tag, buttonClass, channelLabel } from "@/app/_ui/kit";
 import type { Summary } from "@/server/admin/summary";
 
 const naira = (k: number) => `₦${(k / 100).toLocaleString("en-NG", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const nairaShort = (k: number) => (k >= 1_000_000_00 ? `₦${(k / 1_000_000_00).toFixed(1)}m` : k >= 1_000_00 ? `₦${(k / 1_000_00).toFixed(1)}k` : `₦${(k / 100).toFixed(0)}`);
 const time = (iso: string) => new Date(iso).toLocaleTimeString("en-NG", { timeZone: "Africa/Lagos", hour: "2-digit", minute: "2-digit", second: "2-digit" });
 const dayLabel = (date: string) => new Date(`${date}T12:00:00Z`).toLocaleDateString("en-NG", { day: "numeric", month: "short", timeZone: "UTC" });
-
-function Panel({ title, aside, children, className = "" }: { title: string; aside?: React.ReactNode; children: React.ReactNode; className?: string }) {
-  return (
-    <section className={`min-w-0 rounded-[var(--radius-card)] border border-line bg-paper p-5 sm:p-6 ${className}`}>
-      <div className="mb-5 flex items-center justify-between gap-3">
-        <h2 className="text-[15px] font-semibold tracking-[-0.01em]">{title}</h2>
-        {aside}
-      </div>
-      {children}
-    </section>
-  );
-}
+const lagosHour = (iso: string) => Number(new Date(iso).toLocaleString("en-GB", { timeZone: "Africa/Lagos", hour: "2-digit", hour12: false }));
+const greeting = (iso: string) => {
+  const h = lagosHour(iso);
+  return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
+};
+const channelIcon = (c: string): IconName => (c === "ussd" ? "hash" : c === "card" ? "card" : "transfer");
 
 export function LiveDashboard({ initial }: { initial: Summary }) {
   const [d, setD] = useState(initial);
@@ -43,166 +38,178 @@ export function LiveDashboard({ initial }: { initial: Summary }) {
   const totalTraders = d.compliance.reduce((x, c) => x + c.traders, 0);
   const totalPaid = d.compliance.reduce((x, c) => x + c.paid, 0);
   const rate = totalTraders ? Math.round((totalPaid / totalTraders) * 100) : 0;
+  const today = d.collected.day > 0;
 
   return (
-    <div className="flex flex-col gap-6">
-      <PageHeader
-        title="Collections"
-        lead="Recomputed from the append-only ledger every 3 seconds. Fees are the amounts the bank reported."
-        actions={
-          <p className="inline-flex items-center gap-2 rounded-full border border-line bg-paper px-3 py-1.5 text-[13px] font-medium text-ink-2">
-            <span className="relative flex h-2 w-2" aria-hidden="true">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-go opacity-60" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-go" />
-            </span>
-            Live · <span className="tnum">{time(d.asOf)}</span>
-          </p>
-        }
-      />
-
-      {/* KPI band: one hero figure, three supporting ones, split by hairlines. */}
-      <section className="grid overflow-hidden rounded-[var(--radius-card)] border border-line bg-line [grid-gap:1px] sm:grid-cols-2 xl:grid-cols-[1.4fr_1fr_1fr_1fr]">
-        <div key={flash} className={`bg-paper p-6 sm:col-span-2 xl:col-span-1 ${flash ? "animate-flash" : ""}`}>
-          <p className="text-[13px] font-medium text-ink-2">Collected today</p>
-          <p className="money mt-2 text-[40px] leading-none sm:text-[48px]">{naira(d.collected.day)}</p>
-          <p className="mt-3 text-[13px] text-ink-3">
-            {d.paymentsDay} payments · bank fees {naira(d.feesDay)}
-          </p>
-        </div>
-        <Kpi label="This week" value={naira(d.collected.week)} />
-        <Kpi label="This month" value={naira(d.collected.month)} />
-        <div className="bg-paper p-6">
-          <p className="text-[13px] font-medium text-ink-2">Traders paid today</p>
-          <p className="money mt-2 text-[28px] leading-none">{rate}%</p>
-          <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-mist-2" role="progressbar" aria-valuenow={rate} aria-valuemin={0} aria-valuemax={100} aria-label="Traders paid today">
-            <div className="h-full rounded-full bg-forest transition-all duration-700" style={{ width: `${rate}%` }} />
+    <div className="-mx-4 -my-8 sm:-mx-6 lg:-mx-10 lg:-my-10 2xl:-mx-14">
+      {/* Hero panel */}
+      <section className="relative overflow-hidden bg-mist-2 px-4 py-8 sm:px-6 lg:mx-10 lg:mt-10 lg:px-10 lg:py-10 2xl:mx-14">
+        <svg className="pointer-events-none absolute inset-0 hidden h-full w-full lg:block" viewBox="0 0 1000 400" preserveAspectRatio="none" aria-hidden="true">
+          <path className="lp-draw" pathLength={1} d="M520 -10 C 560 160, 700 300, 1010 330" fill="none" stroke="#0f3d2e" strokeOpacity="0.35" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
+        </svg>
+        <div className="relative grid gap-8 xl:grid-cols-[1fr_auto] xl:items-center">
+          <div>
+            <div className="flex flex-wrap items-center gap-3">
+              <p className="text-[16px] text-ink">{greeting(d.asOf)}, revenue office.</p>
+              <span className="inline-flex items-center gap-2 bg-paper px-2.5 py-1 text-[12px] font-medium text-ink-2">
+                <span className="relative flex h-2 w-2" aria-hidden="true">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-go opacity-60" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-go" />
+                </span>
+                Live · <span className="tnum">{time(d.asOf)}</span>
+              </span>
+            </div>
+            <h1 key={flash} className={`mt-5 max-w-[15ch] text-[44px] font-medium leading-[0.98] tracking-[-0.055em] sm:text-[60px] ${flash ? "animate-flash" : ""}`}>
+              <span className="tnum">{naira(today ? d.collected.day : d.collected.month)}</span> collected {today ? "today" : "this month"}
+            </h1>
+            <p className="mt-4 max-w-xl text-[16px] text-ink-2">
+              {d.paymentsDay} payments today, bank fees {naira(d.feesDay)}. Recomputed from the append-only ledger every 3 seconds.
+            </p>
+            <div className="mt-7 flex flex-wrap gap-2">
+              <Link href="/admin/reconciliation" className={buttonClass("primary", "lg", "pr-5")}>
+                Reconcile with the bank
+                <Icon name="arrowUpRight" size={15} stroke={2.4} />
+              </Link>
+              <Link href="/admin/fraud" className={buttonClass("outline", "lg")}>
+                Review flags
+              </Link>
+            </div>
           </div>
-          <p className="mt-2 text-[13px] text-ink-3">
-            {totalPaid} of {totalTraders} traders
-          </p>
+          <div className="grid gap-3 sm:grid-cols-3 xl:w-[620px]">
+            <HeroTile n="01" label="This week" value={naira(d.collected.week)} tone="cream" art={<IlloCoins className="h-[96px] w-auto" />} />
+            <HeroTile n="02" label="Traders paid today" value={`${rate}%`} sub={`${totalPaid} of ${totalTraders}`} tone="lime" art={<IlloStall className="h-[96px] w-auto" />} />
+            <HeroTile n="03" label="Officer scans today" value={String(d.open.scansToday)} tone="forest" art={<IlloBadge className="h-[96px] w-auto" />} />
+          </div>
         </div>
       </section>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Panel title="Collections, last 14 days" aside={<span className="text-[12px] text-ink-3">Lagos days</span>} className="lg:col-span-2">
-          <Chart days={d.days} />
-        </Panel>
-        <div className="flex min-w-0 flex-col gap-6">
-          <Panel title="Compliance today">
-            <div className="flex flex-col gap-4">
-              {d.compliance.map((c) => (
-                <div key={c.market}>
-                  <div className="flex justify-between gap-3 text-[14px]">
-                    <span className="truncate text-ink-2">{c.market}</span>
-                    <span className="font-semibold tnum">{Math.round(c.rate * 100)}%</span>
-                  </div>
-                  <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-mist-2">
-                    <div className="h-full rounded-full bg-forest transition-all duration-700" style={{ width: `${Math.round(c.rate * 100)}%` }} />
-                  </div>
-                </div>
-              ))}
-              {d.compliance.length === 0 ? <p className="text-[14px] text-ink-3">No active traders yet.</p> : null}
+      {/* Main column and right rail */}
+      <div className="mt-10 grid lg:grid-cols-[1fr_340px] 2xl:grid-cols-[1fr_380px]">
+        <div className="min-w-0 border-t border-line px-4 sm:px-6 lg:pl-10 lg:pr-10 2xl:pl-14">
+          <section className="py-9">
+            <div className="flex flex-wrap items-baseline justify-between gap-3">
+              <div>
+                <p className="text-[14px] text-ink-2">Last 14 days, Lagos time</p>
+                <h2 className="mt-1 text-[28px] font-medium tracking-[-0.045em]">Collections</h2>
+              </div>
+              <p className="text-[14px] text-ink-2">
+                This month <span className="font-semibold text-ink tnum">{naira(d.collected.month)}</span>
+              </p>
             </div>
-          </Panel>
-          <Panel title="Revenue by levy, today">
-            <dl className="divide-y divide-line text-[14px]">
-              {d.byLevy.map((l) => (
-                <div key={l.levy} className="flex justify-between gap-3 py-2.5 first:pt-0 last:pb-0">
-                  <dt className="text-ink-2">{l.levy}</dt>
-                  <dd className="font-semibold tnum">{naira(l.kobo)}</dd>
-                </div>
+            <div className="mt-7">
+              <Chart days={d.days} />
+            </div>
+          </section>
+
+          <section className="border-t border-line py-9">
+            <div className="flex flex-wrap items-baseline justify-between gap-3">
+              <h2 className="text-[28px] font-medium tracking-[-0.045em]">Latest confirmed payments</h2>
+              <span className="text-[14px] text-ink-2">Verified with the bank</span>
+            </div>
+            <ol className="mt-6 flex flex-col">
+              {d.recent.map((p, i) => (
+                <li key={p.id} className="animate-fadein grid grid-cols-[48px_1fr_auto] items-center gap-4 py-2.5 sm:grid-cols-[48px_1fr_1fr_auto]">
+                  <span className="relative flex h-12 w-12 items-center justify-center border-[1.5px] border-ink bg-paper">
+                    <Icon name={channelIcon(p.channel)} size={18} />
+                    {i < d.recent.length - 1 ? <span className="absolute left-1/2 top-full h-5 w-[1.5px] -translate-x-1/2 bg-ink/25" aria-hidden="true" /> : null}
+                  </span>
+                  <span className="min-w-0">
+                    <span className="flex items-center gap-2 text-[16px] font-medium tracking-[-0.02em]">
+                      <span className="truncate">{p.name}</span>
+                      {p.flagged ? <Tag tone="warn">Flagged</Tag> : null}
+                    </span>
+                    <span className="text-[13px] text-ink-2">
+                      {channelLabel(p.channel)} · <span className="tnum">{time(p.at)}</span>
+                    </span>
+                  </span>
+                  <span className="hidden text-[13px] text-ink-2 sm:block">
+                    {p.receipt ? (
+                      <a className="font-mono text-ink hover:underline" href={`/r/${p.receipt}`}>
+                        {p.receipt}
+                      </a>
+                    ) : null}
+                    <span className="block">bank fee {naira(p.feeKobo)}</span>
+                  </span>
+                  <span className="text-right text-[17px] font-semibold tracking-[-0.02em] tnum">{naira(p.amountKobo)}</span>
+                </li>
               ))}
-            </dl>
-          </Panel>
+              {d.recent.length === 0 ? <li className="border-[1.5px] border-dashed border-line-2 p-6 text-[15px] text-ink-2">No confirmed payments yet.</li> : null}
+            </ol>
+          </section>
         </div>
-      </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Panel title="Latest confirmed payments" className="lg:col-span-2">
-          <div className="-mx-5 overflow-x-auto sm:-mx-6">
-            <table className="w-full min-w-[560px] text-[14px]">
-              <thead>
-                <tr className="border-b border-line text-left text-[12px] text-ink-3">
-                  <th className="py-2 pl-5 pr-4 font-medium sm:pl-6">Time</th>
-                  <th className="font-medium">Trader</th>
-                  <th className="font-medium">Channel</th>
-                  <th className="text-right font-medium">Amount</th>
-                  <th className="pr-5 text-right font-medium sm:pr-6">Receipt</th>
-                </tr>
-              </thead>
-              <tbody>
-                {d.recent.map((p) => (
-                  <tr key={p.id} className="animate-fadein border-b border-line last:border-0">
-                    <td className="py-3 pl-5 pr-4 text-ink-3 tnum sm:pl-6">{time(p.at)}</td>
-                    <td className="font-medium">
-                      <span className="flex items-center gap-2">
-                        {p.name}
-                        {p.flagged ? (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-warn-bg px-2 py-0.5 text-[11px] font-semibold text-warn-fg">
-                            <Icon name="flag" size={12} stroke={2.2} />
-                            Flagged
-                          </span>
-                        ) : null}
-                      </span>
-                    </td>
-                    <td>
-                      <span className="rounded-full bg-mist-2 px-2 py-0.5 text-[12px] font-medium text-ink-2">{channelLabel(p.channel)}</span>
-                    </td>
-                    <td className="text-right font-semibold tnum">{naira(p.amountKobo)}</td>
-                    <td className="pr-5 text-right sm:pr-6">
-                      {p.receipt ? (
-                        <a className="font-mono text-[12px] text-forest hover:underline" href={`/r/${p.receipt}`}>
-                          {p.receipt}
-                        </a>
-                      ) : null}
-                    </td>
-                  </tr>
-                ))}
-                {d.recent.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-6 py-6 text-ink-3">
-                      No confirmed payments yet.
-                    </td>
-                  </tr>
-                ) : null}
-              </tbody>
-            </table>
+        <aside className="border-t border-line px-4 py-9 sm:px-6 lg:border-l lg:px-8">
+          <h2 className="text-[28px] font-medium tracking-[-0.045em]">Needs attention</h2>
+          <div className="mt-6 flex flex-col gap-2.5">
+            <RailCard href="/admin/fraud" title="Open fraud flags" value={d.open.flags} tag={<Tag tone={d.open.flags ? "warn" : "paid"}>{d.open.flags ? "Review" : "Clear"}</Tag>} />
+            <RailCard href="/admin/fraud" title="Open complaints" value={d.open.complaints} tag={<Tag tone={d.open.complaints ? "warn" : "paid"}>{d.open.complaints ? "Waiting" : "Clear"}</Tag>} />
+            <RailCard href="/admin/fraud" title="Money to review" value={d.open.review} tag={<Tag tone={d.open.review ? "unpaid" : "paid"}>{d.open.review ? "Unmatched" : "All matched"}</Tag>} />
           </div>
-        </Panel>
-        <Panel title="Needs attention">
-          <ul className="-my-1 flex flex-col">
-            <Attention href="/admin/fraud" icon="flag" label="Open fraud flags" value={d.open.flags} warn={d.open.flags > 0} />
-            <Attention href="/admin/fraud" icon="message" label="Open complaints" value={d.open.complaints} warn={d.open.complaints > 0} />
-            <Attention href="/admin/fraud" icon="scale" label="Money to review" value={d.open.review} warn={d.open.review > 0} />
-            <Attention href="/admin/officers" icon="scan" label="Officer scans today" value={d.open.scansToday} />
-          </ul>
-        </Panel>
+
+          <h3 className="mt-10 text-[15px] text-ink-2">Compliance today</h3>
+          <div className="mt-3 flex flex-col gap-2.5">
+            {d.compliance.map((c) => (
+              <div key={c.market} className="bg-mist-2 p-5">
+                <div className="flex items-baseline justify-between gap-3">
+                  <span className="text-[16px] font-medium tracking-[-0.02em]">{c.market}</span>
+                  <span className="text-[15px] font-semibold tnum">{Math.round(c.rate * 100)}%</span>
+                </div>
+                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-paper" role="progressbar" aria-valuenow={Math.round(c.rate * 100)} aria-valuemin={0} aria-valuemax={100} aria-label={`${c.market} compliance`}>
+                  <div className="h-full rounded-full bg-forest transition-all duration-700" style={{ width: `${Math.round(c.rate * 100)}%` }} />
+                </div>
+                <p className="mt-2 text-[13px] text-ink-2">
+                  {c.paid} of {c.traders} traders paid
+                </p>
+              </div>
+            ))}
+            {d.compliance.length === 0 ? <p className="text-[14px] text-ink-2">No active traders yet.</p> : null}
+          </div>
+
+          <h3 className="mt-10 text-[15px] text-ink-2">Revenue by levy, today</h3>
+          <dl className="mt-3 bg-mist-2 px-5">
+            {d.byLevy.map((l) => (
+              <div key={l.levy} className="flex justify-between gap-3 border-b border-line py-3.5 text-[15px] last:border-0">
+                <dt>{l.levy}</dt>
+                <dd className="font-semibold tnum">{naira(l.kobo)}</dd>
+              </div>
+            ))}
+          </dl>
+        </aside>
       </div>
     </div>
   );
 }
 
-function Kpi({ label, value }: { label: string; value: string }) {
+const tileTone = {
+  cream: "bg-cream text-ink",
+  lime: "bg-lime text-ink",
+  forest: "bg-forest text-white",
+};
+
+function HeroTile({ n, label, value, sub, tone, art }: { n: string; label: string; value: string; sub?: string; tone: keyof typeof tileTone; art: ReactNode }) {
   return (
-    <div className="bg-paper p-6">
-      <p className="text-[13px] font-medium text-ink-2">{label}</p>
-      <p className="money mt-2 text-[28px] leading-none">{value}</p>
+    <div className={`relative flex min-h-[132px] min-w-0 flex-col overflow-hidden p-4 sm:min-h-[230px] ${tileTone[tone]}`}>
+      <span className="text-[14px] font-medium">{n}</span>
+      <span className="mt-3 text-[15px] font-medium leading-tight tracking-[-0.02em]">{label}</span>
+      <span className="money mt-1 text-[26px] leading-none sm:truncate">{value}</span>
+      {sub ? <span className={`mt-1 text-[12px] ${tone === "forest" ? "text-white/70" : "text-ink/65"}`}>{sub}</span> : null}
+      <span className="absolute bottom-0 right-3 sm:static sm:-mb-2 sm:mt-auto sm:flex sm:justify-end">{art}</span>
     </div>
   );
 }
 
-function Attention({ href, icon, label, value, warn = false }: { href: string; icon: IconName; label: string; value: number; warn?: boolean }) {
+function RailCard({ href, title, value, tag }: { href: string; title: string; value: number; tag: ReactNode }) {
   return (
-    <li>
-      <Link href={href} className="group -mx-2 flex items-center gap-3 rounded-xl px-2 py-2.5 hover:bg-mist">
-        <span className={`flex h-9 w-9 items-center justify-center rounded-full ${warn ? "bg-warn-bg text-warn-fg" : "bg-mist-2 text-ink-2"}`}>
-          <Icon name={icon} size={17} />
-        </span>
-        <span className="flex-1 text-[14px] text-ink-2 group-hover:text-ink">{label}</span>
-        <span className="text-[18px] font-bold tracking-[-0.02em] tnum">{value}</span>
-        <Icon name="chevronRight" size={16} className="text-ink-3" />
-      </Link>
-    </li>
+    <Link href={href} className="group flex items-center justify-between gap-4 bg-mist-2 p-5 hover:bg-fill-2">
+      <span>
+        <span className="block text-[16px] font-medium tracking-[-0.02em]">{title}</span>
+        <span className="mt-2 block">{tag}</span>
+      </span>
+      <span className="flex items-center gap-2">
+        <span className="text-[34px] font-medium leading-none tracking-[-0.05em] tnum">{value}</span>
+        <Icon name="arrowUpRight" size={14} stroke={2.2} className="text-ink-2 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+      </span>
+    </Link>
   );
 }
 
@@ -213,7 +220,7 @@ function Chart({ days }: { days: Summary["days"] }) {
   return (
     <figure>
       <div className="flex gap-3">
-        <div className="flex h-52 flex-col justify-between py-0 text-right text-[11px] text-ink-3 tnum" aria-hidden="true">
+        <div className="flex h-56 flex-col justify-between text-right text-[11px] text-ink-3 tnum" aria-hidden="true">
           {ticks.map((t) => (
             <span key={t} className="-translate-y-1/2 first:translate-y-0 last:translate-y-0">
               {nairaShort(max * t)}
@@ -223,23 +230,23 @@ function Chart({ days }: { days: Summary["days"] }) {
         <div className="relative flex-1">
           <div className="pointer-events-none absolute inset-0 flex flex-col justify-between" aria-hidden="true">
             {ticks.map((t) => (
-              <span key={t} className={`border-t ${t === 0 ? "border-line-2" : "border-dashed border-line"}`} />
+              <span key={t} className={`border-t ${t === 0 ? "border-ink/40" : "border-dashed border-line-2"}`} />
             ))}
           </div>
-          <div className="relative flex h-52 items-end gap-1 sm:gap-1.5" role="img" aria-label="Daily collections for the last 14 days">
+          <div className="relative flex h-56 items-end gap-1 sm:gap-2" role="img" aria-label="Daily collections for the last 14 days">
             {days.map((x, i) => {
-              const today = i === days.length - 1;
+              const isToday = i === days.length - 1;
               return (
                 <div key={x.date} className="group relative flex h-full flex-1 items-end">
-                  <div className={`w-full rounded-t-[4px] transition-colors ${today ? "bg-forest" : "bg-forest/20 group-hover:bg-forest/35"}`} style={{ height: `${Math.max(1.5, (x.kobo / max) * 100)}%` }} />
-                  <span className={`pointer-events-none absolute bottom-full z-10 mb-2 whitespace-nowrap rounded-lg bg-ink px-2.5 py-1.5 text-[12px] font-semibold text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100 ${i < days.length / 2 ? "left-0" : "right-0"}`}>
+                  <div className={`w-full rounded-t-[2px] transition-colors ${isToday ? "bg-forest" : "bg-forest/20 group-hover:bg-forest/35"}`} style={{ height: `${Math.max(1.5, (x.kobo / max) * 100)}%` }} />
+                  <span className={`pointer-events-none absolute bottom-full z-10 mb-2 whitespace-nowrap bg-ink px-2.5 py-1.5 text-[12px] font-semibold text-white opacity-0 transition-opacity group-hover:opacity-100 ${i < days.length / 2 ? "left-0" : "right-0"}`}>
                     {dayLabel(x.date)} · {naira(x.kobo)}
                   </span>
                 </div>
               );
             })}
           </div>
-          <div className="mt-2 flex gap-1 text-center text-[11px] text-ink-3 sm:gap-1.5" aria-hidden="true">
+          <div className="mt-2 flex gap-1 text-center text-[11px] text-ink-3 sm:gap-2" aria-hidden="true">
             {days.map((x, i) => (
               <span key={x.date} className={`flex-1 tnum ${i === days.length - 1 ? "font-semibold text-ink" : ""}`}>
                 {i === days.length - 1 ? "Today" : i % 2 === 1 ? "" : x.date.slice(8)}

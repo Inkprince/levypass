@@ -42,6 +42,8 @@ const paths = {
   alert: "M12 7.5v6M12 17h.01",
   arrowRight: "M5 12h14M13 6l6 6-6 6",
   arrowLeft: "M19 12H5M11 6l-6 6 6 6",
+  arrowUpRight: "M7 17L17 7M8 7h9v9",
+  search: "M11 18a7 7 0 100-14 7 7 0 000 14zM20 20l-4-4",
   chevronRight: "M9.5 6l6 6-6 6",
   phone: "M8 3h8a1.5 1.5 0 011.5 1.5v15A1.5 1.5 0 0116 21H8a1.5 1.5 0 01-1.5-1.5v-15A1.5 1.5 0 018 3zM11 17.5h2",
   scan: "M4 8V5.5A1.5 1.5 0 015.5 4H8M16 4h2.5A1.5 1.5 0 0120 5.5V8M20 16v2.5a1.5 1.5 0 01-1.5 1.5H16M8 20H5.5A1.5 1.5 0 014 18.5V16M4 12h16",
@@ -101,7 +103,7 @@ const sizeClass: Record<Size, string> = {
 };
 
 export function buttonClass(variant: Variant = "primary", size: Size = "md", className = "") {
-  return `inline-flex select-none items-center justify-center gap-2 rounded-full font-semibold tracking-[-0.01em] transition-colors duration-150 disabled:pointer-events-none disabled:opacity-50 ${variantClass[variant]} ${sizeClass[size]} ${className}`;
+  return `inline-flex select-none items-center justify-center gap-2 rounded-[var(--radius-btn)] font-semibold tracking-[-0.01em] transition-colors duration-150 disabled:pointer-events-none disabled:opacity-50 ${variantClass[variant]} ${sizeClass[size]} ${className}`;
 }
 
 export function Button({ children, variant = "primary", size = "md", className = "", ...rest }: React.ButtonHTMLAttributes<HTMLButtonElement> & { variant?: Variant; size?: Size }) {
@@ -133,7 +135,7 @@ export function ArrowLink({ href, children, className = "", target }: { href: st
 /* ----------------------------------------------------------------- inputs */
 
 export const inputClass =
-  "min-h-12 w-full rounded-xl border border-line-2 bg-paper px-4 text-base text-ink outline-none transition placeholder:text-ink-3/70 focus:border-forest focus:ring-4 focus:ring-forest/10";
+  "min-h-12 w-full rounded-[var(--radius-input)] border border-line-2 bg-paper px-4 text-base text-ink outline-none transition placeholder:text-ink-3/70 focus:border-forest focus:ring-4 focus:ring-forest/10";
 
 export function Field({ label, hint, className = "", ...rest }: React.InputHTMLAttributes<HTMLInputElement> & { label: string; hint?: string }) {
   return (
@@ -161,7 +163,7 @@ export function Select({ label, children, ...rest }: React.SelectHTMLAttributes<
 
 export function ErrorNote({ children }: { children: ReactNode }) {
   return (
-    <p role="alert" className="flex items-start gap-2.5 rounded-xl bg-stop-bg px-4 py-3 text-sm font-medium text-stop-fg">
+    <p role="alert" className="flex items-start gap-2.5 rounded-[var(--radius-input)] bg-stop-bg px-4 py-3 text-sm font-medium text-stop-fg">
       <Icon name="alert" size={18} className="mt-px" />
       <span>{children}</span>
     </p>
@@ -171,7 +173,7 @@ export function ErrorNote({ children }: { children: ReactNode }) {
 export function Note({ children, tone = "neutral", icon = "info" }: { children: ReactNode; tone?: "neutral" | "go" | "warn"; icon?: IconName }) {
   const style = { neutral: "bg-mist-2 text-ink-2", go: "bg-go-bg text-go-fg", warn: "bg-warn-bg text-warn-fg" }[tone];
   return (
-    <p className={`flex items-start gap-2.5 rounded-xl px-4 py-3 text-sm font-medium ${style}`}>
+    <p className={`flex items-start gap-2.5 rounded-[var(--radius-input)] px-4 py-3 text-sm font-medium ${style}`}>
       <Icon name={icon} size={18} className="mt-px" />
       <span>{children}</span>
     </p>
@@ -192,8 +194,20 @@ const toneIcon: Record<Tone, IconName> = { paid: "check", unpaid: "x", warn: "al
 /** Status always shows an icon and a word, never colour alone (PRD section 5). */
 export function Badge({ tone, children }: { tone: Tone; children: ReactNode }) {
   return (
-    <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full py-0.5 pl-1.5 pr-2.5 text-[12px] font-semibold ${toneStyle[tone]}`}>
+    <span className={`inline-flex items-center gap-1 whitespace-nowrap rounded-[var(--radius-chip)] py-0.5 pl-1.5 pr-2.5 text-[12px] font-semibold ${toneStyle[tone]}`}>
       <Icon name={toneIcon[tone]} size={14} stroke={2.4} />
+      <span className="inline-block first-letter:uppercase">{children}</span>
+    </span>
+  );
+}
+
+const tagDot: Record<Tone, string> = { paid: "bg-go", unpaid: "bg-stop", warn: "bg-warn", neutral: "bg-ink-3" };
+
+/** Kalimo-style tag: a white chip with a coloured dot and a word. */
+export function Tag({ tone, children }: { tone: Tone; children: ReactNode }) {
+  return (
+    <span className="inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap bg-paper px-2 py-1 text-[12px] font-medium text-ink">
+      <span className={`h-1.5 w-1.5 rounded-full ${tagDot[tone]}`} aria-hidden="true" />
       <span className="inline-block first-letter:uppercase">{children}</span>
     </span>
   );
@@ -224,13 +238,13 @@ export function StatusPanel({ tone, word, sub, children, className = "" }: { ton
 /* ------------------------------------------------------------- containers */
 
 export function Card({ children, className = "" }: { children: ReactNode; className?: string }) {
-  return <div className={`rounded-[var(--radius-card)] border border-line bg-paper p-5 sm:p-6 ${className}`}>{children}</div>;
+  return <div className={`rounded-[var(--radius-card)] border border-[var(--card-border)] bg-[var(--card-bg)] p-5 sm:p-6 ${className}`}>{children}</div>;
 }
 
 export function CardTitle({ children, aside }: { children: ReactNode; aside?: ReactNode }) {
   return (
     <div className="mb-4 flex items-center justify-between gap-3">
-      <h2 className="text-[15px] font-semibold tracking-[-0.01em] text-ink">{children}</h2>
+      <h2 className="text-[18px] font-medium tracking-[-0.03em] text-ink">{children}</h2>
       {aside}
     </div>
   );
@@ -265,8 +279,8 @@ export function PageHeader({ title, lead, actions }: { title: string; lead?: Rea
   return (
     <div className="flex flex-wrap items-end justify-between gap-4">
       <div className="min-w-0">
-        <h1 className="text-[28px] font-semibold leading-tight tracking-[-0.03em] text-ink sm:text-[32px]">{title}</h1>
-        {lead ? <p className="mt-1.5 max-w-2xl text-[15px] text-ink-2">{lead}</p> : null}
+        <h1 className="text-[34px] font-medium leading-[1.02] tracking-[-0.05em] text-ink sm:text-[44px]">{title}</h1>
+        {lead ? <p className="mt-3 max-w-2xl text-[15px] text-ink-2">{lead}</p> : null}
       </div>
       {actions ? <div className="flex flex-wrap items-center gap-2">{actions}</div> : null}
     </div>
@@ -278,13 +292,13 @@ export function PageShell({ children, title, lead, back, art, wide = false }: { 
   const width = wide ? "max-w-none gutter" : "max-w-md px-4";
   return (
     <div className="min-h-dvh bg-mist">
-      <header className="sticky top-0 z-30 border-b border-line bg-paper/85 backdrop-blur-md">
+      <header className="sticky top-0 z-30 border-b border-line bg-mist/85 backdrop-blur-md">
         <div className={`mx-auto flex h-14 items-center justify-between ${width}`}>
           <Link href="/" aria-label="LevyPass home">
             <Logo size={26} />
           </Link>
           {back ? (
-            <Link href={back.href} className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-sm font-semibold text-ink-2 hover:bg-fill hover:text-ink">
+            <Link href={back.href} className="inline-flex items-center gap-1 rounded-[var(--radius-btn)] px-3 py-1.5 text-sm font-semibold text-ink-2 hover:bg-fill hover:text-ink">
               <Icon name="arrowLeft" size={16} stroke={2} />
               {back.label}
             </Link>
