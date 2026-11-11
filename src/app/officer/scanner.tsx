@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { Icon, buttonClass } from "@/app/_ui/kit";
 import { SearchReveal, useSearchReveal, type RevealTiming } from "@/app/_ui/search-reveal";
 
@@ -35,6 +35,9 @@ export function Scanner() {
   const [busy, setBusy] = useState(false);
   const geo = useRef<{ lat: number; lng: number; acc: number } | null>(null);
   const lock = useRef(false);
+  // The QR just shown stays in front of the lens for a moment after the officer taps on.
+  // Do not read it straight back: ignore that same code for a few seconds.
+  const last = useRef<{ code: string; until: number }>({ code: "", until: 0 });
   const reveal = useSearchReveal(OFFICER_TIMING);
 
   useEffect(() => {
@@ -61,6 +64,7 @@ export function Scanner() {
         return body;
       };
       const show = (body: Result | null) => {
+        lock.current = true; // a typed lookup also pauses the camera until the officer taps on
         setResult(body ?? { result: "unknown_trader" });
         setBusy(false);
         reveal.reset();
@@ -78,6 +82,8 @@ export function Scanner() {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" }, audio: false });
       if (!video.current) return;
       video.current.srcObject = stream;
+      // If the phone takes the camera away (another app, a call), show the start button again.
+      stream.getVideoTracks().forEach((track) => track.addEventListener("ended", () => setCamera("off")));
       await video.current.play();
       setCamera("on");
       const detector = new window.BarcodeDetector({ formats: ["qr_code"] });
@@ -86,9 +92,11 @@ export function Scanner() {
         if (!lock.current && video.current.readyState >= 2) {
           const t0 = performance.now();
           const codes = await detector.detect(video.current).catch(() => []);
-          if (codes[0]?.rawValue) {
+          const code = codes[0]?.rawValue;
+          if (code && !(code === last.current.code && Date.now() < last.current.until)) {
             lock.current = true;
-            await check({ token: codes[0].rawValue }, t0);
+            last.current = { code, until: Number.POSITIVE_INFINITY }; // held until the officer taps on
+            await check({ token: code }, t0);
           }
         }
         setTimeout(loop, 200);
@@ -106,15 +114,20 @@ export function Scanner() {
 
   const next = () => {
     setResult(null);
+    last.current = { ...last.current, until: Date.now() + 3000 };
     lock.current = false;
   };
 
+  // The result covers the screen but the scanner underneath stays mounted. It used to be replaced by
+  // the result, which threw away the <video> and its camera stream: after "tap to scan the next
+  // trader" the square was black, with no camera and no button, until the page was reloaded.
+  let overlay: ReactNode = null;
   if (result) {
     const paid = result.result === "paid";
     const unpaid = result.result === "not_paid";
     const bg = paid ? "bg-go" : unpaid ? "bg-stop" : "bg-night";
     const word = paid ? "PAID" : unpaid ? "NOT PAID" : result.result === "officer_suspended" ? "YOUR ID IS SUSPENDED" : result.result === "invalid_token" ? "FAKE OR OLD QR" : "UNKNOWN TRADER";
-    return (
+    overlay = (
       <button onClick={next} className={`animate-fadein fixed inset-0 z-50 flex flex-col items-center justify-center gap-5 px-6 text-center text-white ${bg}`}>
         <span className={`animate-pop flex h-28 w-28 items-center justify-center rounded-full ${paid ? "bg-white text-go" : unpaid ? "bg-white text-stop" : "bg-warn text-night"}`}>
           <Icon name={paid ? "check" : unpaid ? "x" : "alert"} size={60} />
@@ -146,38 +159,41 @@ export function Scanner() {
   }
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="relative aspect-square overflow-hidden rounded-[28px] bg-night">
-        <video ref={video} playsInline muted className="h-full w-full object-cover" />
-        <div className="pointer-events-none absolute inset-[18%]" aria-hidden="true">
-          {["left-0 top-0 border-l-[3px] border-t-[3px] rounded-tl-2xl", "right-0 top-0 border-r-[3px] border-t-[3px] rounded-tr-2xl", "left-0 bottom-0 border-l-[3px] border-b-[3px] rounded-bl-2xl", "right-0 bottom-0 border-r-[3px] border-b-[3px] rounded-br-2xl"].map((c) => (
-            <span key={c} className={`absolute h-10 w-10 border-lime ${c}`} />
-          ))}
-        </div>
-        {camera !== "on" ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-8 text-center text-white">
-            <Icon name="scan" size={36} className="text-white/60" />
-            {camera === "unsupported" ? <p className="text-[15px] text-white/80">This browser cannot scan. Use the trader ID or stall number below.</p> : null}
-            {camera === "denied" ? <p className="text-[15px] text-white/80">Camera blocked. Allow the camera, or type the ID below.</p> : null}
-            <button onClick={() => void start()} className={buttonClass("accent", "lg")}>
-              Start scanning
-            </button>
+    <>
+      <div className="flex flex-col gap-4">
+        <div className="relative aspect-square overflow-hidden rounded-[28px] bg-night">
+          <video ref={video} playsInline muted className="h-full w-full object-cover" />
+          <div className="pointer-events-none absolute inset-[18%]" aria-hidden="true">
+            {["left-0 top-0 border-l-[3px] border-t-[3px] rounded-tl-2xl", "right-0 top-0 border-r-[3px] border-t-[3px] rounded-tr-2xl", "left-0 bottom-0 border-l-[3px] border-b-[3px] rounded-bl-2xl", "right-0 bottom-0 border-r-[3px] border-b-[3px] rounded-br-2xl"].map((c) => (
+              <span key={c} className={`absolute h-10 w-10 border-lime ${c}`} />
+            ))}
           </div>
-        ) : null}
+          {camera !== "on" ? (
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 p-8 text-center text-white">
+              <Icon name="scan" size={36} className="text-white/60" />
+              {camera === "unsupported" ? <p className="text-[15px] text-white/80">This browser cannot scan. Use the trader ID or stall number below.</p> : null}
+              {camera === "denied" ? <p className="text-[15px] text-white/80">Camera blocked. Allow the camera, or type the ID below.</p> : null}
+              <button onClick={() => void start()} className={buttonClass("accent", "lg")}>
+                Start scanning
+              </button>
+            </div>
+          ) : null}
+        </div>
+        <form
+          className="flex gap-2 rounded-full border border-line-2 bg-paper p-1.5 pl-5 focus-within:border-forest focus-within:ring-4 focus-within:ring-forest/10"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (manual.trim()) void check({ id: manual.trim() }, performance.now(), true);
+          }}
+        >
+          <input value={manual} onChange={(e) => setManual(e.target.value)} placeholder="Trader ID or stall (E-07)" className="min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-ink-3/70" aria-label="Trader ID or stall number" />
+          <button disabled={busy} className={buttonClass("primary", "md")}>
+            {busy ? "Checking" : "Check"}
+          </button>
+        </form>
+        <SearchReveal phase={reveal.phase} searching="Looking up the trader" found="Paid" missing="Not paid" />
       </div>
-      <form
-        className="flex gap-2 rounded-full border border-line-2 bg-paper p-1.5 pl-5 focus-within:border-forest focus-within:ring-4 focus-within:ring-forest/10"
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (manual.trim()) void check({ id: manual.trim() }, performance.now(), true);
-        }}
-      >
-        <input value={manual} onChange={(e) => setManual(e.target.value)} placeholder="Trader ID or stall (E-07)" className="min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-ink-3/70" aria-label="Trader ID or stall number" />
-        <button disabled={busy} className={buttonClass("primary", "md")}>
-          {busy ? "Checking" : "Check"}
-        </button>
-      </form>
-      <SearchReveal phase={reveal.phase} searching="Looking up the trader" found="Paid" missing="Not paid" />
-    </div>
+      {overlay}
+    </>
   );
 }
