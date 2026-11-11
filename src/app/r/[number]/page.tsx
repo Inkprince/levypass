@@ -10,10 +10,10 @@ import * as s from "@/server/db/schema";
 import { allow, clientIp } from "@/server/ratelimit";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Receipt check · LevyPass", robots: { index: false } };
+export const metadata = { title: "Receipt check", robots: { index: false } };
 
 export default async function ReceiptPage({ params }: { params: Promise<{ number: string }> }) {
-  if (!allow(`r:${clientIp(await headers())}`, 30, 60_000)) return <PageShell title="Slow down" lead="Too many checks from this connection. Wait a minute and try again." />;
+  if (!allow(`r:${clientIp(await headers())}`, 30, 60_000)) return <PageShell title="Too many checks" lead="This connection has made too many checks. Try again in a minute." />;
   const typed = decodeURIComponent((await params).number);
   const number = parseReceiptNumber(typed);
   const [r] = number
@@ -36,7 +36,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ number
         <StatusPanel tone="unpaid" word="Not genuine" sub={number ? "No LevyPass receipt has this number." : "This is not a LevyPass receipt number. Check for a typing mistake."}>
           <p className="rounded-full bg-white/15 px-3.5 py-1 font-mono text-[15px] font-semibold">{typed}</p>
         </StatusPanel>
-        <Note icon="flag" tone="warn">The revenue office has been notified. Do not accept this receipt as proof of payment.</Note>
+        <Note icon="flag" tone="warn">LevyPass has told the revenue office. Do not accept this receipt as proof of payment.</Note>
         <LinkButton href="/r" variant="outline" size="lg">
           Check another receipt
         </LinkButton>
@@ -53,7 +53,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ number
   const [first, ...rest] = r.name.split(" ");
   return (
     <PageShell back={{ href: "/r", label: "Check another" }}>
-      <StatusPanel tone="paid" word="Genuine" sub="This receipt was issued by LevyPass after the bank confirmed the payment.">
+      <StatusPanel tone="paid" word="Genuine" sub="LevyPass issued this receipt after the bank confirmed the payment.">
         <p className="rounded-full bg-white/15 px-3.5 py-1 font-mono text-[15px] font-semibold">{r.number}</p>
       </StatusPanel>
       <Card>

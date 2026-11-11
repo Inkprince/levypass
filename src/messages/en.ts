@@ -8,7 +8,7 @@ export const en = {
   // SMS (NT-01, RC-01). Keep each under 160 characters where possible.
   "sms.otp": "LevyPass code: {code}. It expires in 10 minutes. Do not share it with anyone, including officers.",
   "sms.receipt": "LevyPass receipt {number}: {amount} received for {levy}, {period}. Check it at {url}",
-  "sms.receipt_credit": "LevyPass receipt {number}: {amount} received. {credit} is kept as credit for your next levy. Check it at {url}",
+  "sms.receipt_credit": "LevyPass receipt {number}: {amount} received. We keep {credit} as credit for your next levy. Check it at {url}",
   "sms.welcome": "Welcome to LevyPass, {name}. Your trader ID is {id}. Show your QR pass to any officer. Dial {ussd} to pay.",
   "sms.double_charge": "LevyPass: you already paid {levy} for {period}. We have credited {amount} to your next period. Receipt {number}.",
 
@@ -20,7 +20,7 @@ export const en = {
   "ussd.pay_choose": "Pay {amount} for {what}?\n1. Yes, pay now\n2. Cancel",
   "ussd.pay_started": "Payment of {amount} started. Your receipt will come by SMS.",
   "ussd.pay_failed": "We could not start the payment. Please try again in a minute.",
-  "ussd.cancelled": "Cancelled. Nothing was charged.",
+  "ussd.cancelled": "Cancelled. We did not charge you.",
   "ussd.last_receipt": "Last receipt {number}: {amount} on {date}.",
   "ussd.no_receipt": "You have no receipts yet.",
   "ussd.officer_ask": "Enter the officer's staff ID (for example OTT-001):",

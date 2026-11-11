@@ -15,7 +15,7 @@ export default async function OfficersPage() {
   const markets = await db().select({ id: s.markets.id, name: s.markets.name }).from(s.markets);
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Officers" lead="Suspending ends the officer's sessions at once. Their ID page shows SUSPENDED on the next scan and raises a fraud flag." />
+      <PageHeader title="Officers" lead="Suspending ends the officer's sessions at once. The next scan of their ID shows SUSPENDED and raises a fraud flag." />
       <div className="grid gap-6 lg:grid-cols-3">
         <Card className="overflow-x-auto p-0 sm:p-0 lg:col-span-2">
           <table className="w-full min-w-[560px] text-[14px]">

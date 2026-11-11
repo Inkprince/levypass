@@ -13,7 +13,7 @@ const jakarta = localFont({
 });
 
 export const metadata: Metadata = {
-  title: t("en", "app.name"),
+  title: { default: t("en", "app.name"), template: `%s - ${t("en", "app.name")}` },
   description: t("en", "app.tagline"),
 };
 

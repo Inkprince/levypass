@@ -1,17 +1,17 @@
 import Link from "next/link";
 import { Icon, type IconName, PageShell } from "@/app/_ui/kit";
 
-export const metadata = { title: "Demo script · LevyPass" };
+export const metadata = { title: "Demo script" };
 
 const steps: [string, string, string, string][] = [
   ["Register Mama Bisi on her phone.", "The OTP lands in the phone simulator.", "/register", "Register"],
   ["She pays today's levy by USSD.", "*347*13#, option 1. The receipt SMS arrives in seconds.", "/sim", "Simulator"],
   ["Officer Musa scans her QR: PAID.", "Then an unpaid trader: NOT PAID, with a pay-now code.", "/officer", "Scanner"],
-  ["A judge scans Musa's officer ID.", "The admin suspends him; the next scan says SUSPENDED and a flag appears.", "/admin/officers", "Officers"],
-  ["Type a made-up receipt number.", "NOT GENUINE, and the revenue office is flagged.", "/r", "Receipt check"],
-  ["Charge Mama Bisi again for today.", "Flagged as a double charge and credited to tomorrow.", "/admin/failures", "Drills"],
-  ["Break it.", "Withhold a webhook, replay one, forge a signature.", "/admin/failures", "Drills"],
-  ["The dashboard has moved.", "Reconciliation shows a gap of ₦0.00.", "/admin/reconciliation", "Reconciliation"],
+  ["A judge scans Musa's officer ID.", "The admin suspends him. The next scan says SUSPENDED and raises a flag.", "/admin/officers", "Officers"],
+  ["Type a made-up receipt number.", "NOT GENUINE, and the revenue office gets a fraud flag.", "/r", "Receipt check"],
+  ["Charge Mama Bisi again for today.", "LevyPass flags a double charge and credits the money to tomorrow.", "/admin/failures", "Drills"],
+  ["Run the failure drills.", "Withhold a webhook, replay one, forge a signature.", "/admin/failures", "Drills"],
+  ["The dashboard totals have gone up.", "Reconciliation shows a gap of ₦0.00.", "/admin/reconciliation", "Reconciliation"],
 ];
 
 const roles: [string, string, string, IconName][] = [

@@ -34,7 +34,7 @@ export default async function PassPage({ searchParams }: { searchParams: Promise
             <p className="text-[13px] text-white/65">{trader.market}</p>
             <p className="mt-1 truncate text-[24px] font-bold tracking-[-0.03em]">{trader.name}</p>
             <p className="text-[14px] text-white/75">
-              Stall {trader.stallOrVehicle} · {trader.businessType}
+              Stall {trader.stallOrVehicle}, {trader.businessType}
             </p>
           </div>
           <Mark size={34} tone="lime" />
@@ -76,7 +76,7 @@ export default async function PassPage({ searchParams }: { searchParams: Promise
           {status.current.map((c) => (
             <li key={c.levy} className="flex items-center justify-between gap-3 py-3 last:pb-0">
               <span className="min-w-0">
-                {c.levy} <span className="text-ink-3">· {c.period}</span>
+                {c.levy} <span className="text-ink-3">{c.period}</span>
               </span>
               <Badge tone={c.status === "paid" ? "paid" : c.status === "part_paid" ? "warn" : "unpaid"}>{c.status.replace("_", " ")}</Badge>
             </li>

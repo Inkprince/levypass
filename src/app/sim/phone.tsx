@@ -88,7 +88,7 @@ export function Phone() {
             <select value={phone} onChange={(e) => setPhone(e.target.value)} className="min-h-12 w-full appearance-none rounded-xl border border-line-2 bg-paper px-4 pr-10 text-base outline-none focus:border-forest focus:ring-4 focus:ring-forest/10">
               {contacts.map((c) => (
                 <option key={c.phone} value={c.phone}>
-                  {c.name} · {c.phone}
+                  {c.name}, {c.phone}
                 </option>
               ))}
             </select>
@@ -117,7 +117,7 @@ export function Phone() {
         <div className="rounded-[20px] bg-black/30 p-2.5">
           <div className="flex h-[360px] flex-col overflow-hidden rounded-xl bg-[#c5d4b4] font-mono text-[13px] leading-snug text-[#1d2a16] shadow-[inset_0_2px_8px_rgb(0_0_0/0.18)]">
             <div className="flex justify-between border-b border-[#1d2a16]/15 px-3 py-1.5 text-[10.5px]">
-              <span>{name.split(" ")[0]} · MTN NG</span>
+              <span>{name.split(" ")[0]}, MTN NG</span>
               <span>▮▮▮ 92%</span>
             </div>
             <div className="flex-1 overflow-y-auto p-3">
@@ -127,7 +127,7 @@ export function Phone() {
                   {inbox.length === 0 && <p className="opacity-70">No messages yet.</p>}
                   {inbox.map((m) => (
                     <div key={m.id} className={`rounded-md bg-white/45 p-2 ${m.id === fresh ? "animate-pop ring-2 ring-[#1d2a16]" : ""}`}>
-                      <p className="text-[10px] font-bold opacity-70">LevyPass · {m.at ? new Date(m.at).toLocaleTimeString("en-NG", { timeZone: "Africa/Lagos" }) : ""}</p>
+                      <p className="text-[10px] font-bold opacity-70">LevyPass {m.at ? new Date(m.at).toLocaleTimeString("en-NG", { timeZone: "Africa/Lagos" }) : ""}</p>
                       <p className="whitespace-pre-wrap break-words">{m.text}</p>
                     </div>
                   ))}

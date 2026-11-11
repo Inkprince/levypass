@@ -29,7 +29,7 @@ export default async function StickersPage() {
               <div className="w-full max-w-[150px] [&_svg]:h-auto [&_svg]:w-full" dangerouslySetInnerHTML={{ __html: c.svg }} />
               <p className="text-[14px] font-semibold">{c.name}</p>
               <p className="text-[12px] text-ink-2">
-                {c.market} · Stall <span className="font-semibold">{c.stall}</span>
+                {c.market}, Stall <span className="font-semibold">{c.stall}</span>
               </p>
             </div>
           </div>

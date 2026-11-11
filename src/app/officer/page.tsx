@@ -8,7 +8,7 @@ import { officerLogout } from "./actions";
 import { Scanner } from "./scanner";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Officer scan · LevyPass" };
+export const metadata = { title: "Officer scan" };
 
 export default async function OfficerPage() {
   const officerId = await requireSubject("officer");

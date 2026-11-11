@@ -15,7 +15,7 @@ export function ReportForm({ officerId }: { officerId?: string }) {
         required
         rows={3}
         aria-label="What happened"
-        placeholder="What happened? English, Pidgin or Yoruba is fine."
+        placeholder="Describe what happened in English, Pidgin or Yoruba."
         className="w-full resize-none rounded-xl border border-line-2 bg-paper p-4 text-base outline-none placeholder:text-ink-3/70 focus:border-forest focus:ring-4 focus:ring-forest/10"
       />
       {state.error ? <p className="text-sm font-medium text-stop-fg">{state.error}</p> : null}

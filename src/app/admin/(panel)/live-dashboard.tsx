@@ -56,7 +56,7 @@ export function LiveDashboard({ initial }: { initial: Summary }) {
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-go opacity-60" />
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-go" />
                 </span>
-                Live · <span className="tnum">{time(d.asOf)}</span>
+                Live at <span className="tnum">{time(d.asOf)}</span>
               </span>
             </div>
             <h1 key={flash} className={`mt-5 max-w-[15ch] text-[44px] font-medium leading-[0.98] tracking-[-0.055em] sm:text-[60px] ${flash ? "animate-flash" : ""}`}>
@@ -119,7 +119,7 @@ export function LiveDashboard({ initial }: { initial: Summary }) {
                       {p.flagged ? <Tag tone="warn">Flagged</Tag> : null}
                     </span>
                     <span className="text-[13px] text-ink-2">
-                      {channelLabel(p.channel)} · <span className="tnum">{time(p.at)}</span>
+                      {channelLabel(p.channel)}, <span className="tnum">{time(p.at)}</span>
                     </span>
                   </span>
                   <span className="hidden text-[13px] text-ink-2 sm:block">
@@ -240,7 +240,7 @@ function Chart({ days }: { days: Summary["days"] }) {
                 <div key={x.date} className="group relative flex h-full flex-1 items-end">
                   <div className={`w-full rounded-t-[4px] transition-colors ${isToday ? "bg-forest" : "bg-forest/20 group-hover:bg-forest/35"}`} style={{ height: `${Math.max(1.5, (x.kobo / max) * 100)}%` }} />
                   <span className={`pointer-events-none absolute bottom-full z-10 mb-2 whitespace-nowrap rounded-lg bg-ink px-2.5 py-1.5 text-[12px] font-semibold text-white opacity-0 transition-opacity group-hover:opacity-100 ${i < days.length / 2 ? "left-0" : "right-0"}`}>
-                    {dayLabel(x.date)} · {naira(x.kobo)}
+                    {dayLabel(x.date)}: {naira(x.kobo)}
                   </span>
                 </div>
               );

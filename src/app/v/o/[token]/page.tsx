@@ -9,17 +9,17 @@ import { raiseOfficerFlag } from "@/server/ussd/menu";
 import { ReportForm } from "../../report-form";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Officer check · LevyPass", robots: { index: false } };
+export const metadata = { title: "Officer check", robots: { index: false } };
 
 /** OF-07: a trader checks the officer in front of them. A suspended ID raises a flag (FR-03). */
 export default async function OfficerPublicPage({ params }: { params: Promise<{ token: string }> }) {
-  if (!allow(`vo:${clientIp(await headers())}`, 60, 60_000)) return <PageShell title="Slow down" lead="Too many checks from this connection. Wait a minute and try again." />;
+  if (!allow(`vo:${clientIp(await headers())}`, 60, 60_000)) return <PageShell title="Too many checks" lead="This connection has made too many checks. Try again in a minute." />;
   const { token } = await params;
   const officer = await officerFromToken(decodeURIComponent(token));
   if (!officer) {
     return (
       <PageShell>
-        <StatusPanel tone="unpaid" word="Not an officer" sub="This ID was not issued by LevyPass. Do not pay this person. Report them below." />
+        <StatusPanel tone="unpaid" word="Not an officer" sub="LevyPass did not issue this ID. Do not pay this person. Report them below." />
         <Card>
           <CardTitle>Report this collector</CardTitle>
           <ReportForm />
@@ -35,7 +35,7 @@ export default async function OfficerPublicPage({ params }: { params: Promise<{ 
       <StatusPanel
         tone={suspended ? "unpaid" : "paid"}
         word={suspended ? "Suspended" : "Genuine officer"}
-        sub={suspended ? "Do not pay this person. The revenue office has been alerted." : "This officer is active and allowed to check levies."}
+        sub={suspended ? "Do not pay this person. LevyPass has alerted the revenue office." : "This officer is active and allowed to check levies."}
       />
       <Card>
         <div className="flex items-center gap-4">
@@ -49,7 +49,7 @@ export default async function OfficerPublicPage({ params }: { params: Promise<{ 
           <div className="min-w-0">
             <p className="text-[20px] font-semibold tracking-[-0.02em]">{officer.name}</p>
             <p className="text-[14px] text-ink-2">
-              <span className="font-mono">{officer.staffId}</span> · {aut?.name}
+              <span className="font-mono">{officer.staffId}</span>, {aut?.name}
             </p>
           </div>
         </div>
@@ -59,7 +59,7 @@ export default async function OfficerPublicPage({ params }: { params: Promise<{ 
         </p>
       </Card>
       <Card>
-        <CardTitle>Problem with this officer?</CardTitle>
+        <CardTitle>Report a problem with this officer</CardTitle>
         <ReportForm officerId={officer.id} />
       </Card>
     </PageShell>

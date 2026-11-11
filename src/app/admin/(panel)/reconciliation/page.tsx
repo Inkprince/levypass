@@ -35,7 +35,7 @@ export default async function ReconciliationPage({ searchParams }: { searchParam
     <div className="flex flex-col gap-6">
       <PageHeader
         title="Reconciliation"
-        lead={`Our ledger against the bank's own settlement and reconciliation for ${date}, Lagos time.`}
+        lead={`The LevyPass ledger compared with the bank's settlement and reconciliation for ${date}, Lagos time.`}
         actions={
           <>
             <form className="flex items-center gap-2">
@@ -62,7 +62,7 @@ export default async function ReconciliationPage({ searchParams }: { searchParam
             <p className="money text-[40px] leading-none sm:text-[48px]">{formatNaira(view.gapKobo)}</p>
           </div>
         </div>
-        <p className="text-[17px] font-bold uppercase tracking-wide">{ok ? "Balanced. Every kobo accounted for." : "Not balanced. See the lines below."}</p>
+        <p className="text-[17px] font-bold uppercase tracking-wide">{ok ? "Balanced. The ledger and the bank agree to the kobo." : "Not balanced. See the lines below."}</p>
       </section>
 
       <div className="grid gap-6 md:grid-cols-2">
@@ -103,7 +103,7 @@ export default async function ReconciliationPage({ searchParams }: { searchParam
                   <span className="font-mono text-[13px]">{p.ref}</span>
                 </span>
                 <span className="text-ink-2">
-                  {p.kind} · <span className="tnum">{p.text}</span>
+                  {p.kind}: <span className="tnum">{p.text}</span>
                 </span>
               </li>
             ))}
@@ -120,7 +120,7 @@ export default async function ReconciliationPage({ searchParams }: { searchParam
                 <span className="font-mono text-[13px]">{b.settlementId ?? "Pending batch"}</span>
                 <Badge tone={b.status === "settled" ? "paid" : "warn"}>{b.status}</Badge>
                 <span className="text-ink-2 tnum">
-                  {b.transactions.length} {b.transactions.length === 1 ? "payment" : "payments"} · net {formatNaira(b.netKobo)} to {b.settlementAccount}
+                  {b.transactions.length} {b.transactions.length === 1 ? "payment" : "payments"}, net {formatNaira(b.netKobo)} to {b.settlementAccount}
                 </span>
               </li>
             ))}

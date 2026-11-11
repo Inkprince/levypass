@@ -58,7 +58,7 @@ export default async function PayPage({ params }: { params: Promise<{ id: string
             <Option n={2} icon="transfer" title="Bank transfer">
               <p className="font-mono text-[24px] font-bold tracking-wide">{c.transferAccount.accountNumber}</p>
               <p className="mt-1 text-[14px] text-ink-2">
-                {c.transferAccount.accountName} · {c.transferAccount.bankName}
+                {c.transferAccount.accountName}, {c.transferAccount.bankName}
               </p>
             </Option>
           ) : null}

@@ -81,9 +81,9 @@ export default async function FraudPage() {
               </p>
               <p className="text-[13px] text-ink-2">
                 {f.type === "double_charge"
-                  ? `Paid again for a period already paid. Credited to ${((f.details as { creditedTo?: string[] }).creditedTo ?? []).join(", ")}.`
+                  ? `The trader paid twice for one period. LevyPass credited the extra payment to ${((f.details as { creditedTo?: string[] }).creditedTo ?? []).join(", ")}.`
                   : f.type === "suspended_officer_scan"
-                    ? `A suspended ID was presented (${String((f.details as { via?: string }).via ?? "")}).`
+                    ? `Someone showed a suspended officer ID (${String((f.details as { via?: string }).via ?? "")}).`
                     : f.type === "unknown_receipt"
                       ? "Someone checked a receipt number that LevyPass never issued."
                       : ""}
@@ -143,7 +143,7 @@ export default async function FraudPage() {
                 <tr>
                   <td className="flex items-center gap-2 px-6 py-5 text-ink-2">
                     <Icon name="check" size={17} stroke={2.4} className="text-go" />
-                    Nothing to review. No money is unaccounted for.
+                    Nothing to review. Every payment is matched.
                   </td>
                 </tr>
               ) : null}

@@ -13,7 +13,7 @@ export default async function LeviesPage() {
   const markets = await db().select({ id: s.markets.id, name: s.markets.name }).from(s.markets);
   return (
     <div className="flex flex-col gap-6">
-      <PageHeader title="Levies" lead="A new amount applies to periods created from now on. Paid and existing periods keep the amount they were issued with." />
+      <PageHeader title="Levies" lead="A new amount applies only to new periods. Existing periods keep their original amount." />
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="flex flex-col gap-4 lg:col-span-2">
           {levies.map((l) => (

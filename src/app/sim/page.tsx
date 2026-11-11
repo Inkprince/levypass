@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Icon, Logo } from "@/app/_ui/kit";
 import { Phone } from "./phone";
 
-export const metadata = { title: "Phone simulator · LevyPass" };
+export const metadata = { title: "Phone simulator" };
 
 export default function SimPage() {
   return (
