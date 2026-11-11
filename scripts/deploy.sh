@@ -1,16 +1,21 @@
 #!/usr/bin/env bash
-# npm run deploy: build linux/amd64, tag with the Git SHA, push, apply, wait, report quota.
-# Migrations run in the app pod's init container on every rollout.
-#   ALLOW_DIRTY=1 npm run deploy   # deploy uncommitted changes (tag gets a -dirty suffix)
+# npm run deploy: get the linux/amd64 image for HEAD, apply, wait, report quota.
+# The image is built by GitHub Actions (.github/workflows/image.yml) on every push to main and
+# tagged with the first 12 characters of the commit SHA. This script waits for that tag, so
+# commit and `git push` first. Migrations run in the app pod's init container on every rollout.
+#   BUILD=local npm run deploy     # build on this machine instead (slow on Apple Silicon)
+#   ALLOW_DIRTY=1 npm run deploy   # deploy uncommitted changes; always a local build, tag gets -dirty
 set -euo pipefail
 export KUBECONFIG="${KUBECONFIG:-$HOME/forge/team13.yaml}"
 cd "$(dirname "$0")/.."
 
 image_repo="${IMAGE_REPO:-ghcr.io/inkprince/levypass}"
-sha="$(git rev-parse --short=12 HEAD)"
+sha="$(git rev-parse HEAD | cut -c1-12)"
+build="${BUILD:-ci}"
 if [[ -n "$(git status --porcelain)" ]]; then
   [[ "${ALLOW_DIRTY:-}" == 1 ]] || { echo "Working tree has changes. Commit first, or set ALLOW_DIRTY=1." >&2; exit 1; }
   sha="${sha}-dirty"
+  build=local
 fi
 image="${image_repo}:${sha}"
 
@@ -18,8 +23,28 @@ for s in levypass-db levypass-app huawei-gateway; do
   kubectl get secret "$s" >/dev/null 2>&1 || { echo "Secret $s is missing. Run scripts/create-secrets.sh first." >&2; exit 1; }
 done
 
-echo "==> Building $image (linux/amd64)"
-docker buildx build --platform linux/amd64 -f deploy/Dockerfile -t "$image" --push .
+image_ready() { docker buildx imagetools inspect "$image" >/dev/null 2>&1; }
+
+if [[ "$sha" != *-dirty ]] && image_ready; then
+  echo "==> $image is already in the registry"
+elif [[ "$build" == local ]]; then
+  echo "==> Building $image (linux/amd64) on this machine"
+  docker buildx build --platform linux/amd64 -f deploy/Dockerfile -t "$image" --push .
+else
+  git fetch -q origin main 2>/dev/null || true
+  if ! git merge-base --is-ancestor HEAD origin/main 2>/dev/null; then
+    echo "HEAD is not on origin/main yet, so GitHub Actions has not built it. Run git push first," >&2
+    echo "or build here with BUILD=local npm run deploy." >&2
+    exit 1
+  fi
+  echo "==> Waiting for GitHub Actions to push $image (gh run watch shows progress)"
+  for i in $(seq 1 120); do
+    image_ready && break
+    (( i % 6 == 0 )) && echo "    still building ($((i / 6)) min)"
+    sleep 10
+  done
+  image_ready || { echo "No image after 20 minutes. Check: gh run list --workflow image.yml" >&2; exit 1; }
+fi
 
 echo "==> Postgres"
 if [[ "${PG_EPHEMERAL:-}" == 1 ]]; then
