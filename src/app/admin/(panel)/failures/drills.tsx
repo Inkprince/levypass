@@ -36,7 +36,7 @@ function Choice<T extends string>({ value, options, onChange, label }: { value: 
           role="radio"
           aria-checked={value === v}
           onClick={() => onChange(v)}
-          className={`inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-[13px] font-semibold transition ${value === v ? "bg-forest text-white" : "bg-paper text-ink-2 hover:text-ink"}`}
+          className={`inline-flex min-h-10 items-center gap-1.5 rounded-full px-3.5 text-[13px] font-semibold transition ${value === v ? "bg-forest text-white" : "bg-paper text-ink-2 hover:text-ink"}`}
         >
           {value === v ? <Icon name="check" size={14} stroke={2.6} /> : null}
           {text}
@@ -225,7 +225,7 @@ export function Drills({ options }: { options: DrillOptions }) {
           them on the other screens.
         </span>
       </p>
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 xl:grid-cols-2">
         <Drill
           icon="clock"
           title="Withheld webhook"

@@ -74,7 +74,7 @@ export default async function PanelLayout({ children }: { children: ReactNode })
       <div className="min-w-0">
         <header className="no-print sticky top-0 z-30 border-b border-line bg-mist/90 backdrop-blur-md">
           <div className="flex h-[76px] items-center gap-3 px-4 sm:px-6 lg:px-10 2xl:px-14">
-            <Link href="/admin" className="lg:hidden" aria-label="Collections">
+            <Link href="/admin" className="flex min-h-11 items-center lg:hidden" aria-label="Collections">
               <Mark size={30} />
             </Link>
             <ReceiptSearch variant="bar" />

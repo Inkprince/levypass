@@ -24,7 +24,7 @@ const roles: [string, string, string, IconName][] = [
 export default function DemoPage() {
   return (
     <PageShell title="Five-minute demo" wide back={{ href: "/", label: "Home" }}>
-      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+      <div className="grid grid-cols-1 gap-3 min-[400px]:grid-cols-2 lg:grid-cols-4">
         {roles.map(([label, sub, href, icon]) => (
           <Link key={href} href={href} target="_blank" className="group flex flex-col gap-6 rounded-[var(--radius-card)] border border-line bg-paper p-5 transition-colors hover:border-forest">
             <span className="flex h-11 w-11 items-center justify-center rounded-full bg-forest text-lime">
@@ -49,7 +49,7 @@ export default function DemoPage() {
               <span className="block text-[15px] font-semibold">{title}</span>
               <span className="text-[14px] text-ink-2">{body}</span>
             </span>
-            <Link href={href} target="_blank" className="inline-flex shrink-0 items-center gap-1 rounded-full bg-fill px-3 py-1.5 text-[13px] font-semibold text-ink hover:bg-fill-2">
+            <Link href={href} target="_blank" className="inline-flex min-h-10 shrink-0 items-center gap-1 rounded-full bg-fill px-3 text-[13px] font-semibold text-ink hover:bg-fill-2">
               <span className="hidden sm:inline">{cta}</span>
               <Icon name="arrowRight" size={15} stroke={2} />
             </Link>

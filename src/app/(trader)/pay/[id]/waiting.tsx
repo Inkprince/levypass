@@ -27,7 +27,7 @@ export function Waiting({ id, startedAt }: { id: string; startedAt: number }) {
   if (s?.settled && s.receipt) {
     return (
       <StatusPanel tone="paid" word="Paid" sub="The bank confirmed your payment. Your receipt is on its way by SMS.">
-        <a href={`/r/${s.receipt}`} className="rounded-full bg-white/15 px-3.5 py-1 font-mono text-[15px] font-semibold hover:bg-white/25">
+        <a href={`/r/${s.receipt}`} className="inline-flex min-h-11 items-center rounded-full bg-white/15 px-4 font-mono text-[15px] font-semibold hover:bg-white/25">
           {s.receipt}
         </a>
         <a href="/pass" className={buttonClass("accent", "lg", "mt-3")}>

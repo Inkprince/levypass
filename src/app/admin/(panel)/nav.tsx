@@ -43,7 +43,7 @@ export function TabNav() {
       {adminNav.map(([href, label]) => {
         const on = isActive(path, href);
         return (
-          <Link key={href} href={href} aria-current={on ? "page" : undefined} className={`shrink-0 rounded-full px-3.5 py-1.5 text-[13px] font-semibold ${on ? "bg-forest text-white" : "bg-mist-2 text-ink-2"}`}>
+          <Link key={href} href={href} aria-current={on ? "page" : undefined} className={`inline-flex min-h-10 shrink-0 items-center rounded-full px-3.5 text-[13px] font-semibold ${on ? "bg-forest text-white" : "bg-mist-2 text-ink-2"}`}>
             {label}
           </Link>
         );

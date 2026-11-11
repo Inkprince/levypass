@@ -9,10 +9,10 @@ export default function SimPage() {
     <div className="min-h-dvh bg-mist">
       <header className="border-b border-line bg-paper">
         <div className="gutter flex h-14 items-center justify-between">
-          <Link href="/" aria-label="LevyPass home">
+          <Link href="/" aria-label="LevyPass home" className="flex min-h-11 items-center">
             <Logo size={26} />
           </Link>
-          <Link href="/demo" className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-sm font-semibold text-ink-2 hover:bg-fill hover:text-ink">
+          <Link href="/demo" className="inline-flex min-h-11 items-center gap-1 rounded-full px-3 text-sm font-semibold text-ink-2 hover:bg-fill hover:text-ink">
             <Icon name="arrowLeft" size={16} stroke={2} />
             Demo
           </Link>

@@ -1,6 +1,6 @@
 import { ActionForm } from "@/app/_ui/action-form";
-import { Card, Field, Icon, PageShell, Select } from "@/app/_ui/kit";
-import { IlloStall } from "@/app/_ui/illustrations";
+import { FormShell } from "@/app/_ui/form-shell";
+import { Card, Field, Icon, Select } from "@/app/_ui/kit";
 import { markets } from "@/server/traders/register";
 import { registerStart } from "../actions";
 
@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export default async function RegisterPage() {
   const list = await markets();
   return (
-    <PageShell art={<IlloStall />} title="Get your LevyPass" back={{ href: "/login", label: "Log in" }}>
+    <FormShell scene="register" title="Get your LevyPass" back={{ href: "/login", label: "Log in" }}>
       <Card>
         <ActionForm action={registerStart} submit="Send my code">
           <Field label="Full name" name="name" autoComplete="name" required placeholder="Bisi Adewale" />
@@ -48,6 +48,6 @@ export default async function RegisterPage() {
           </li>
         ))}
       </ol>
-    </PageShell>
+    </FormShell>
   );
 }

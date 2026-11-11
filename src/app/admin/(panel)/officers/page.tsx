@@ -16,8 +16,8 @@ export default async function OfficersPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title="Officers" lead="Suspending ends the officer's sessions at once. The next scan of their ID shows SUSPENDED and raises a fraud flag." />
-      <div className="grid gap-6 lg:grid-cols-3">
-        <Card className="overflow-x-auto p-0 sm:p-0 lg:col-span-2">
+      <div className="grid gap-6 xl:grid-cols-3">
+        <Card className="overflow-x-auto p-0 sm:p-0 xl:col-span-2">
           <table className="w-full min-w-[560px] text-[14px]">
             <thead>
               <tr className="border-b border-line text-left text-[12px] text-ink-3">

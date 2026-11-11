@@ -1,11 +1,11 @@
 import { ActionForm } from "@/app/_ui/action-form";
-import { Card, Field, LinkButton, PageShell } from "@/app/_ui/kit";
-import { IlloFeaturePhone } from "@/app/_ui/illustrations";
+import { FormShell } from "@/app/_ui/form-shell";
+import { Card, Field, LinkButton } from "@/app/_ui/kit";
 import { loginStart } from "../actions";
 
 export default function LoginPage() {
   return (
-    <PageShell art={<IlloFeaturePhone />} title="Welcome back" back={{ href: "/", label: "Home" }}>
+    <FormShell scene="trader" title="Welcome back" back={{ href: "/", label: "Home" }}>
       <Card>
         <ActionForm action={loginStart} submit="Send my code">
           <Field label="Phone number" name="phone" inputMode="tel" autoComplete="tel" required placeholder="0803 000 0000" />
@@ -19,6 +19,6 @@ export default function LoginPage() {
       <LinkButton href="/register" variant="outline" size="lg">
         Register as a trader
       </LinkButton>
-    </PageShell>
+    </FormShell>
   );
 }

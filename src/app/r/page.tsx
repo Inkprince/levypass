@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
-import { Card, Note, PageShell } from "@/app/_ui/kit";
-import { IlloReceipt } from "@/app/_ui/illustrations";
+import { FormShell } from "@/app/_ui/form-shell";
+import { Card, Note } from "@/app/_ui/kit";
 import { ReceiptSearch } from "./receipt-search";
 
 export const metadata = { title: "Check a receipt" };
@@ -12,11 +12,11 @@ export default async function ReceiptCheck({ searchParams }: { searchParams: Pro
   const { number } = await searchParams;
   if (number !== undefined) redirect(target(number));
   return (
-    <PageShell art={<IlloReceipt />} title="Check that a receipt is genuine" back={{ href: "/", label: "Home" }}>
+    <FormShell scene="receipt" title="Check that a receipt is genuine" back={{ href: "/", label: "Home" }}>
       <Card>
         <ReceiptSearch variant="card" />
       </Card>
       <Note icon="flag">LevyPass reports any receipt number it never issued to the revenue office.</Note>
-    </PageShell>
+    </FormShell>
   );
 }

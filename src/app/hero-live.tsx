@@ -115,7 +115,7 @@ export function PaymentCarousel({ payments }: { payments: HeroPayment[] }) {
           {lagosTime(p.at)}
         </p>
         {payments.length > 1 ? (
-          <div className="mt-5 flex items-center gap-1.5">
+          <div className="-mx-1 mt-3 flex items-center">
             {payments.map((x, n) => (
               <button
                 key={x.id}
@@ -123,9 +123,11 @@ export function PaymentCarousel({ payments }: { payments: HeroPayment[] }) {
                 onClick={() => setI(n)}
                 aria-label={`Show payment ${n + 1} of ${payments.length}`}
                 aria-current={n === i ? "true" : undefined}
-                className={`relative h-1.5 overflow-hidden rounded-full transition-all duration-300 ${n === i ? "w-8 bg-white/20" : "w-1.5 bg-white/30 hover:bg-white/50"}`}
+                className="group flex h-8 items-center px-1"
               >
-                {n === i ? <span key={`${x.id}-${i}`} className="lp-progress absolute inset-0 origin-left rounded-full bg-lime" style={{ animationDuration: `${STEP_MS}ms`, animationPlayState: paused ? "paused" : "running" }} /> : null}
+                <span className={`relative block h-1.5 overflow-hidden rounded-full transition-all duration-300 ${n === i ? "w-8 bg-white/20" : "w-1.5 bg-white/30 group-hover:bg-white/50"}`}>
+                  {n === i ? <span key={`${x.id}-${i}`} className="lp-progress absolute inset-0 origin-left rounded-full bg-lime" style={{ animationDuration: `${STEP_MS}ms`, animationPlayState: paused ? "paused" : "running" }} /> : null}
+                </span>
               </button>
             ))}
           </div>

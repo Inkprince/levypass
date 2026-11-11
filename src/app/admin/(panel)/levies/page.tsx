@@ -14,8 +14,8 @@ export default async function LeviesPage() {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader title="Levies" lead="A new amount applies only to new periods. Existing periods keep their original amount." />
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="flex flex-col gap-4 lg:col-span-2">
+      <div className="grid gap-6 xl:grid-cols-3">
+        <div className="flex flex-col gap-4 xl:col-span-2">
           {levies.map((l) => (
             <Card key={l.id}>
               <form action={updateLevy} className="flex flex-col gap-4">

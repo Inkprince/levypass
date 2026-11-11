@@ -127,7 +127,7 @@ export function LinkButton({ href, children, variant = "primary", size = "md", c
 /** A text link with a trailing arrow, used for secondary navigation. */
 export function ArrowLink({ href, children, className = "", target }: { href: string; children: ReactNode; className?: string; target?: string }) {
   return (
-    <Link href={href} target={target} className={`group inline-flex items-center gap-1 font-semibold text-forest ${className}`}>
+    <Link href={href} target={target} className={`group inline-flex min-h-11 items-center gap-1 font-semibold text-forest ${className}`}>
       {children}
       <Icon name="chevronRight" size={16} stroke={2.2} className="transition-transform group-hover:translate-x-0.5" />
     </Link>
@@ -296,11 +296,11 @@ export function PageShell({ children, title, lead, back, art, wide = false }: { 
     <div className="min-h-dvh bg-mist">
       <header className="sticky top-0 z-30 border-b border-line bg-mist/85 backdrop-blur-md">
         <div className={`mx-auto flex h-14 items-center justify-between ${width}`}>
-          <Link href="/" aria-label="LevyPass home">
+          <Link href="/" aria-label="LevyPass home" className="flex min-h-11 items-center">
             <Logo size={26} />
           </Link>
           {back ? (
-            <Link href={back.href} className="inline-flex items-center gap-1 rounded-[var(--radius-btn)] px-3 py-1.5 text-sm font-semibold text-ink-2 hover:bg-fill hover:text-ink">
+            <Link href={back.href} className="inline-flex min-h-11 items-center gap-1 rounded-[var(--radius-btn)] px-3 text-sm font-semibold text-ink-2 hover:bg-fill hover:text-ink">
               <Icon name="arrowLeft" size={16} stroke={2} />
               {back.label}
             </Link>

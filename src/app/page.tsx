@@ -54,13 +54,13 @@ function SiteNav() {
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-cream/85 backdrop-blur-md">
       <div className="gutter flex h-16 items-center gap-8">
-        <Link href="/" aria-label="LevyPass home">
+        <Link href="/" aria-label="LevyPass home" className="flex min-h-11 items-center">
           <Logo />
         </Link>
         <nav className="hidden items-center gap-6 text-[14px] font-medium text-ink-2 md:flex">
-          <a href="#how" className="hover:text-ink">How it works</a>
-          <Link href="/r" className="hover:text-ink">Check a receipt</Link>
-          <Link href="/demo" className="hover:text-ink">Demo</Link>
+          <a href="#how" className="py-2.5 hover:text-ink">How it works</a>
+          <Link href="/r" className="py-2.5 hover:text-ink">Check a receipt</Link>
+          <Link href="/demo" className="py-2.5 hover:text-ink">Demo</Link>
         </nav>
         <div className="ml-auto flex items-center gap-2">
           <Link href="/officer" className="hidden rounded-full px-3 py-2 text-[14px] font-medium text-ink-2 hover:bg-fill hover:text-ink lg:inline-flex">
@@ -72,9 +72,14 @@ function SiteNav() {
           <LinkButton href="/demo" variant="secondary" size="sm" className="md:hidden">
             Demo
           </LinkButton>
-          <LinkButton href="/register" size="sm">
-            Register a trader
+          <LinkButton href="/login" size="sm" className="whitespace-nowrap">
+            Log in
           </LinkButton>
+          <span className="hidden sm:block">
+            <LinkButton href="/register" variant="secondary" size="sm">
+              Register
+            </LinkButton>
+          </span>
         </div>
       </div>
     </header>
@@ -91,7 +96,7 @@ function Hero({ payments, levy, qr }: { payments: HeroPayment[]; levy: { name: s
       </svg>
       <div className="gutter relative grid items-center gap-12 pb-10 pt-12 md:pt-20 lg:grid-cols-[1.2fr_0.8fr] lg:gap-14 lg:pb-12">
         <div>
-          <h1 className="display text-[48px] sm:text-[68px] lg:text-[62px] xl:text-[72px] 2xl:text-[88px]">
+          <h1 className="display text-[40px] min-[375px]:text-[48px] sm:text-[68px] lg:text-[62px] xl:text-[72px] 2xl:text-[88px]">
             <span className="animate-rise block" style={{ animationDelay: "80ms" }}>
               Traders pay levies by phone.
             </span>
@@ -100,10 +105,13 @@ function Hero({ payments, levy, qr }: { payments: HeroPayment[]; levy: { name: s
             </span>
           </h1>
           <div style={{ animationDelay: "360ms" }} className="animate-rise mt-9 flex flex-wrap items-center gap-3">
-            <LinkButton href="/register" size="lg">
+            <LinkButton href="/login" size="lg">
+              Log in
+            </LinkButton>
+            <LinkButton href="/register" size="lg" variant="secondary">
               Register a trader
             </LinkButton>
-            <LinkButton href="/demo" size="lg" variant="secondary">
+            <LinkButton href="/demo" size="lg" variant="outline">
               See the five-minute demo
               <Icon name="arrowRight" size={18} stroke={2} />
             </LinkButton>
@@ -263,9 +271,9 @@ function LiveBand({ d }: { d: Summary | null }) {
             Open the revenue dashboard
           </ArrowLink>
         </div>
-        <dl className="mt-14 grid grid-cols-2 gap-x-6 gap-y-10 border-t border-white/10 pt-10 lg:grid-cols-4">
+        <dl className="mt-14 grid grid-cols-1 gap-x-6 gap-y-10 border-t border-white/10 pt-10 min-[400px]:grid-cols-2 lg:grid-cols-4">
           {stats.map(([value, label, sub]) => (
-            <div key={label}>
+            <div key={label} className="min-w-0">
               <dd className="money text-[30px] leading-none text-white sm:text-[38px]">{value}</dd>
               <dt className="mt-3 text-[15px] font-medium text-white/85">{label}</dt>
               <p className="mt-0.5 text-[13px] text-white/50">{sub}</p>
@@ -304,7 +312,7 @@ function LiveBand({ d }: { d: Summary | null }) {
 
 function ReceiptCheck({ qr }: { qr: string }) {
   return (
-    <section className="rails gutter border-t border-line py-20 lg:py-28">
+    <section className="rails gutter overflow-x-clip border-t border-line py-20 lg:py-28">
       <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
         <PlayInView className="w-full max-w-[420px]">
           <IlloHands className="h-auto w-full" />
@@ -327,7 +335,7 @@ function ReceiptCheck({ qr }: { qr: string }) {
 
 function SiteFooter() {
   const cols: [string, [string, string][]][] = [
-    ["Traders", [["Register", "/register"], ["Log in", "/login"], ["Check a receipt", "/r"], ["Phone simulator", "/sim"]]],
+    ["Traders", [["Log in", "/login"], ["Register", "/register"], ["Check a receipt", "/r"], ["Phone simulator", "/sim"]]],
     ["Officers", [["Scanner", "/officer"], ["Officer login", "/officer/login"]]],
     ["Revenue office", [["Dashboard", "/admin"], ["Reconciliation", "/admin/reconciliation"], ["Fraud and complaints", "/admin/fraud"], ["Failure drills", "/admin/failures"]]],
     ["Project", [["Five-minute demo", "/demo"]]],
@@ -343,10 +351,10 @@ function SiteFooter() {
           {cols.map(([title, links]) => (
             <div key={title}>
               <p className="text-[13px] font-semibold text-ink">{title}</p>
-              <ul className="mt-3 flex flex-col gap-2.5 text-[14px] text-ink-2">
+              <ul className="mt-1.5 flex flex-col text-[14px] text-ink-2 md:mt-3 md:gap-2.5">
                 {links.map(([label, href]) => (
                   <li key={href}>
-                    <Link href={href} className="hover:text-ink">
+                    <Link href={href} className="inline-flex min-h-11 items-center hover:text-ink md:min-h-0">
                       {label}
                     </Link>
                   </li>

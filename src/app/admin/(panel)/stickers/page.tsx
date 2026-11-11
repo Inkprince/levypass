@@ -15,7 +15,7 @@ export default async function StickersPage() {
       <div className="no-print">
         <PageHeader title="QR stickers" lead="Print with your browser (Ctrl or Cmd + P) and fix one to each stall." />
       </div>
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 xl:grid-cols-4">
         {cards.map((c) => (
           <div key={c.id} className="flex break-inside-avoid flex-col overflow-hidden rounded-2xl border border-line bg-paper">
             <div className="flex items-center justify-between bg-forest px-3 py-2 text-white">
