@@ -29,11 +29,11 @@ function Settled({ id }: { id: string }) {
     return () => clearInterval(t);
   }, [id]);
   return done ? (
-    <li className="animate-pop flex gap-2.5 bg-go-bg px-3 py-2.5 font-semibold text-go-fg">
+    <li className="animate-pop flex gap-2.5 rounded-xl bg-go-bg px-3 py-2.5 font-semibold text-go-fg">
       <Icon name="check" size={16} stroke={2.6} className="mt-0.5" /> LevyPass: the poller asked the bank, verified the payment and settled it after {secs} s. No webhook needed.
     </li>
   ) : (
-    <li className="flex items-center gap-2.5 bg-warn-bg px-3 py-2.5 text-warn-fg">
+    <li className="flex items-center gap-2.5 rounded-xl bg-warn-bg px-3 py-2.5 text-warn-fg">
       <span className="h-4 w-4 shrink-0 animate-spin rounded-full border-2 border-warn-fg/30 border-t-warn-fg" aria-hidden="true" /> Waiting for the safety net... {secs} s
     </li>
   );
@@ -51,9 +51,9 @@ export function Drills() {
       {scenarios.map(([key, title, blurb, icon]) => {
         const run = runs[key];
         return (
-          <section key={key} className="flex flex-col gap-5 bg-mist-2 p-6">
+          <section key={key} className="flex flex-col gap-5 rounded-[var(--radius-card)] bg-mist-2 p-6">
             <div className="flex items-start gap-4">
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center border-[1.5px] border-ink bg-paper text-ink">
+              <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-paper text-forest">
                 <Icon name={icon} size={20} />
               </span>
               <div>

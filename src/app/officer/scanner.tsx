@@ -112,7 +112,7 @@ export function Scanner() {
             </p>
             <p className="text-white/70">Today, {result.date}</p>
             {unpaid && result.owedKobo ? (
-              <p className="mt-4 bg-white/15 px-5 py-3.5 text-[17px]">
+              <p className="mt-4 rounded-2xl bg-white/15 px-5 py-3.5 text-[17px]">
                 Owes <b className="tnum">{naira(result.owedKobo)}</b>. Pay now: dial <b className="font-mono">{result.payCode}</b>
               </p>
             ) : null}
@@ -124,14 +124,14 @@ export function Scanner() {
             Checked in {(elapsed / 1000).toFixed(2)} s
           </p>
         ) : null}
-        <p className="mt-6 bg-white/15 px-6 py-3 font-semibold">Tap to scan the next trader</p>
+        <p className="mt-6 rounded-full bg-white/15 px-6 py-3 font-semibold">Tap to scan the next trader</p>
       </button>
     );
   }
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="relative aspect-square overflow-hidden bg-night">
+      <div className="relative aspect-square overflow-hidden rounded-[28px] bg-night">
         <video ref={video} playsInline muted className="h-full w-full object-cover" />
         <div className="pointer-events-none absolute inset-[18%]" aria-hidden="true">
           {["left-0 top-0 border-l-[3px] border-t-[3px] rounded-tl-2xl", "right-0 top-0 border-r-[3px] border-t-[3px] rounded-tr-2xl", "left-0 bottom-0 border-l-[3px] border-b-[3px] rounded-bl-2xl", "right-0 bottom-0 border-r-[3px] border-b-[3px] rounded-br-2xl"].map((c) => (
@@ -150,7 +150,7 @@ export function Scanner() {
         ) : null}
       </div>
       <form
-        className="flex gap-2 border-[1.5px] border-ink bg-paper p-1.5 pl-4 focus-within:ring-4 focus-within:ring-forest/10"
+        className="flex gap-2 rounded-full border border-line-2 bg-paper p-1.5 pl-5 focus-within:border-forest focus-within:ring-4 focus-within:ring-forest/10"
         onSubmit={(e) => {
           e.preventDefault();
           if (manual.trim()) void check({ id: manual.trim() }, performance.now());

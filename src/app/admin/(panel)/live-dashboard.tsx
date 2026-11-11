@@ -43,7 +43,7 @@ export function LiveDashboard({ initial }: { initial: Summary }) {
   return (
     <div className="-mx-4 -my-8 sm:-mx-6 lg:-mx-10 lg:-my-10 2xl:-mx-14">
       {/* Hero panel */}
-      <section className="relative overflow-hidden bg-mist-2 px-4 py-8 sm:px-6 lg:mx-10 lg:mt-10 lg:px-10 lg:py-10 2xl:mx-14">
+      <section className="relative overflow-hidden bg-mist-2 px-4 py-8 sm:px-6 lg:mx-10 lg:mt-10 lg:rounded-[28px] lg:px-10 lg:py-10 2xl:mx-14">
         <svg className="pointer-events-none absolute inset-0 hidden h-full w-full lg:block" viewBox="0 0 1000 400" preserveAspectRatio="none" aria-hidden="true">
           <path className="lp-draw" pathLength={1} d="M520 -10 C 560 160, 700 300, 1010 330" fill="none" stroke="#0f3d2e" strokeOpacity="0.35" strokeWidth="1.5" vectorEffect="non-scaling-stroke" />
         </svg>
@@ -51,7 +51,7 @@ export function LiveDashboard({ initial }: { initial: Summary }) {
           <div>
             <div className="flex flex-wrap items-center gap-3">
               <p className="text-[16px] text-ink">{greeting(d.asOf)}, revenue office.</p>
-              <span className="inline-flex items-center gap-2 bg-paper px-2.5 py-1 text-[12px] font-medium text-ink-2">
+              <span className="inline-flex items-center gap-2 rounded-full bg-paper px-2.5 py-1 text-[12px] font-medium text-ink-2">
                 <span className="relative flex h-2 w-2" aria-hidden="true">
                   <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-go opacity-60" />
                   <span className="relative inline-flex h-2 w-2 rounded-full bg-go" />
@@ -109,7 +109,7 @@ export function LiveDashboard({ initial }: { initial: Summary }) {
             <ol className="mt-6 flex flex-col">
               {d.recent.map((p, i) => (
                 <li key={p.id} className="animate-fadein grid grid-cols-[48px_1fr_auto] items-center gap-4 py-2.5 sm:grid-cols-[48px_1fr_1fr_auto]">
-                  <span className="relative flex h-12 w-12 items-center justify-center border-[1.5px] border-ink bg-paper">
+                  <span className="relative flex h-12 w-12 items-center justify-center rounded-full border border-line bg-paper text-forest">
                     <Icon name={channelIcon(p.channel)} size={18} />
                     {i < d.recent.length - 1 ? <span className="absolute left-1/2 top-full h-5 w-[1.5px] -translate-x-1/2 bg-ink/25" aria-hidden="true" /> : null}
                   </span>
@@ -133,7 +133,7 @@ export function LiveDashboard({ initial }: { initial: Summary }) {
                   <span className="text-right text-[17px] font-semibold tracking-[-0.02em] tnum">{naira(p.amountKobo)}</span>
                 </li>
               ))}
-              {d.recent.length === 0 ? <li className="border-[1.5px] border-dashed border-line-2 p-6 text-[15px] text-ink-2">No confirmed payments yet.</li> : null}
+              {d.recent.length === 0 ? <li className="rounded-[var(--radius-card)] border border-dashed border-line-2 p-6 text-[15px] text-ink-2">No confirmed payments yet.</li> : null}
             </ol>
           </section>
         </div>
@@ -149,7 +149,7 @@ export function LiveDashboard({ initial }: { initial: Summary }) {
           <h3 className="mt-10 text-[15px] text-ink-2">Compliance today</h3>
           <div className="mt-3 flex flex-col gap-2.5">
             {d.compliance.map((c) => (
-              <div key={c.market} className="bg-mist-2 p-5">
+              <div key={c.market} className="rounded-[var(--radius-card)] bg-mist-2 p-5">
                 <div className="flex items-baseline justify-between gap-3">
                   <span className="text-[16px] font-medium tracking-[-0.02em]">{c.market}</span>
                   <span className="text-[15px] font-semibold tnum">{Math.round(c.rate * 100)}%</span>
@@ -166,7 +166,7 @@ export function LiveDashboard({ initial }: { initial: Summary }) {
           </div>
 
           <h3 className="mt-10 text-[15px] text-ink-2">Revenue by levy, today</h3>
-          <dl className="mt-3 bg-mist-2 px-5">
+          <dl className="mt-3 rounded-[var(--radius-card)] bg-mist-2 px-5">
             {d.byLevy.map((l) => (
               <div key={l.levy} className="flex justify-between gap-3 border-b border-line py-3.5 text-[15px] last:border-0">
                 <dt>{l.levy}</dt>
@@ -188,7 +188,7 @@ const tileTone = {
 
 function HeroTile({ n, label, value, sub, tone, art }: { n: string; label: string; value: string; sub?: string; tone: keyof typeof tileTone; art: ReactNode }) {
   return (
-    <div className={`relative flex min-h-[132px] min-w-0 flex-col overflow-hidden p-4 sm:min-h-[230px] ${tileTone[tone]}`}>
+    <div className={`relative flex min-h-[132px] min-w-0 flex-col overflow-hidden rounded-[20px] p-4 sm:min-h-[230px] ${tileTone[tone]}`}>
       <span className="text-[14px] font-medium">{n}</span>
       <span className="mt-3 text-[15px] font-medium leading-tight tracking-[-0.02em]">{label}</span>
       <span className="money mt-1 text-[26px] leading-none sm:truncate">{value}</span>
@@ -200,7 +200,7 @@ function HeroTile({ n, label, value, sub, tone, art }: { n: string; label: strin
 
 function RailCard({ href, title, value, tag }: { href: string; title: string; value: number; tag: ReactNode }) {
   return (
-    <Link href={href} className="group flex items-center justify-between gap-4 bg-mist-2 p-5 hover:bg-fill-2">
+    <Link href={href} className="group flex items-center justify-between gap-4 rounded-[var(--radius-card)] bg-mist-2 p-5 hover:bg-fill-2">
       <span>
         <span className="block text-[16px] font-medium tracking-[-0.02em]">{title}</span>
         <span className="mt-2 block">{tag}</span>
@@ -238,8 +238,8 @@ function Chart({ days }: { days: Summary["days"] }) {
               const isToday = i === days.length - 1;
               return (
                 <div key={x.date} className="group relative flex h-full flex-1 items-end">
-                  <div className={`w-full rounded-t-[2px] transition-colors ${isToday ? "bg-forest" : "bg-forest/20 group-hover:bg-forest/35"}`} style={{ height: `${Math.max(1.5, (x.kobo / max) * 100)}%` }} />
-                  <span className={`pointer-events-none absolute bottom-full z-10 mb-2 whitespace-nowrap bg-ink px-2.5 py-1.5 text-[12px] font-semibold text-white opacity-0 transition-opacity group-hover:opacity-100 ${i < days.length / 2 ? "left-0" : "right-0"}`}>
+                  <div className={`w-full rounded-t-[4px] transition-colors ${isToday ? "bg-forest" : "bg-forest/20 group-hover:bg-forest/35"}`} style={{ height: `${Math.max(1.5, (x.kobo / max) * 100)}%` }} />
+                  <span className={`pointer-events-none absolute bottom-full z-10 mb-2 whitespace-nowrap rounded-lg bg-ink px-2.5 py-1.5 text-[12px] font-semibold text-white opacity-0 transition-opacity group-hover:opacity-100 ${i < days.length / 2 ? "left-0" : "right-0"}`}>
                     {dayLabel(x.date)} · {naira(x.kobo)}
                   </span>
                 </div>

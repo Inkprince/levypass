@@ -33,7 +33,7 @@ export default async function OfficersPage() {
                 <tr key={o.id} className="border-b border-line last:border-0">
                   <td className="px-6 py-3.5">
                     <span className="flex items-center gap-3">
-                      <span className="flex h-9 w-9 items-center justify-center bg-forest text-[12px] font-bold text-lime">
+                      <span className="flex h-9 w-9 items-center justify-center rounded-full bg-forest text-[12px] font-bold text-lime">
                         {o.name
                           .split(" ")
                           .map((p) => p[0])

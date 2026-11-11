@@ -62,7 +62,7 @@ export default async function FraudPage() {
             <Card key={f.id} className="animate-fadein flex flex-col gap-3">
               <div className="flex items-start justify-between gap-3">
                 <span className="flex items-center gap-3">
-                  <span className="flex h-10 w-10 items-center justify-center border-[1.5px] border-ink bg-paper text-ink">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-warn-bg text-warn-fg">
                     <Icon name={flagIcon[f.type] ?? "flag"} size={17} />
                   </span>
                   <span className="font-semibold">{label[f.type] ?? f.type}</span>
@@ -159,7 +159,7 @@ function SectionTitle({ children, count }: { children: React.ReactNode; count: n
   return (
     <h2 className="mb-5 flex items-center gap-3 border-t border-line pt-8 text-[28px] font-medium tracking-[-0.045em]">
       {children}
-      <span className="bg-mist-2 px-2 py-0.5 text-[12px] font-semibold text-ink-2 tnum">{count}</span>
+      <span className="rounded-full bg-mist-2 px-2.5 py-0.5 text-[13px] font-semibold text-ink-2 tnum">{count}</span>
     </h2>
   );
 }

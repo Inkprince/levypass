@@ -21,7 +21,7 @@ const initials = (name: string) =>
 
 /** Square sand chip from the Kalimo top bar. */
 function Chip({ children, href, label }: { children: ReactNode; href?: string; label?: string }) {
-  const cls = "flex h-11 items-center gap-2 bg-mist-2 px-3.5 text-[14px] font-medium text-ink";
+  const cls = "flex h-10 items-center gap-2 rounded-full bg-mist-2 px-3.5 text-[14px] font-medium text-ink";
   return href ? (
     <Link href={href} aria-label={label} className={`${cls} hover:bg-fill-2`}>
       {children}
@@ -51,13 +51,13 @@ export default async function PanelLayout({ children }: { children: ReactNode })
           <SideNav />
         </div>
 
-        <Link href="/admin/failures" className="group relative mt-auto block bg-lime px-4 pb-4 pt-9 text-ink">
+        <Link href="/admin/failures" className="group relative mt-auto block rounded-[var(--radius-card)] bg-lime px-4 pb-4 pt-9 text-ink">
           <span className="absolute -top-6 left-4 flex h-12 w-12 items-center justify-center rounded-full border-[2.5px] border-ink bg-paper" aria-hidden="true">
             <Icon name="bolt" size={20} stroke={2.2} />
           </span>
           <span className="block text-[22px] font-medium leading-[1.02] tracking-[-0.045em]">Break it on purpose</span>
           <span className="mt-2 block text-[13px] leading-snug text-ink/75">Withhold, replay and forge webhooks live. No double credit.</span>
-          <span className="mt-4 flex h-10 items-center justify-between bg-paper px-3 text-[14px] font-medium">
+          <span className="mt-4 flex h-10 items-center justify-between rounded-full bg-paper px-4 text-[14px] font-medium">
             Failure drills
             <Icon name="arrowUpRight" size={14} stroke={2.4} className="transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
           </span>
@@ -88,13 +88,13 @@ export default async function PanelLayout({ children }: { children: ReactNode })
                 </Chip>
               </span>
               <Chip href="/admin/fraud" label={`${openFlags} open fraud flags`}>
-                <span className={`flex h-6 w-6 items-center justify-center rounded-full border-2 border-ink ${openFlags ? "bg-coral" : "bg-paper"}`} aria-hidden="true">
+                <span className={`flex h-6 w-6 items-center justify-center rounded-full ${openFlags ? "bg-coral text-white" : "bg-paper text-ink-2"}`} aria-hidden="true">
                   <Icon name="flag" size={12} stroke={2.4} />
                 </span>
                 <span className="tnum">{openFlags}</span>
                 <span className="hidden md:inline">open flags</span>
               </Chip>
-              <span className="flex h-11 w-11 items-center justify-center bg-forest text-[14px] font-semibold text-lime" title={me?.name}>
+              <span className="flex h-10 w-10 items-center justify-center rounded-full bg-forest text-[13px] font-semibold text-lime" title={me?.name}>
                 {initials(me?.name ?? "Revenue office")}
               </span>
             </div>

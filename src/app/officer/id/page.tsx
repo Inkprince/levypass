@@ -15,7 +15,7 @@ export default async function OfficerIdPage() {
   const svg = await qrSvg(await officerIdUrl(o.id, o.qrTokenId));
   return (
     <PageShell back={{ href: "/officer", label: "Back to scan" }}>
-      <section className="overflow-hidden rounded-[var(--radius-card)] bg-forest text-white">
+      <section className="overflow-hidden rounded-[28px] bg-forest text-white">
         <div className="flex items-start justify-between px-6 pt-6">
           <div>
             <p className="text-[13px] text-white/65">Levy officer</p>
@@ -24,7 +24,7 @@ export default async function OfficerIdPage() {
           </div>
           <Mark size={34} tone="lime" />
         </div>
-        <div className="mx-4 mb-4 mt-6 flex flex-col items-center gap-4 rounded-[var(--radius-card)] bg-paper p-5 text-ink">
+        <div className="mx-4 mb-4 mt-6 flex flex-col items-center gap-4 rounded-[22px] bg-paper p-5 text-ink">
           <Badge tone={o.status === "active" ? "paid" : "unpaid"}>{o.status}</Badge>
           <div className="w-full max-w-[240px] [&_svg]:h-auto [&_svg]:w-full" dangerouslySetInnerHTML={{ __html: svg }} />
           <p className="text-center text-[14px] text-ink-2">Traders: scan this with your phone camera to check that I am a real, active officer.</p>

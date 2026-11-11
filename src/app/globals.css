@@ -64,14 +64,10 @@
 }
 
 /*
- * The desk: revenue office and officer screens, after the Kalimo dashboard.
- * Cream ground, sand panels without borders, square corners, ink type.
+ * The desk: revenue office and officer screens, after the Kalimo dashboard layout.
+ * Cream ground and sand panels without borders; same rounded shapes as the rest of the site.
  */
 .desk {
-  --radius-card: 0px;
-  --radius-btn: 0px;
-  --radius-input: 0px;
-  --radius-chip: 0px;
   --card-bg: var(--color-mist-2);
   --card-border: transparent;
   --color-line: #ddd3bd;

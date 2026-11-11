@@ -25,7 +25,7 @@ export default async function LeviesPage() {
                     <p className="text-[17px] font-semibold tracking-[-0.02em]">{l.name}</p>
                     <p className="text-[13px] capitalize text-ink-3">{l.period}</p>
                   </div>
-                  <label className="inline-flex cursor-pointer items-center gap-2 bg-paper px-3 py-1.5 text-[13px] font-medium">
+                  <label className="inline-flex cursor-pointer items-center gap-2 rounded-full bg-paper px-3 py-1.5 text-[13px] font-medium">
                     <input type="checkbox" name="active" defaultChecked={l.active} className="h-4 w-4 accent-[#0f3d2e]" /> Active
                   </label>
                 </div>

@@ -18,8 +18,8 @@ export default async function OfficerPage() {
       <header className="bg-forest text-white">
         <div className="mx-auto flex h-14 max-w-md items-center justify-between px-4">
           <Logo light size={26} />
-          <Link href="/officer/id" className="flex items-center gap-2.5 bg-white/10 py-1 pl-1 pr-3 text-left hover:bg-white/15">
-            <span className="flex h-8 w-8 items-center justify-center bg-lime text-[12px] font-bold text-forest">
+          <Link href="/officer/id" className="flex items-center gap-2.5 rounded-full bg-white/10 py-1 pl-1 pr-3 text-left hover:bg-white/15">
+            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-lime text-[12px] font-bold text-forest">
               {(o?.name ?? "")
                 .split(" ")
                 .map((p) => p[0])
@@ -40,12 +40,12 @@ export default async function OfficerPage() {
         </div>
         <Scanner />
         <div className="mt-2 flex items-center justify-between text-[14px] font-semibold">
-          <Link href="/officer/id" className="inline-flex items-center gap-1.5 px-3 py-2 text-forest hover:bg-fill">
+          <Link href="/officer/id" className="inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-forest hover:bg-fill">
             <Icon name="qr" size={17} />
             Show my officer ID
           </Link>
           <form action={officerLogout}>
-            <button className="inline-flex items-center gap-1.5 px-3 py-2 text-ink-3 hover:bg-fill hover:text-ink">
+            <button className="inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-ink-3 hover:bg-fill hover:text-ink">
               <Icon name="logout" size={17} />
               Log out
             </button>
