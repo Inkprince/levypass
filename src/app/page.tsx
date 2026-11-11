@@ -6,7 +6,9 @@ import { t } from "@/messages";
 import { ArrowLink, Icon, LinkButton, Logo, buttonClass, type IconName } from "@/app/_ui/kit";
 import { IlloHands, IlloScan, MarketScene } from "@/app/_ui/illustrations";
 import { dashboardSummary, type Summary } from "@/server/admin/summary";
-import { CountUp, PaymentCarousel, type HeroPayment } from "./hero-live";
+import { PlayInView } from "@/app/_ui/play-in-view";
+import { PaymentCarousel, type HeroPayment } from "./hero-live";
+import { ReceiptSearch } from "./r/receipt-search";
 import { db } from "@/server/db/client";
 import * as s from "@/server/db/schema";
 import { env } from "@/server/env";
@@ -34,8 +36,10 @@ export default async function Home() {
   return (
     <div className="bg-cream text-ink">
       <SiteNav />
-      <Hero d={d} payments={payments} levy={levy ?? null} qr={checkQr} />
-      <MarketScene className="block h-[230px] w-full sm:h-auto sm:max-h-[640px]" />
+      <Hero payments={payments} levy={levy ?? null} qr={checkQr} />
+      <PlayInView>
+        <MarketScene className="block h-[230px] w-full sm:h-auto sm:max-h-[640px]" />
+      </PlayInView>
       <HowItWorks d={d} levy={levy ?? null} latestReceipt={latest?.receipt ?? null} host={base.replace(/^https?:\/\//, "")} />
       <LiveBand d={d} />
       <ReceiptCheck qr={checkQr} />
@@ -79,7 +83,7 @@ function SiteNav() {
 
 /* -------------------------------------------------------------------- hero */
 
-function Hero({ d, payments, levy, qr }: { d: Summary | null; payments: HeroPayment[]; levy: { name: string; amountKobo: number } | null; qr: string }) {
+function Hero({ payments, levy, qr }: { payments: HeroPayment[]; levy: { name: string; amountKobo: number } | null; qr: string }) {
   return (
     <section className="rails relative overflow-hidden">
       <svg className="pointer-events-none absolute inset-0 hidden h-full w-full lg:block" viewBox="0 0 1200 760" preserveAspectRatio="none" aria-hidden="true">
@@ -87,22 +91,12 @@ function Hero({ d, payments, levy, qr }: { d: Summary | null; payments: HeroPaym
       </svg>
       <div className="gutter relative grid items-center gap-12 pb-10 pt-12 md:pt-20 lg:grid-cols-[1.2fr_0.8fr] lg:gap-14 lg:pb-12">
         <div>
-          {d && (d.collected.day > 0 || d.collected.month > 0) ? (
-            <p className="animate-rise mb-7 inline-flex items-center gap-2.5 rounded-full border border-line bg-paper/70 py-1.5 pl-3 pr-4 text-[13px] text-ink-2">
-              <LiveDot />
-              <span>
-                {d.collected.day > 0 ? "Collected today" : "Collected this month"}
-                <span className="hidden sm:inline"> through LevyPass</span>
-              </span>
-              <CountUp kobo={d.collected.day > 0 ? d.collected.day : d.collected.month} className="font-bold text-ink tnum" />
-            </p>
-          ) : null}
           <h1 className="display text-[48px] sm:text-[68px] lg:text-[62px] xl:text-[72px] 2xl:text-[88px]">
             <span className="animate-rise block" style={{ animationDelay: "80ms" }}>
-              Every levy paid.
+              Traders pay levies by phone.
             </span>
             <span className="animate-rise block text-ink-3" style={{ animationDelay: "180ms" }}>
-              Every naira traced.
+              Officers check them in one scan.
             </span>
           </h1>
           <div style={{ animationDelay: "360ms" }} className="animate-rise mt-9 flex flex-wrap items-center gap-3">
@@ -117,22 +111,13 @@ function Hero({ d, payments, levy, qr }: { d: Summary | null; payments: HeroPaym
           <p style={{ animationDelay: "440ms" }} className="animate-rise mt-8 flex items-start gap-2 text-[14px] text-ink-2">
             <Icon name="phone" size={18} className="mt-px text-forest" />
             <span>
-              No smartphone needed. Dial <span className="whitespace-nowrap rounded-md bg-mist-2 px-1.5 py-0.5 font-mono text-[13px] font-semibold text-ink">*347*13#</span> on any phone.
+              Dial <span className="whitespace-nowrap rounded-md bg-mist-2 px-1.5 py-0.5 font-mono text-[13px] font-semibold text-ink">*347*13#</span>
             </span>
           </p>
         </div>
         <PaymentCard payments={payments} levy={levy} qr={qr} />
       </div>
     </section>
-  );
-}
-
-function LiveDot() {
-  return (
-    <span className="relative flex h-2 w-2" aria-hidden="true">
-      <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-go opacity-60" />
-      <span className="relative inline-flex h-2 w-2 rounded-full bg-go" />
-    </span>
   );
 }
 
@@ -204,21 +189,21 @@ function HowItWorks({ d, levy, latestReceipt, host }: { d: Summary | null; levy:
   const paidRate = d ? d.compliance.reduce((x, c) => x + c.paid, 0) : 0;
   return (
     <section className="rails gutter border-t border-line py-20 lg:py-28">
-      <SectionHead id="how" title="Three steps from stall to proof." />
+      <SectionHead id="how" title="How a trader pays" />
       <ol className="mt-14 grid gap-4 md:grid-cols-3">
         <Step n="01" tone="sand" title="Pay on any phone" body="Dial the LevyPass code, pick what to pay and approve with a bank PIN. Transfer and card work too.">
           <Lcd>{t("en", "ussd.menu")}</Lcd>
         </Step>
-        <Step n="02" tone="lime" title="Receipt by SMS" body="The bank confirms the payment server to server. Only then is the levy marked paid and a receipt sent.">
+        <Step n="02" tone="lime" title="Receipt by SMS" body="The bank confirms the payment server to server. LevyPass marks the levy paid and sends a receipt only after that.">
           <div className="flex h-full flex-col justify-end gap-2 p-4">
-            <p className="text-center text-[11px] font-medium text-ink-3">LevyPass · now</p>
+            <p className="text-center text-[11px] font-medium text-ink-3">LevyPass, now</p>
             <p className="max-w-[92%] rounded-2xl rounded-bl-md bg-paper px-3.5 py-2.5 text-[13px] leading-snug text-ink shadow-[0_1px_0_rgb(12_28_21/0.06)]">{sms}</p>
           </div>
         </Step>
         <Step n="03" tone="forest" title="One scan to prove it" body={`An officer scans the trader's QR and sees PAID or NOT PAID in under three seconds.${paidRate ? ` ${paidRate} traders have paid today.` : ""}`}>
           <div className="flex h-full flex-col items-center justify-center gap-1">
             <IlloScan className="h-[150px] w-auto" />
-            <p className="rounded-full border-2 border-ink bg-lime px-3 py-0.5 text-[12px] font-bold text-ink">PAID · {amount} · today</p>
+            <p className="rounded-full border-2 border-ink bg-lime px-3 py-0.5 text-[12px] font-bold text-ink">PAID {amount} today</p>
           </div>
         </Step>
       </ol>
@@ -272,7 +257,7 @@ function LiveBand({ d }: { d: Summary | null }) {
       <div className="gutter py-20 lg:py-24">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <h2 className="headline max-w-2xl text-[30px] sm:text-[40px]">
-            Live from the ledger.
+            Collections in the ledger
           </h2>
           <ArrowLink href="/admin" className="text-lime">
             Open the revenue dashboard
@@ -294,7 +279,7 @@ function LiveBand({ d }: { d: Summary | null }) {
               <div key={x.date} className="group relative flex h-full flex-1 items-end">
                 <div className={`w-full rounded-t-[4px] ${i === d.days.length - 1 ? "bg-lime" : "bg-lime/25 group-hover:bg-lime/45"}`} style={{ height: `${Math.max(3, (x.kobo / max) * 100)}%` }} />
                 <span className={`pointer-events-none absolute bottom-full mb-2 whitespace-nowrap rounded-md bg-white px-2 py-1 text-[11px] font-semibold text-ink opacity-0 transition group-hover:opacity-100 ${i < d.days.length / 2 ? "left-0" : "right-0"}`}>
-                  {x.date.slice(5)} · {formatNaira(x.kobo)}
+                  {x.date.slice(5)}: {formatNaira(x.kobo)}
                 </span>
               </div>
             ))}
@@ -321,13 +306,11 @@ function ReceiptCheck({ qr }: { qr: string }) {
   return (
     <section className="rails gutter border-t border-line py-20 lg:py-28">
       <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
-        <IlloHands className="h-auto w-full max-w-[420px]" />
-        <h2 className="display mt-8 text-[40px] sm:text-[56px]">Holding a levy receipt?</h2>
-        <form action="/r" method="get" className="mt-8 flex w-full max-w-lg items-center gap-2 rounded-full border border-line-2 bg-paper p-1.5 pl-5 focus-within:border-forest focus-within:ring-4 focus-within:ring-forest/10">
-          <Icon name="receipt" size={20} className="text-ink-3" />
-          <input name="number" required aria-label="Receipt number" placeholder="Receipt number, e.g. LP-7K3M-9QX2T" autoCapitalize="characters" className="min-w-0 flex-1 bg-transparent py-2 font-medium outline-none placeholder:font-normal placeholder:text-ink-3" />
-          <button className={buttonClass("primary", "md")}>Check</button>
-        </form>
+        <PlayInView className="w-full max-w-[420px]">
+          <IlloHands className="h-auto w-full" />
+        </PlayInView>
+        <h2 className="display mt-8 text-[40px] sm:text-[56px]">Check a levy receipt</h2>
+        <ReceiptSearch variant="pill" />
         <div className="mt-10 flex items-center gap-4 rounded-2xl border border-line p-3 pr-5 text-left">
           <div className="w-[76px] shrink-0 [&_svg]:h-auto [&_svg]:w-full" dangerouslySetInnerHTML={{ __html: qr }} />
           <p className="text-[14px] text-ink-2">
@@ -373,7 +356,7 @@ function SiteFooter() {
           ))}
         </div>
         <div className="mt-14 flex flex-col gap-2 border-t border-line pt-6 text-[13px] text-ink-3 sm:flex-row sm:justify-between">
-          <p>Team FET · Access Youth Tech Forge 2026, Track 01</p>
+          <p>Team FET, Access Youth Tech Forge 2026, Track 01</p>
           <p>Built on the Xtradot Bank sandbox. Synthetic data only.</p>
         </div>
       </div>

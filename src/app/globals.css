@@ -190,7 +190,19 @@ body {
   15% { opacity: 0.85; }
   100% { opacity: 0; transform: translate(-36px, -28px) scale(1.7); }
 }
-@keyframes lp-ride { from { transform: translateX(-180px); } to { transform: translateX(1380px); } }
+/* The danfo starts at the left edge when the scene comes into view, drives in, waits at the park,
+   drives off right, and repeats. Wheels roll the same distance: 1120 px / (2 x pi x 21 px) =
+   8.49 turns in, 430 px = 3.26 turns out. */
+@keyframes lp-drive {
+  0% { transform: translateX(-1120px); animation-timing-function: cubic-bezier(0.2, 0.6, 0.35, 1); }
+  38%, 62% { transform: translateX(0); animation-timing-function: cubic-bezier(0.55, 0, 0.8, 0.4); }
+  100% { transform: translateX(430px); }
+}
+@keyframes lp-roll {
+  0% { transform: rotate(-3056deg); animation-timing-function: cubic-bezier(0.2, 0.6, 0.35, 1); }
+  38%, 62% { transform: rotate(0deg); animation-timing-function: cubic-bezier(0.55, 0, 0.8, 0.4); }
+  100% { transform: rotate(1173deg); }
+}
 @keyframes lp-pay {
   0%, 4% { opacity: 1; } 6% { opacity: 0.2; } 8% { opacity: 1; } 10% { opacity: 0.2; }
   12% { opacity: 1; } 14% { opacity: 0.2; } 16%, 100% { opacity: 1; }
@@ -217,12 +229,32 @@ body {
   64%, 88% { opacity: 1; transform: scale(1); }
   94%, 100% { opacity: 0; transform: scale(0.8); }
 }
+@keyframes lp-lens {
+  0%, 100% { transform: translate(-22px, -26px); }
+  25% { transform: translate(20px, -12px); }
+  50% { transform: translate(-16px, 10px); }
+  75% { transform: translate(18px, 30px); }
+}
+/* Landing receipt check, played once when it scrolls into view: the trader's hand brings the
+   slip to the officer's, the check stamps on it, and everything stops there. */
+@keyframes lp-hand-l { from { transform: translateX(-22px); } 55%, to { transform: none; } }
+@keyframes lp-hand-r { from { transform: translateX(22px); } 55%, to { transform: none; } }
+@keyframes lp-slip {
+  from { transform: translate(-22px, -4px); opacity: 0; }
+  15% { transform: translateX(-22px); opacity: 1; }
+  55%, to { transform: none; opacity: 1; }
+}
+@keyframes lp-stamp {
+  from, 62% { transform: scale(0); }
+  82% { transform: scale(1.35); }
+  to { transform: scale(1); }
+}
 @keyframes lp-draw { to { stroke-dashoffset: 0; } }
 @keyframes lp-float { 0%, 100% { translate: 0 0; } 50% { translate: 0 -8px; } }
 @keyframes lp-slot { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 @keyframes lp-progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
-.lp-puff, .lp-glow, .lp-sms, .lp-wheel { transform-box: fill-box; transform-origin: center; }
+.lp-puff, .lp-glow, .lp-sms, .lp-roll, .lp-stamp { transform-box: fill-box; transform-origin: center; }
 .lp-sms { transform-origin: 0% 100%; }
 .lp-rays, .lp-sway, .lp-paid { transform-box: view-box; }
 
@@ -235,11 +267,11 @@ body {
   .lp-sway-slow { animation-duration: 6s; }
   .lp-breathe { animation: lp-breathe 3.4s ease-in-out infinite; }
   .lp-breathe-late { animation-delay: -1.3s; }
-  .lp-bounce { animation-duration: 0.35s; }
   .lp-idle { animation: lp-idle 0.42s ease-in-out infinite; }
   .lp-puff { animation: lp-puff 2.4s ease-out infinite; }
-  .lp-ride { animation: lp-ride 11s linear infinite; animation-delay: -3s; }
-  .lp-wheel { animation: lp-spin 0.45s linear infinite; }
+  .lp-drive { animation: lp-drive 16s infinite both paused; }
+  .lp-roll { animation: lp-roll 16s infinite both paused; }
+  [data-play] :is(.lp-drive, .lp-roll) { animation-play-state: running; }
   .lp-pay { animation: lp-pay 8s linear infinite; }
   .lp-sms { animation: lp-sms 8s ease-out infinite; }
   .lp-reach { animation: lp-reach 8s ease-in-out infinite; }
@@ -248,6 +280,12 @@ body {
   .lp-paid { animation: lp-paid 8s cubic-bezier(0.2, 0.8, 0.2, 1) infinite; }
   .lp-draw { stroke-dasharray: 1; stroke-dashoffset: 1; animation: lp-draw 2.6s 0.3s cubic-bezier(0.4, 0, 0.2, 1) forwards; }
   .lp-float { animation: lp-float 6s ease-in-out infinite; }
+  .lp-hand-l { animation: lp-hand-l 1.6s ease-in-out both paused; }
+  .lp-hand-r { animation: lp-hand-r 1.6s ease-in-out both paused; }
+  .lp-slip { animation: lp-slip 1.6s ease-in-out both paused; }
+  .lp-stamp { animation: lp-stamp 1.6s ease-out both paused; }
+  [data-play] :is(.lp-hand-l, .lp-hand-r, .lp-slip, .lp-stamp) { animation-play-state: running; }
+  .lp-lens { animation: lp-lens 0.8s ease-in-out infinite; }
   .lp-slot { animation: lp-slot 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
   .lp-progress { animation: lp-progress linear both; }
 }

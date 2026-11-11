@@ -59,6 +59,24 @@ describe("failure drills (T19)", () => {
     expect(run.steps.find((x) => x.ok !== undefined)?.ok).toBe(true);
   });
 
+  it("replaying one event three times still leaves the ledger unchanged", async () => {
+    const run = await replayedWebhook({ times: 3 });
+    expect(run.exchanges).toHaveLength(3);
+    expect(run.ledger?.after).toBe(run.ledger?.before);
+    expect(run.steps.every((x) => x.ok !== false)).toBe(true);
+  });
+
+  it.each([
+    ["wrong_key", "bad_signature"],
+    ["tampered", "bad_signature"],
+    ["stale", "stale_timestamp"],
+  ] as const)("forged webhook, %s, is rejected as %s and stores nothing", async (attack, reason) => {
+    const run = await forgedSignature({ attack, amountNaira: 75_000, guessedKey: "letmein", staleMinutes: 10, targetRealPayment: true });
+    expect(run.exchanges?.[0]?.response).toBe(`401 {"error":"${reason}"}`);
+    expect(run.steps.every((x) => x.ok !== false)).toBe(true);
+    expect(run.ledger?.after).toBe(run.ledger?.before);
+  });
+
   it("second payment for a paid day raises a double-charge flag", async () => {
     const run = await secondPayment();
     expect(run.steps.every((x) => x.ok !== false)).toBe(true);

@@ -7,6 +7,7 @@ import { db } from "@/server/db/client";
 import * as s from "@/server/db/schema";
 import { env } from "@/server/env";
 import { adminLogout } from "../actions";
+import { ReceiptSearch } from "@/app/r/receipt-search";
 import { SideNav, TabNav } from "./nav";
 
 export const dynamic = "force-dynamic";
@@ -55,8 +56,8 @@ export default async function PanelLayout({ children }: { children: ReactNode })
           <span className="absolute -top-6 left-4 flex h-12 w-12 items-center justify-center rounded-full border-[2.5px] border-ink bg-paper" aria-hidden="true">
             <Icon name="bolt" size={20} stroke={2.2} />
           </span>
-          <span className="block text-[22px] font-medium leading-[1.02] tracking-[-0.045em]">Break it on purpose</span>
-          <span className="mt-2 block text-[13px] leading-snug text-ink/75">Withhold, replay and forge webhooks live. No double credit.</span>
+          <span className="block text-[22px] font-medium leading-[1.02] tracking-[-0.045em]">Test the failure cases</span>
+          <span className="mt-2 block text-[13px] leading-snug text-ink/75">Withhold, replay or forge a webhook and watch LevyPass credit each payment once.</span>
           <span className="mt-4 flex h-10 items-center justify-between rounded-full bg-paper px-4 text-[14px] font-medium">
             Failure drills
             <Icon name="arrowUpRight" size={14} stroke={2.4} className="transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
@@ -76,10 +77,7 @@ export default async function PanelLayout({ children }: { children: ReactNode })
             <Link href="/admin" className="lg:hidden" aria-label="Collections">
               <Mark size={30} />
             </Link>
-            <form action="/r" method="get" className="flex min-w-0 flex-1 items-center gap-3" role="search">
-              <Icon name="search" size={19} className="shrink-0 text-ink-2" />
-              <input name="number" aria-label="Look up a receipt number" placeholder="Look up a receipt, e.g. LP-7K3M-9QX2T" autoCapitalize="characters" className="min-w-0 flex-1 bg-transparent py-2 text-[15px] outline-none placeholder:text-ink-2" />
-            </form>
+            <ReceiptSearch variant="bar" />
             <div className="flex items-center gap-1.5">
               <span className="hidden sm:block">
                 <Chip>

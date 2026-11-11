@@ -4,6 +4,8 @@
  * market stalls, a danfo, an officer, a trader's phone. All decorative: aria-hidden.
  */
 
+import { useId } from "react";
+
 const INK = "#0c1c15";
 const C = {
   ink: INK,
@@ -39,6 +41,17 @@ function Limb({ d, color, width = 9 }: { d: string; color: string; width?: numbe
       <path d={d} fill="none" stroke={INK} strokeWidth={width + 5} strokeLinecap="round" strokeLinejoin="round" />
       <path d={d} fill="none" stroke={color} strokeWidth={width} strokeLinecap="round" strokeLinejoin="round" />
     </>
+  );
+}
+
+/** Two eyes and a smile, centred on (cx, cy). */
+function Face({ cx, cy, s = 1 }: { cx: number; cy: number; s?: number }) {
+  return (
+    <g transform={s === 1 ? undefined : `translate(${cx} ${cy}) scale(${s}) translate(${-cx} ${-cy})`}>
+      <circle cx={cx - 5} cy={cy - 1} r={1.9} fill={INK} />
+      <circle cx={cx + 5} cy={cy - 1} r={1.9} fill={INK} />
+      <path d={`M${cx - 4} ${cy + 4} q4 3.6 8 0`} fill="none" stroke={INK} strokeWidth={1.8} strokeLinecap="round" />
+    </g>
   );
 }
 
@@ -107,7 +120,7 @@ function Building({ x, y, w, h, cols, rows }: { x: number; y: number; w: number;
   );
 }
 
-/** Full-width Lagos market scene: two stalls, a trader paying, an officer scanning, a danfo at the park. */
+/** Full-width Lagos market scene: two stalls, a trader paying, an officer scanning, a danfo driving past in front. */
 export function MarketScene({ className = "" }: { className?: string }) {
   return (
     <svg viewBox="0 0 1200 420" preserveAspectRatio="xMinYMax slice" className={className} aria-hidden="true">
@@ -171,6 +184,7 @@ export function MarketScene({ className = "" }: { className?: string }) {
         <circle cx={204} cy={218} r={18} fill={C.skin} {...line} />
         <path d="M170 204 C 168 176 226 168 238 194 C 250 186 262 196 252 206 C 232 214 190 214 170 204 Z" fill={C.tangerine} {...line} />
         <path d="M186 198 C 200 190 220 190 232 198" fill="none" {...line} strokeWidth={1.5} />
+        <Face cx={208} cy={222} />
         <path d="M160 272 C 162 246 180 236 204 236 C 228 236 246 246 248 272 Z" fill={C.coral} {...line} />
         {([
           [182, 252],
@@ -246,6 +260,7 @@ export function MarketScene({ className = "" }: { className?: string }) {
         <path d="M391 188 C 391 166 431 164 431 186 Z" fill={C.forest} {...line} />
         <path d="M384 188 H416" stroke={INK} strokeWidth={6} strokeLinecap="round" />
         <path d="M396 180 H428" stroke={C.lime} strokeWidth={3} />
+        <Face cx={404} cy={199} />
       </g>
 
       {/* PAID bubble */}
@@ -295,61 +310,38 @@ export function MarketScene({ className = "" }: { className?: string }) {
         <path className="lp-sway lp-sway-slow" style={{ transformOrigin: "769px 284px" }} d="M740 284 a22 22 0 0 1 2-40 a26 26 0 0 1 44-14 a22 22 0 0 1 22 34 a18 18 0 0 1 -14 22 z" fill={C.leaf} {...line} />
       </g>
 
-      {/* exhaust */}
-      {[0, 0.8, 1.6].map((delay) => (
-        <circle key={delay} className="lp-puff" style={{ animationDelay: `${delay}s` }} cx={798} cy={340} r={7} fill={C.paper} stroke={INK} strokeWidth={2} opacity={0} />
-      ))}
 
-      {/* danfo */}
-      <g className="lp-idle">
-        <rect x={846} y={238} width={170} height={10} rx={3} fill="none" {...line} />
-        <rect x={858} y={220} width={40} height={18} rx={5} fill={C.coral} {...line} />
-        <rect x={904} y={224} width={52} height={14} rx={5} fill={C.forest} {...line} />
-        <rect x={962} y={218} width={34} height={20} rx={5} fill={C.lime} {...line} />
-        <path d="M806 350 V282 C 806 262 818 250 838 250 H1078 C 1094 250 1104 258 1108 272 L1120 318 V350 Z" fill={C.danfo} {...line} />
-        {[826, 878, 930, 982, 1034].map((x) => (
-          <rect key={x} x={x} y={262} width={42} height={34} rx={4} fill={C.sky} stroke={INK} strokeWidth={2} />
-        ))}
-        <path d="M1086 262 H1096 L1108 298 H1086 Z" fill={C.sky} stroke={INK} strokeWidth={2} />
-        <rect x={1089} y={266} width={11} height={13} rx={1.5} fill={C.lime} stroke={INK} strokeWidth={1.2} />
-        <rect x={806} y={318} width={314} height={8} fill={C.ink} />
-        <rect x={806} y={331} width={314} height={4} fill={C.ink} />
-        <text x={826} y={312} fontSize={11} fontWeight={800} fill={INK} letterSpacing="0.08em">
-          OSHODI · OBALENDE
-        </text>
-        <circle cx={1112} cy={338} r={5} fill={C.cream} stroke={INK} strokeWidth={2} />
-        {[868, 1058].map((cx) => (
-          <g key={cx}>
-            <circle cx={cx} cy={352} r={21} fill={C.ink} />
-            <circle cx={cx} cy={352} r={8} fill="#9aa39e" />
-          </g>
-        ))}
-      </g>
-
-      {/* okada crossing in the near lane */}
-      <g className="lp-ride">
-        <g transform="translate(0 404)">
-          <g className="lp-breathe lp-bounce">
-            <Limb d="M20 -28 C 26 -22 30 -18 32 -10" color={C.ink} width={6} />
-            <path d="M8 -26 C 8 -44 20 -54 30 -52 L 36 -30 Z" fill={C.forest} {...line} />
-            <Limb d="M26 -44 C 34 -40 40 -36 46 -32" color={C.forest} width={6} />
-            <circle cx={30} cy={-60} r={10} fill={C.sun} {...line} />
-            <path d="M32 -62 h8" stroke={INK} strokeWidth={4} strokeLinecap="round" />
-          </g>
-          <path d="M2 -8 C 10 -22 30 -24 44 -16 L54 0" fill="none" stroke={INK} strokeWidth={4} strokeLinecap="round" />
-          <rect x={4} y={-28} width={26} height={8} rx={4} fill={C.ink} />
-          <path d="M32 -24 h14 l6 10 h-14 z" fill={C.coral} {...line} />
-          <path d="M46 -26 l6 -10" stroke={INK} strokeWidth={3} strokeLinecap="round" />
-          {[0, 54].map((cx) => (
-            <g key={cx} transform={`translate(${cx} 0)`}>
-              <g className="lp-wheel">
-                <circle r={13} fill={C.ink} />
-                <circle r={5} fill="#9aa39e" />
-                <path d="M0 -12 V12 M-12 0 H12" stroke="#9aa39e" strokeWidth={1.5} />
-              </g>
+      {/* danfo, in front of everything: drives in from the left, waits at the park, drives off right */}
+      <g className="lp-drive">
+        <g className="lp-idle">
+          <rect x={846} y={238} width={170} height={10} rx={3} fill="none" {...line} />
+          <rect x={858} y={220} width={40} height={18} rx={5} fill={C.coral} {...line} />
+          <rect x={904} y={224} width={52} height={14} rx={5} fill={C.forest} {...line} />
+          <rect x={962} y={218} width={34} height={20} rx={5} fill={C.lime} {...line} />
+          <path d="M806 350 V282 C 806 262 818 250 838 250 H1078 C 1094 250 1104 258 1108 272 L1120 318 V350 Z" fill={C.danfo} {...line} />
+          {[826, 878, 930, 982, 1034].map((x) => (
+            <rect key={x} x={x} y={262} width={42} height={34} rx={4} fill={C.sky} stroke={INK} strokeWidth={2} />
+          ))}
+          <path d="M1086 262 H1096 L1108 298 H1086 Z" fill={C.sky} stroke={INK} strokeWidth={2} />
+          <rect x={1089} y={266} width={11} height={13} rx={1.5} fill={C.lime} stroke={INK} strokeWidth={1.2} />
+          <rect x={806} y={318} width={314} height={8} fill={C.ink} />
+          <rect x={806} y={331} width={314} height={4} fill={C.ink} />
+          <text x={826} y={312} fontSize={11} fontWeight={800} fill={INK} letterSpacing="0.08em">
+            OSHODI - OBALENDE
+          </text>
+          <circle cx={1112} cy={338} r={5} fill={C.cream} stroke={INK} strokeWidth={2} />
+          {[868, 1058].map((cx) => (
+            <g key={cx} className="lp-roll">
+              <circle cx={cx} cy={352} r={21} fill={C.ink} />
+              <circle cx={cx} cy={352} r={8} fill="#9aa39e" />
+              <path d={`M${cx} 340 V364 M${cx - 12} 352 H${cx + 12}`} stroke="#9aa39e" strokeWidth={2} />
             </g>
           ))}
         </g>
+        {/* exhaust */}
+        {[0, 0.8, 1.6].map((delay) => (
+          <circle key={delay} className="lp-puff" style={{ animationDelay: `${delay}s` }} cx={798} cy={340} r={7} fill={C.paper} stroke={INK} strokeWidth={2} opacity={0} />
+        ))}
       </g>
     </svg>
   );
@@ -455,24 +447,41 @@ function HandThumb({ skin }: { skin: string }) {
   return <rect x={98} y={36} width={52} height={12} rx={6} transform="rotate(-10 98 42)" fill={skin} {...line} />;
 }
 
-/** Two hands passing a receipt: the moment a levy is proven. */
+/**
+ * Two hands passing a receipt: the moment a levy is proven. Played once inside PlayInView: the
+ * trader's hand brings the slip in and the check stamps on it. Still frame: both hands holding
+ * the stamped slip.
+ */
 export function IlloHands({ className = "" }: Spot) {
   const mirror = "translate(320 0) scale(-1 1)";
   return (
-    <svg viewBox="0 0 320 110" className={className} aria-hidden="true">
-      <HandBack skin={C.skin} sleeve={C.forest} />
-      <g transform={mirror}>
-        <HandBack skin={C.skinDark} sleeve={C.tangerine} />
+    <svg viewBox="0 0 320 110" className={className} aria-hidden="true" overflow="visible">
+      <g className="lp-hand-l">
+        <HandBack skin={C.skin} sleeve={C.forest} />
       </g>
-      <g transform="rotate(-6 160 56)">
-        <rect x={136} y={20} width={48} height={62} rx={4} fill={C.paper} {...line} />
-        <path d="M136 24 a4 4 0 0 1 4-4 h40 a4 4 0 0 1 4 4 v7 h-48z" fill={C.lime} {...line} />
-        <path d="M146 44 h28 M146 54 h20" stroke={INK} strokeWidth={2.5} strokeLinecap="round" opacity={0.35} />
-        <circle cx={170} cy={68} r={7} fill={C.lime} stroke={INK} strokeWidth={2} />
+      <g className="lp-hand-r">
+        <g transform={mirror}>
+          <HandBack skin={C.skinDark} sleeve={C.tangerine} />
+        </g>
       </g>
-      <HandThumb skin={C.skin} />
-      <g transform={mirror}>
-        <HandThumb skin={C.skinDark} />
+      <g className="lp-slip">
+        <g transform="rotate(-6 160 56)">
+          <rect x={136} y={20} width={48} height={62} rx={4} fill={C.paper} {...line} />
+          <path d="M136 24 a4 4 0 0 1 4-4 h40 a4 4 0 0 1 4 4 v7 h-48z" fill={C.lime} {...line} />
+          <path d="M146 44 h28 M146 54 h20" stroke={INK} strokeWidth={2.5} strokeLinecap="round" opacity={0.35} />
+          <g className="lp-stamp">
+            <circle cx={170} cy={68} r={8} fill={C.lime} stroke={INK} strokeWidth={2} />
+            <path d="M166.2 68.2 l2.6 2.6 l5 -5.4" fill="none" stroke={INK} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" />
+          </g>
+        </g>
+      </g>
+      <g className="lp-hand-l">
+        <HandThumb skin={C.skin} />
+      </g>
+      <g className="lp-hand-r">
+        <g transform={mirror}>
+          <HandThumb skin={C.skinDark} />
+        </g>
       </g>
     </svg>
   );
@@ -512,6 +521,7 @@ export function IlloBadge({ className = "" }: Spot) {
       <path d="M42 44 a10 10 0 0 1 10-10 h56 a10 10 0 0 1 10 10 v8 h-76z" fill={C.forest} {...line} />
       <circle cx={62} cy={74} r={11} fill={C.skin} {...line} />
       <path d="M52 70 C 52 60 72 60 72 70 Z" fill={C.forest} />
+      <Face cx={62} cy={77} s={0.55} />
       <path d="M80 68 h26 M80 78 h18" stroke={INK} strokeWidth={2.5} strokeLinecap="round" opacity={0.35} />
       <MiniQr x={80} y={88} size={18} />
       <circle cx={60} cy={102} r={6} fill={C.lime} stroke={INK} strokeWidth={2} />
@@ -530,6 +540,66 @@ export function IlloScan({ className = "" }: Spot) {
         <rect x={99} y={28} width={34} height={64} rx={4} fill={C.go} />
         <path d="M108 60 l6 6 l11 -12" fill="none" stroke={C.paper} strokeWidth={4} strokeLinecap="round" strokeLinejoin="round" />
       </g>
+    </svg>
+  );
+}
+
+/* ------------------------------------------------------------------ stamp */
+
+const polar = (r: number, deg: number) => {
+  const a = (deg * Math.PI) / 180;
+  return `${(60 + r * Math.cos(a)).toFixed(2)} ${(60 + r * Math.sin(a)).toFixed(2)}`;
+};
+
+/** A small four-point star, the stamp's side ornament. */
+function Spark({ at }: { at: string }) {
+  return <path transform={`translate(${at})`} d="M0 -4.2 Q0.7 -0.7 4.2 0 Q0.7 0.7 0 4.2 Q-0.7 0.7 -4.2 0 Q-0.7 -0.7 0 -4.2 Z" fill={INK} />;
+}
+
+/**
+ * Round rubber stamp for a settled payment: "Processed by Access Bank" over the top of the ring,
+ * "Payment verified" under it, a bank with a check in the middle.
+ */
+export function BankStamp({ className = "" }: { className?: string }) {
+  const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
+  const ring = { fontSize: 8, fontWeight: 800, letterSpacing: "0.07em", fill: INK } as const;
+  return (
+    <svg viewBox="0 0 120 120" className={className} role="img" aria-label="Processed by Access Bank. Payment verified.">
+      <defs>
+        {/* top: clockwise from lower left over the top; bottom: anticlockwise under the centre */}
+        <path id={`${id}-top`} d={`M${polar(43.5, 160)} A43.5 43.5 0 1 1 ${polar(43.5, 20)}`} />
+        <path id={`${id}-bottom`} d={`M${polar(51, 148)} A51 51 0 0 0 ${polar(51, 32)}`} />
+      </defs>
+      <circle cx={60} cy={60} r={57} fill={C.lime} stroke={INK} strokeWidth={2.5} />
+      <circle cx={60} cy={60} r={37} fill={C.cream} stroke={INK} strokeWidth={2.5} />
+      <text {...ring}>
+        <textPath href={`#${id}-top`} startOffset="50%" textAnchor="middle">
+          PROCESSED BY ACCESS BANK
+        </textPath>
+      </text>
+      <text {...ring} fontSize={7.5}>
+        <textPath href={`#${id}-bottom`} startOffset="50%" textAnchor="middle">
+          PAYMENT VERIFIED
+        </textPath>
+      </text>
+      <Spark at={polar(47.5, 155)} />
+      <Spark at={polar(47.5, 25)} />
+
+      {/* motion lines either side of the bank, like a stamp just pressed */}
+      <path d={`M${polar(31, 200)} A31 31 0 0 1 ${polar(31, 235)} M${polar(31, -20)} A31 31 0 0 0 ${polar(31, -55)}`} fill="none" stroke={INK} strokeWidth={2} strokeLinecap="round" />
+
+      {/* bank */}
+      <path d="M41 50 L60 37.5 L79 50 Z" fill={C.sun} {...line} strokeWidth={2.2} />
+      <rect x={43} y={50} width={34} height={5} fill={C.sand} {...line} strokeWidth={2.2} />
+      {[46.5, 54, 61.5, 69].map((x) => (
+        <rect key={x} x={x} y={55} width={4.5} height={14} fill={C.paper} {...line} strokeWidth={2} />
+      ))}
+      <rect x={40} y={69} width={40} height={6} rx={1} fill={C.sandDark} {...line} strokeWidth={2.2} />
+      <circle cx={60} cy={45} r={2.2} fill={C.forest} />
+
+      {/* check */}
+      <circle cx={77} cy={72} r={9.5} fill={C.go} stroke={INK} strokeWidth={2.2} />
+      <path d="M72.6 72.2 l3.1 3.1 l5.6 -6.2" fill="none" stroke={C.paper} strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round" />
     </svg>
   );
 }

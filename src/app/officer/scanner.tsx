@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Icon, buttonClass } from "@/app/_ui/kit";
+import { SearchReveal, useSearchReveal, type RevealTiming } from "@/app/_ui/search-reveal";
 
 type Result = {
   result: "paid" | "not_paid" | "unknown_trader" | "invalid_token" | "officer_suspended" | "login_required";
@@ -20,6 +21,9 @@ declare global {
   }
 }
 
+/** Typed lookups get the lens; camera scans skip it, since an officer at a gate needs speed. */
+const OFFICER_TIMING: RevealTiming = { search: 600, mark: 400, timeout: 1200 };
+
 const naira = (k: number) => `₦${(k / 100).toLocaleString("en-NG", { minimumFractionDigits: 2 })}`;
 
 export function Scanner() {
@@ -31,6 +35,7 @@ export function Scanner() {
   const [busy, setBusy] = useState(false);
   const geo = useRef<{ lat: number; lng: number; acc: number } | null>(null);
   const lock = useRef(false);
+  const reveal = useSearchReveal(OFFICER_TIMING);
 
   useEffect(() => {
     navigator.geolocation?.getCurrentPosition(
@@ -40,21 +45,32 @@ export function Scanner() {
     );
   }, []);
 
-  const check = useCallback(async (params: Record<string, string>, t0: number) => {
-    setBusy(true);
-    const q = new URLSearchParams(params);
-    if (geo.current) {
-      q.set("lat", String(geo.current.lat));
-      q.set("lng", String(geo.current.lng));
-      q.set("acc", String(Math.round(geo.current.acc)));
-    }
-    const res = await fetch(`/api/verify/trader?${q}`, { cache: "no-store" });
-    const body = (await res.json()) as Result;
-    setResult(body);
-    setElapsed(performance.now() - t0);
-    setBusy(false);
-    if (navigator.vibrate) navigator.vibrate(body.result === "paid" ? 80 : [80, 60, 80]);
-  }, []);
+  const check = useCallback(
+    async (params: Record<string, string>, t0: number, withReveal = false) => {
+      setBusy(true);
+      const q = new URLSearchParams(params);
+      if (geo.current) {
+        q.set("lat", String(geo.current.lat));
+        q.set("lng", String(geo.current.lng));
+        q.set("acc", String(Math.round(geo.current.acc)));
+      }
+      const lookup = async () => {
+        const res = await fetch(`/api/verify/trader?${q}`, { cache: "no-store" });
+        const body = (await res.json()) as Result;
+        setElapsed(performance.now() - t0); // the real check time, not the animation
+        return body;
+      };
+      const show = (body: Result | null) => {
+        setResult(body ?? { result: "unknown_trader" });
+        setBusy(false);
+        reveal.reset();
+        if (body && navigator.vibrate) navigator.vibrate(body.result === "paid" ? 80 : [80, 60, 80]);
+      };
+      if (!withReveal) return show(await lookup().catch(() => null));
+      await reveal.run(lookup, (b) => (b.result === "paid" ? true : b.result === "not_paid" ? false : null), show);
+    },
+    [reveal],
+  );
 
   const start = useCallback(async () => {
     if (!window.BarcodeDetector) return setCamera("unsupported");
@@ -108,7 +124,7 @@ export function Scanner() {
           <div className="flex flex-col gap-1">
             <p className="text-[24px] font-bold tracking-[-0.02em]">{result.trader.name}</p>
             <p className="text-[17px] text-white/85">
-              Stall {result.trader.stall} · {result.trader.market}
+              Stall {result.trader.stall}, {result.trader.market}
             </p>
             <p className="text-white/70">Today, {result.date}</p>
             {unpaid && result.owedKobo ? (
@@ -153,7 +169,7 @@ export function Scanner() {
         className="flex gap-2 rounded-full border border-line-2 bg-paper p-1.5 pl-5 focus-within:border-forest focus-within:ring-4 focus-within:ring-forest/10"
         onSubmit={(e) => {
           e.preventDefault();
-          if (manual.trim()) void check({ id: manual.trim() }, performance.now());
+          if (manual.trim()) void check({ id: manual.trim() }, performance.now(), true);
         }}
       >
         <input value={manual} onChange={(e) => setManual(e.target.value)} placeholder="Trader ID or stall (E-07)" className="min-w-0 flex-1 bg-transparent text-base outline-none placeholder:text-ink-3/70" aria-label="Trader ID or stall number" />
@@ -161,6 +177,7 @@ export function Scanner() {
           {busy ? "Checking" : "Check"}
         </button>
       </form>
+      <SearchReveal phase={reveal.phase} searching="Looking up the trader" found="Paid" missing="Not paid" />
     </div>
   );
 }

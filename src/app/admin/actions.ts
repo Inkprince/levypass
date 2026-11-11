@@ -112,9 +112,38 @@ export async function runSettlement(): Promise<void> {
   revalidatePath("/admin/reconciliation");
 }
 
-export async function runFailure(scenario: string): Promise<failures.Run> {
+const drillInput = z.object({
+  traderId: z.string().startsWith("trd_").max(64).optional(),
+  eventId: z.string().max(128).optional(),
+  times: z.coerce.number().int().min(1).max(5).optional(),
+  attack: z.enum(["wrong_key", "tampered", "stale"]).optional(),
+  amountNaira: z.coerce.number().int().min(1).max(10_000_000).optional(),
+  guessedKey: z.string().max(64).optional(),
+  staleMinutes: z.coerce.number().int().min(6).max(1440).optional(),
+  targetRealPayment: z.boolean().optional(),
+});
+
+export async function runFailure(scenario: string, raw: unknown = {}): Promise<failures.Run> {
   await requireSubject("admin");
-  const run = { withheld: failures.withheldWebhook, replayed: failures.replayedWebhook, forged: failures.forgedSignature, double: failures.secondPayment }[scenario];
-  if (!run) return { scenario, steps: [{ who: "check", text: "Unknown scenario.", ok: false }] };
-  return run();
+  const parsed = drillInput.safeParse(raw);
+  const failed = (text: string): failures.Run => ({ scenario, steps: [{ who: "check", text, ok: false, at: new Date().toISOString() }], startedAt: new Date().toISOString(), ms: 0 });
+  if (!parsed.success) return failed("Those choices are not valid. Amounts are whole naira, stale replays are 6 minutes or older.");
+  const i = parsed.data;
+  switch (scenario) {
+    case "withheld":
+      return failures.withheldWebhook({ traderId: i.traderId });
+    case "replayed":
+      return failures.replayedWebhook({ eventId: i.eventId, times: i.times });
+    case "forged":
+      return failures.forgedSignature({ attack: i.attack, amountNaira: i.amountNaira, guessedKey: i.guessedKey, staleMinutes: i.staleMinutes, targetRealPayment: i.targetRealPayment });
+    case "double":
+      return failures.secondPayment({ traderId: i.traderId, amountNaira: i.amountNaira });
+    default:
+      return failed("Unknown scenario.");
+  }
+}
+
+export async function requeryDrillPayment(paymentId: string): Promise<{ kind: string; settled: boolean }> {
+  await requireSubject("admin");
+  return failures.requeryNow(z.string().startsWith("pay_").max(64).parse(paymentId));
 }

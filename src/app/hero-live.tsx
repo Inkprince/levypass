@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { formatNaira } from "@/core/money";
+import { BankStamp } from "@/app/_ui/illustrations";
 import { Icon, type IconName, buttonClass, channelLabel } from "@/app/_ui/kit";
 
 /** A real, settled payment from our own ledger. Fees are what the bank reported. */
@@ -58,17 +59,6 @@ function useTween(target: number, duration = 700, from?: number) {
   return reduce ? target : value;
 }
 
-/** A naira figure that counts up from zero when the page loads. */
-export function CountUp({ kobo, className = "" }: { kobo: number; className?: string }) {
-  const v = useTween(kobo, 1400, 0);
-  return (
-    <span className={className}>
-      <span aria-hidden="true">{formatNaira(v)}</span>
-      <span className="sr-only">{formatNaira(kobo)}</span>
-    </span>
-  );
-}
-
 function Row({ icon, label, note, children, strong = false }: { icon: IconName; label: string; note?: string; children: ReactNode; strong?: boolean }) {
   return (
     <div className="flex items-center gap-3 border-b border-line py-3 last:border-0">
@@ -115,19 +105,13 @@ export function PaymentCarousel({ payments }: { payments: HeroPayment[] }) {
       onBlur={() => setHold(false)}
     >
       <div className="relative bg-forest px-6 pb-6 pt-6 text-white">
-        <div className="flex items-center justify-between gap-3">
-          <p className="text-[13px] font-medium text-white/70">{i === 0 ? "Latest payment" : "Earlier payment"}</p>
-          <span className="inline-flex items-center gap-1 rounded-full bg-lime px-2.5 py-1 text-[12px] font-bold text-forest">
-            <Icon name="check" size={14} stroke={2.8} />
-            Verified with the bank
-          </span>
-        </div>
-        <p className="money mt-4 text-[52px] leading-none">
+        <BankStamp className="absolute right-3 top-3 h-[80px] w-[80px] -rotate-[10deg] sm:right-4 sm:top-4 sm:h-[96px] sm:w-[96px]" />
+        <p className="money mt-[72px] text-[52px] leading-none sm:mt-9">
           <span aria-hidden="true">{formatNaira(amount)}</span>
           <span className="sr-only">{formatNaira(p.amountKobo)}</span>
         </p>
         <p key={p.id} className="lp-slot mt-2 text-[14px] text-white/75">
-          {shortName(p.name)} · {channelLabel(p.channel)} · {today ? "" : `${lagosDay(p.at)}, `}
+          {shortName(p.name)}, {channelLabel(p.channel)}, {today ? "" : `${lagosDay(p.at)}, `}
           {lagosTime(p.at)}
         </p>
         {payments.length > 1 ? (
