@@ -117,7 +117,7 @@ export function Scanner() {
     return (
       <button onClick={next} className={`animate-fadein fixed inset-0 z-50 flex flex-col items-center justify-center gap-5 px-6 text-center text-white ${bg}`}>
         <span className={`animate-pop flex h-28 w-28 items-center justify-center rounded-full ${paid ? "bg-white text-go" : unpaid ? "bg-white text-stop" : "bg-warn text-night"}`}>
-          <Icon name={paid ? "check" : unpaid ? "x" : "alert"} size={60} stroke={3} />
+          <Icon name={paid ? "check" : unpaid ? "x" : "alert"} size={60} />
         </span>
         <p className="display text-[56px] leading-none sm:text-[72px]">{word}</p>
         {result.trader ? (

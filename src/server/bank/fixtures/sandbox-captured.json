@@ -487,6 +487,60 @@
       "request_id": "req_1f2021ef"
     }
   },
+  "ussd_below_fee": {
+    "status": 200,
+    "body": {
+      "status": "success",
+      "message": "Payment successful",
+      "data": {
+        "reference": "pay_b1e02avxd15mtnzphc83",
+        "status": "successful",
+        "amount": 20.0,
+        "amount_paid": 20.0,
+        "currency": "NGN",
+        "channel": "ussd",
+        "merchant_id": "mer_204",
+        "customer": {
+          "name": "Bisi Testwell",
+          "email": null
+        },
+        "merchant_fee": 50.0,
+        "settlement_amount": -30.0,
+        "paid_at": "2026-11-11T09:26:09Z",
+        "card": null,
+        "metadata": null
+      },
+      "meta": null,
+      "request_id": "req_bcf1d66a"
+    }
+  },
+  "verify_expired": {
+    "status": 200,
+    "body": {
+      "status": "success",
+      "message": "Request completed",
+      "data": {
+        "reference": "pay_8s36wzmcwna7bw6sq5yj",
+        "status": "expired",
+        "amount": 800.0,
+        "amount_paid": 0.0,
+        "currency": "NGN",
+        "channel": null,
+        "merchant_id": "mer_204",
+        "customer": {
+          "name": "Taiwo Popoola",
+          "email": null
+        },
+        "merchant_fee": 0.0,
+        "settlement_amount": 0.0,
+        "paid_at": null,
+        "card": null,
+        "metadata": null
+      },
+      "meta": null,
+      "request_id": "req_760f615d"
+    }
+  },
   "webhooks": {
     "payment.successful": "{\"event\":\"payment.successful\",\"event_id\":\"evt_6D52B774B3\",\"created_at\":\"2026-11-10T16:37:57Z\",\"data\":{\"reference\":\"LPPROBE-PAY-002\",\"amount\":500.0,\"amount_paid\":500.0,\"currency\":\"NGN\",\"status\":\"successful\",\"channel\":\"ussd\",\"merchant_id\":\"mer_204\",\"metadata\":null},\"attempt\":2}",
     "webhook.test": "{\"event\":\"webhook.test\",\"event_id\":\"evt_28CDFAD33F\",\"created_at\":\"2026-11-10T16:39:47Z\",\"data\":{\"message\":\"Signed sample event from the Forge sandbox\"},\"attempt\":1}",

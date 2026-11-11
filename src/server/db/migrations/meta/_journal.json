@@ -29,6 +29,13 @@
       "when": 1794333770982,
       "tag": "0003_app_settings",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794391783695,
+      "tag": "0004_payment_fee_may_exceed_amount",
+      "breakpoints": true
     }
   ]
 }

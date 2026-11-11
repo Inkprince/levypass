@@ -557,8 +557,20 @@ function Spark({ at }: { at: string }) {
 }
 
 /**
+ * The Access Bank mark: three nested diamonds, the outer two open at the top left with their
+ * right arm running on past the peak. Traced from the bank's published logo, drawn around 0,0
+ * (x -73.8..73.8, y -83.3..73.8). It is the bank's mark, so it keeps its own orange and takes no
+ * ink outline.
+ */
+const ACCESS_ORANGE = "#fe6309";
+const ACCESS_MARK =
+  "M-43 -30.8L-73.8 0L0 73.8L73.8 0L-9.5 -83.3V-70.3L60.8 0L0 60.8L-60.8 0L-30 -30.8Z" +
+  "M-21.2 -30.8L-52 0L0 52L52 0L-9.5 -61.5V-48.5L39 0L0 39L-39 0L-8.2 -30.8Z" +
+  "M0 -30.8L30.8 0L0 30.8L-30.8 0ZM0 -17.8L17.8 0L0 17.8L-17.8 0Z";
+
+/**
  * Round rubber stamp for a settled payment: "Processed by Access Bank" over the top of the ring,
- * "Payment verified" under it, a bank with a check in the middle.
+ * "Payment verified" under it, the Access Bank mark in the middle.
  */
 export function BankStamp({ className = "" }: { className?: string }) {
   const id = useId().replace(/[^a-zA-Z0-9_-]/g, "");
@@ -585,21 +597,8 @@ export function BankStamp({ className = "" }: { className?: string }) {
       <Spark at={polar(47.5, 155)} />
       <Spark at={polar(47.5, 25)} />
 
-      {/* motion lines either side of the bank, like a stamp just pressed */}
-      <path d={`M${polar(31, 200)} A31 31 0 0 1 ${polar(31, 235)} M${polar(31, -20)} A31 31 0 0 0 ${polar(31, -55)}`} fill="none" stroke={INK} strokeWidth={2} strokeLinecap="round" />
-
-      {/* bank */}
-      <path d="M41 50 L60 37.5 L79 50 Z" fill={C.sun} {...line} strokeWidth={2.2} />
-      <rect x={43} y={50} width={34} height={5} fill={C.sand} {...line} strokeWidth={2.2} />
-      {[46.5, 54, 61.5, 69].map((x) => (
-        <rect key={x} x={x} y={55} width={4.5} height={14} fill={C.paper} {...line} strokeWidth={2} />
-      ))}
-      <rect x={40} y={69} width={40} height={6} rx={1} fill={C.sandDark} {...line} strokeWidth={2.2} />
-      <circle cx={60} cy={45} r={2.2} fill={C.forest} />
-
-      {/* check */}
-      <circle cx={77} cy={72} r={9.5} fill={C.go} stroke={INK} strokeWidth={2.2} />
-      <path d="M72.6 72.2 l3.1 3.1 l5.6 -6.2" fill="none" stroke={C.paper} strokeWidth={2.6} strokeLinecap="round" strokeLinejoin="round" />
+      {/* Access Bank mark, sat 2 units low so its tall right arm leaves the box centred */}
+      <path transform="translate(60 62) scale(0.335)" d={ACCESS_MARK} fill={ACCESS_ORANGE} fillRule="evenodd" />
     </svg>
   );
 }

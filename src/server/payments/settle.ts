@@ -14,16 +14,21 @@ import { env } from "@/server/env";
 import { log } from "@/server/log";
 import { ensureObligations, levyAssignments } from "@/server/levy/obligations";
 import { queueSms } from "@/server/notify/outbox";
-import { t, isLocale } from "@/messages";
+import { t, isLocale, type Locale } from "@/messages";
 
 type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
 
 export type SettleOutcome =
   | { kind: "settled"; receiptNumber: string; doubleCharge: boolean }
   | { kind: "already_settled" }
-  | { kind: "pending" | "failed" | "reversed" | "not_found" | "unknown_payment" };
+  | { kind: "pending" | "failed" | "reversed" | "expired" | "not_found" | "unknown_payment" };
 
-const periodLabel = (start: Date, period: string) => (period === "daily" ? lagosDate(start) : `${period} from ${lagosDate(start)}`);
+/** "2026-11-11" for a daily levy, "weekly from 2026-11-09" for the others, in the trader's language. */
+function periodLabel(locale: Locale, start: Date, period: string): string {
+  if (period === "daily") return lagosDate(start);
+  const word = period === "weekly" ? t(locale, "sms.period_weekly") : period === "monthly" ? t(locale, "sms.period_monthly") : period === "yearly" ? t(locale, "sms.period_yearly") : period;
+  return t(locale, "sms.period_from", { period: word, date: lagosDate(start) });
+}
 
 /**
  * Money rule 3: a webhook or redirect is only a hint. This asks the bank, then settles in one
@@ -37,11 +42,24 @@ export async function settlePayment(paymentId: string, now = new Date()): Promis
   const verified = await getBank().verifyPayment(payment.providerRef);
   if (!verified) return { kind: "not_found" };
   if (verified.status !== "successful") {
-    const status = verified.status;
+    // An expired checkout is final for us: nobody can pay it any more. Our payment status has no
+    // "expired", so it is stored as failed with the bank's own word kept beside it.
+    const status = verified.status === "expired" ? "failed" : verified.status;
     if (status !== payment.status) {
-      await db().update(s.payments).set({ status, updatedAt: sql`now()`, providerData: sql`${s.payments.providerData} || ${JSON.stringify({ amountPaidKobo: verified.amountPaidKobo })}::jsonb` }).where(and(eq(s.payments.id, paymentId), sql`${s.payments.settledAt} IS NULL`));
+      await db().transaction(async (tx) => {
+        const closed = await tx
+          .update(s.payments)
+          .set({ status, updatedAt: sql`now()`, providerData: sql`${s.payments.providerData} || ${JSON.stringify({ amountPaidKobo: verified.amountPaidKobo, bankStatus: verified.status })}::jsonb` })
+          .where(and(eq(s.payments.id, paymentId), sql`${s.payments.settledAt} IS NULL`, sql`${s.payments.status} <> ${status}`))
+          .returning({ id: s.payments.id });
+        // Rule 7: money sent to a checkout that then expired settles nowhere. A person must look at it.
+        if (closed.length > 0 && verified.status === "expired" && verified.amountPaidKobo > 0) {
+          await tx.insert(s.reviewItems).values({ id: newId("rev"), kind: "expired_part_paid", paymentId, provider: payment.provider, providerRef: payment.providerRef, amountKobo: verified.amountPaidKobo, details: { amountKobo: verified.amountKobo } });
+        }
+      });
+      if (verified.status === "expired") log("info", "payment.expired", { payment_id: paymentId, amount_paid_kobo: verified.amountPaidKobo });
     }
-    return { kind: status };
+    return { kind: verified.status };
   }
   return db().transaction((tx) => settleVerified(tx, paymentId, verified, now));
 }
@@ -195,9 +213,10 @@ async function settleVerified(tx: Tx, paymentId: string, v: VerifiedPayment, now
   const locale = isLocale(trader.locale) ? trader.locale : "en";
   const first = covered[0];
   const levy = first ? (levyName.get(first.levyTypeId) ?? "levy") : "levy";
-  const period = first ? periodLabel(first.periodStart, levyPeriod.get(first.levyTypeId) ?? "daily") + (covered.length > 1 ? ` + ${covered.length - 1} more` : "") : "";
+  const firstPeriod = first ? periodLabel(locale, first.periodStart, levyPeriod.get(first.levyTypeId) ?? "daily") : "";
+  const period = covered.length > 1 ? t(locale, "sms.period_more", { period: firstPeriod, count: covered.length - 1 }) : firstPeriod;
   const text = double
-    ? t(locale, "sms.double_charge", { levy: levyName.get(double.levyTypeId) ?? "this levy", period: "today", amount: formatNaira(amount), number })
+    ? t(locale, "sms.double_charge", { levy: levyName.get(double.levyTypeId) ?? "this levy", period: t(locale, "sms.today"), amount: formatNaira(amount), number })
     : covered.length
       ? t(locale, "sms.receipt", { number, amount: formatNaira(amount), levy, period, url })
       : t(locale, "sms.receipt_credit", { number, amount: formatNaira(amount), credit: formatNaira(result.unallocatedKobo), url });

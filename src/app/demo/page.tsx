@@ -33,7 +33,7 @@ export default function DemoPage() {
             <span>
               <span className="flex items-center gap-1 text-[16px] font-semibold tracking-[-0.01em]">
                 {label}
-                <Icon name="arrowRight" size={16} stroke={2} className="text-ink-3 transition-transform group-hover:translate-x-0.5 group-hover:text-forest" />
+                <Icon name="arrowRight" size={16} className="text-ink-3 transition-transform group-hover:translate-x-0.5 group-hover:text-forest" />
               </span>
               <span className="text-[13px] text-ink-2">{sub}</span>
             </span>
@@ -51,7 +51,7 @@ export default function DemoPage() {
             </span>
             <Link href={href} target="_blank" className="inline-flex min-h-10 shrink-0 items-center gap-1 rounded-full bg-fill px-3 text-[13px] font-semibold text-ink hover:bg-fill-2">
               <span className="hidden sm:inline">{cta}</span>
-              <Icon name="arrowRight" size={15} stroke={2} />
+              <Icon name="arrowRight" size={15} />
             </Link>
           </li>
         ))}

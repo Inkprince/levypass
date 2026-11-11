@@ -13,7 +13,8 @@ export type Checkout = {
   expiresAt: Date;
 };
 
-export type BankPaymentStatus = "pending" | "successful" | "failed" | "reversed";
+/** "expired": nobody completed the checkout before its expires_at (30 minutes in the sandbox). */
+export type BankPaymentStatus = "pending" | "successful" | "failed" | "reversed" | "expired";
 
 export type VerifiedPayment = {
   reference: string;
@@ -21,7 +22,7 @@ export type VerifiedPayment = {
   amountKobo: Kobo; // what was asked for and what settles
   amountPaidKobo: Kobo; // what the payer sent (can exceed amountKobo)
   feeKobo: Kobo; // merchant_fee, read from the bank
-  settlementKobo: Kobo;
+  settlementKobo: Kobo; // amount less the fee; negative when the payment is smaller than the flat fee
   channel: string | null;
   paidAt: Date | null;
 };

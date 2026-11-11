@@ -1,0 +1,2 @@
+ALTER TABLE "payments" DROP CONSTRAINT "payments_fee_range";--> statement-breakpoint
+ALTER TABLE "payments" ADD CONSTRAINT "payments_fee_range" CHECK ("payments"."fee_kobo" IS NULL OR "payments"."fee_kobo" >= 0);

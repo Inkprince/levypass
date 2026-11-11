@@ -259,7 +259,8 @@ export const payments = pgTable(
     index().on(t.traderId, t.createdAt),
     index().on(t.status),
     check("payments_amount_positive", sql`${t.amountKobo} > 0`),
-    check("payments_fee_range", sql`${t.feeKobo} IS NULL OR (${t.feeKobo} >= 0 AND ${t.feeKobo} <= ${t.amountKobo})`),
+    // The fee may exceed the amount: the bank charges its flat ₦50 on a ₦20 payment (captured 11 Nov, bank notes).
+    check("payments_fee_range", sql`${t.feeKobo} IS NULL OR ${t.feeKobo} >= 0`),
     check("payments_settled_needs_verified", sql`${t.settledAt} IS NULL OR ${t.verifiedAt} IS NOT NULL`),
   ],
 );

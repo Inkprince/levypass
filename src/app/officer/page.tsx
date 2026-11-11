@@ -14,7 +14,7 @@ export default async function OfficerPage() {
   const officerId = await requireSubject("officer");
   const [o] = await db().select({ name: s.officers.name, staffId: s.officers.staffId }).from(s.officers).where(eq(s.officers.id, officerId));
   return (
-    <div className="min-h-dvh bg-mist">
+    <div className="min-h-dvh bg-paper">
       <header className="bg-forest text-white">
         <div className="mx-auto flex h-14 max-w-md items-center justify-between px-4">
           <Logo light size={26} />

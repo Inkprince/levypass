@@ -158,6 +158,68 @@ M = 3 to 5, L = 5 to 8.
   - Verify: a teammate who has not seen the build runs the script from the README without help.
   - 10 Nov: README written. Rubric mapping, slides and backup video pending H3 and rehearsal.
 
+### End-to-end run, 11 Nov, 10:00 to 10:50 Lagos (`ab1999f` on the cluster)
+
+Driven with a headless Chrome through `kubectl port-forward`, real Xtradot sandbox, every result checked
+against the cluster database. The public URL was checked from a browser signed in to Cloudflare Access.
+The uncommitted UI changes in the working tree were not part of this run.
+
+- Passed, twice for steps 1 to 3: register with OTP, QR pass, USSD payment (receipt SMS in 2.1 s and 3.5 s),
+  receipt page GENUINE, officer PAID and NOT PAID with pay code (server 19 to 24 ms), tampered QR refused.
+- Passed once: officer ID GENUINE, suspend (SUSPENDED, flag, scanner 403, login refused), reinstate; made-up
+  receipt NOT GENUINE with a flag; Pidgin complaint triaged by the model in 5 s; double charge flagged and
+  credited to 12 Nov; withheld webhook settled by the poller in 22 s; replay 3 times, ledger 2,183 to 2,183;
+  three forgeries refused with 401; dashboard equal to `ledger_entries` and to `payments`; a new payment on
+  the open dashboard in 3.6 s; reconciliation ₦0.00 with 5 of 5 matched (before F2 below happened).
+- Passed once, beyond the script: trader login by OTP; card payment on the bank's hosted page (₦800, fee
+  ₦12.00 read from the bank); camera scan with a fake camera feed (PAID, 1.10 s including camera start);
+  21 pages at 390 px and 1440 px with no script errors and no sideways scroll; `/admin` and `/officer` gated.
+- Public URL, signed-in browser: `/`, `/demo`, `/sim`, `/register`, both logins and the three QR targets
+  load in 0.5 to 1.0 s and show Paid, Genuine officer, Genuine.
+- Not covered: a real phone (camera timing, stock-camera QR scan), the declining card (the hosted page offers
+  only the good card), a sandbox reset followed by `demo:reset`, levy editing.
+- The cluster API dropped the port-forward several times (5 to 70 s each). The app and the public URL stayed up.
+
+Fixes this run asked for. All eight are in the working tree, not yet committed or deployed, so the
+cluster still runs `ab1999f` and shows the old behaviour until the next deploy.
+Verified 11 Nov, 11:00 to 11:25 Lagos: `npm run typecheck && npm run lint && npm test` pass (187 tests,
+24 of them new); the image builds; the browser checks below ran against `next dev` with the fake bank.
+
+- [x] **F1 Registration code cannot be read in the simulator.** The code pages (register and login) open
+  `/sim?phone=<that number>`; the SIM list starts with numbers sent an SMS in the last 10 minutes that are not
+  traders yet.
+  - Verified in a browser: register, click "Open the phone simulator", the SIM reads "New number, …" and the
+    code is on screen; a plain `/sim` opens on that number too; the code completes the registration.
+- [x] **F2 A payment under ₦50 never settles.** `settlement_amount` and a settlement's `net_amount` may be
+  negative; migration `0004` drops the "fee no larger than amount" half of `payments_fee_range` (approved in
+  the session).
+  - Verified: schema test on the captured body; DB test; in a browser, a ₦20 payment settled with inflow ₦20,
+    fee ₦50, allocation ₦20, a receipt SMS, and reconciliation at ₦0.00 with 7 of 7 payments on both sides.
+- [x] **F3 An abandoned pay page never closes, and open payments eat the bank quota.** `expired` is accepted
+  and closes the payment as `failed` (part-paid ones also go to review); the poller asks every tick for
+  2 minutes, every 30 s to 10 minutes, then every 2 minutes (`src/core/requery.ts`), and a payment goes to the
+  back of the queue whatever the answer; the open pay page turns to NOT PAID.
+  - Verified: schema test on the captured body; unit test (38 calls in 30 minutes, was 225); DB tests for
+    expiry, the review item, the back-off and a throwing payment no longer blocking the next one; in a
+    browser, an open pay page changed to NOT PAID when its payment was closed.
+  - Still to see on the cluster after a deploy: the two payments stuck since this morning close or settle.
+- [x] **F4 Pidgin and Yoruba do nothing.** Both dictionaries now cover every SMS and USSD string, and the
+  English fragments that were built in code ("what you owe", "weekly from", "+ 2 more") moved into them.
+  - Verified in a browser session: OTP, welcome SMS, menu, pay prompt and receipt in Pidgin; menu, balance,
+    pay-ahead prompt and double-charge SMS in Yoruba.
+  - The strings are a draft written with Claude. A fluent speaker must read both files before the demo.
+- [x] **F5 Step 6 cannot pick the trader from step 1.** The drill pickers list the 12 newest app-registered
+  traders first, then the seeded ones. A drill run with no trader chosen still uses a seeded trader.
+  - Verified in a browser: the trader just registered was first in the list; the double-charge drill ran
+    against her, flagged it and credited the next day.
+- [x] **F6 `/icon.svg` is 404 on the cluster.** `deploy/Dockerfile` copies `public/`.
+  - Verified: local image build; `public/icon.svg` and migration `0004` are inside the image.
+- [x] **F7 Forms empty themselves after a refused submit.** `ActionForm` sends the action itself.
+  - Verified in a browser: registration kept name, stall and language after "already registered"; officer
+    and admin login kept the staff ID and email after a wrong PIN and password.
+- [x] **F8 Script and data disagree.** `tasks/plan.md` steps 1, 2 and 6 now match the app: no virtual account
+  number, ₦2,500.00 on seeded data, pick the trader by name. `demo:reset` removes the ₦20 levy from the cluster.
+
 ### Checkpoint E
 
 - [ ] Three clean full run-throughs on the demo devices. Backup video saved off the cluster. No deploys after this except a fix for a failed run-through.

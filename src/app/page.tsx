@@ -35,7 +35,7 @@ export default async function Home() {
   const latest = payments[0] ?? null;
 
   return (
-    <div className="bg-cream text-ink">
+    <div className="bg-paper text-ink">
       <SiteNav />
       <Hero payments={payments} levy={levy ?? null} qr={checkQr} />
       <PlayInView>
@@ -61,7 +61,7 @@ const MENU: MenuLink[] = [
 
 function SiteNav() {
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-cream/85 backdrop-blur-md">
+    <header className="sticky top-0 z-40 border-b border-line bg-paper/85 backdrop-blur-md">
       <div className="gutter flex h-16 items-center gap-8">
         <Link href="/" aria-label="LevyPass home" className="flex min-h-11 items-center">
           <Logo />
@@ -95,6 +95,28 @@ function SiteNav() {
 
 /* -------------------------------------------------------------------- hero */
 
+const channelWords = ["USSD", "card", "transfer"] as const;
+
+/**
+ * The payment channel in the headline: each word fades in, holds, and leaves for the next.
+ * All words share one grid cell so the line never reflows. Screen readers get the full list
+ * once; with reduced motion only the first word shows.
+ */
+function ChannelWords() {
+  return (
+    <>
+      <span className="sr-only">USSD, card or transfer.</span>
+      <span className="lp-words text-forest" aria-hidden="true">
+        {channelWords.map((w) => (
+          <span key={w} className="lp-word">
+            {w}.
+          </span>
+        ))}
+      </span>
+    </>
+  );
+}
+
 function Hero({ payments, levy, qr }: { payments: HeroPayment[]; levy: { name: string; amountKobo: number } | null; qr: string }) {
   return (
     <section className="rails relative overflow-hidden">
@@ -105,7 +127,7 @@ function Hero({ payments, levy, qr }: { payments: HeroPayment[]; levy: { name: s
         <div>
           <h1 className="display text-[40px] min-[375px]:text-[48px] sm:text-[68px] lg:text-[62px] xl:text-[72px] 2xl:text-[88px]">
             <span className="animate-rise block" style={{ animationDelay: "80ms" }}>
-              Traders pay levies by phone.
+              Traders pay levies by <ChannelWords />
             </span>
             <span className="animate-rise block text-ink-3" style={{ animationDelay: "180ms" }}>
               Officers check them in one scan.
@@ -118,15 +140,11 @@ function Hero({ payments, levy, qr }: { payments: HeroPayment[]; levy: { name: s
             <LinkButton href="/register" size="lg" variant="secondary">
               Register a trader
             </LinkButton>
-            <LinkButton href="/demo" size="lg" variant="outline">
-              See the five-minute demo
-              <Icon name="arrowRight" size={18} stroke={2} />
-            </LinkButton>
           </div>
           <p style={{ animationDelay: "440ms" }} className="animate-rise mt-8 flex items-start gap-2 text-[14px] text-ink-2">
             <Icon name="phone" size={18} className="mt-px text-forest" />
             <span>
-              Dial <span className="whitespace-nowrap rounded-md bg-mist-2 px-1.5 py-0.5 font-mono text-[13px] font-semibold text-ink">*347*13#</span>
+              Dial <span className="whitespace-nowrap rounded-md bg-mist-2 px-1.5 py-0.5 font-mono text-[13px] font-semibold text-ink">*347*13#</span> to get started
             </span>
           </p>
         </div>
@@ -210,9 +228,13 @@ function HowItWorks({ d, levy, latestReceipt, host }: { d: Summary | null; levy:
           <Lcd>{t("en", "ussd.menu")}</Lcd>
         </Step>
         <Step n="02" tone="lime" title="Receipt by SMS" body="The bank confirms the payment server to server. LevyPass marks the levy paid and sends a receipt only after that.">
-          <div className="flex h-full flex-col justify-end gap-2 p-4">
-            <p className="text-center text-[11px] font-medium text-ink-3">LevyPass, now</p>
-            <p className="max-w-[92%] rounded-2xl rounded-bl-md bg-paper px-3.5 py-2.5 text-[13px] leading-snug text-ink shadow-[0_1px_0_rgb(12_28_21/0.06)]">{sms}</p>
+          <div className="flex h-full flex-col justify-end gap-2.5 px-4 pb-4 pt-3">
+            <p className="text-center text-[11px] leading-tight text-ink-3">
+              <span className="font-semibold">Text Message</span>
+              <br />
+              Today from LevyPass
+            </p>
+            <SmsBubble>{sms}</SmsBubble>
           </div>
         </Step>
         <Step n="03" tone="forest" title="One scan to prove it" body={`An officer scans the trader's QR and sees PAID or NOT PAID in under three seconds.${paidRate ? ` ${paidRate} traders have paid today.` : ""}`}>
@@ -243,6 +265,22 @@ function Step({ n, tone, title, body, children }: { n: string; tone: keyof typeo
         <p className={`mt-1.5 text-[15px] leading-relaxed ${t.body}`}>{body}</p>
       </div>
     </li>
+  );
+}
+
+/**
+ * An incoming text as a phone's Messages app draws it: 18px corners and a tail that curls out of
+ * the bottom-left corner. The tail is an SVG in the bubble's own colour, so it works on any tile.
+ */
+function SmsBubble({ children }: { children: string }) {
+  return (
+    <div className="relative ml-1.5 max-w-[88%] self-start">
+      {/* drawn first so the text sits on top; its right edge runs inside the bubble, which hides it */}
+      <svg viewBox="0 0 22 21" aria-hidden className="absolute -left-1.5 bottom-0 h-[21px] w-[22px] text-paper">
+        <path d="M6 0C6 11 4.5 17 0 20.8C6 21.6 14 21.4 22 19.5L22 0Z" fill="currentColor" />
+      </svg>
+      <p className="relative rounded-[18px] bg-paper px-3 py-[7px] text-[13px] leading-[1.35] text-ink">{children}</p>
+    </div>
   );
 }
 

@@ -142,7 +142,7 @@ export default async function FraudPage() {
               {review.length === 0 ? (
                 <tr>
                   <td className="flex items-center gap-2 px-6 py-5 text-ink-2">
-                    <Icon name="check" size={17} stroke={2.4} className="text-go" />
+                    <Icon name="check" size={17} className="text-go" />
                     Nothing to review. Every payment is matched.
                   </td>
                 </tr>
@@ -167,7 +167,7 @@ function SectionTitle({ children, count }: { children: React.ReactNode; count: n
 function Empty({ children }: { children: React.ReactNode }) {
   return (
     <p className="flex items-center gap-2 rounded-[var(--radius-card)] border border-dashed border-line-2 px-6 py-5 text-[14px] text-ink-2">
-      <Icon name="check" size={17} stroke={2.4} className="text-go" />
+      <Icon name="check" size={17} className="text-go" />
       {children}
     </p>
   );

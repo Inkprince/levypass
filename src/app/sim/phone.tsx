@@ -86,13 +86,14 @@ export function Phone() {
           <span className="text-sm font-semibold">SIM card</span>
           <span className="relative">
             <select value={phone} onChange={(e) => setPhone(e.target.value)} className="min-h-12 w-full appearance-none rounded-xl border border-line-2 bg-paper px-4 pr-10 text-base outline-none focus:border-forest focus:ring-4 focus:ring-forest/10">
+              {phone && !contacts.some((c) => c.phone === phone) ? <option value={phone}>New number, {phone}</option> : null}
               {contacts.map((c) => (
                 <option key={c.phone} value={c.phone}>
                   {c.name}, {c.phone}
                 </option>
               ))}
             </select>
-            <Icon name="chevronRight" size={16} stroke={2.2} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 rotate-90 text-ink-3" />
+            <Icon name="chevronRight" size={16} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 rotate-90 text-ink-3" />
           </span>
         </label>
         <ol className="mt-8 flex flex-col gap-4 border-t border-line pt-6 text-[15px] text-ink-2">

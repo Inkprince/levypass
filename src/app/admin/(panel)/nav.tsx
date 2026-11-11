@@ -26,7 +26,7 @@ export function SideNav() {
         return (
           <Link key={href} href={href} aria-current={on ? "page" : undefined} className={`-mx-2 flex items-center gap-3 rounded-xl px-2 py-2 text-[15px] transition-colors ${on ? "bg-fill font-semibold text-ink" : "text-ink-2 hover:bg-fill hover:text-ink"}`}>
             <span className={`flex h-8 w-8 items-center justify-center rounded-full ${on ? "bg-lime text-forest" : "text-forest"}`}>
-              <Icon name={icon} size={18} stroke={on ? 2.2 : 1.8} />
+              <Icon name={icon} size={18} />
             </span>
             {label}
           </Link>

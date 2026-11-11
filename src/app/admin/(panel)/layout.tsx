@@ -54,13 +54,13 @@ export default async function PanelLayout({ children }: { children: ReactNode })
 
         <Link href="/admin/failures" className="group relative mt-auto block rounded-[var(--radius-card)] bg-lime px-4 pb-4 pt-9 text-ink">
           <span className="absolute -top-6 left-4 flex h-12 w-12 items-center justify-center rounded-full border-[2.5px] border-ink bg-paper" aria-hidden="true">
-            <Icon name="bolt" size={20} stroke={2.2} />
+            <Icon name="bolt" size={20} />
           </span>
           <span className="block text-[22px] font-medium leading-[1.02] tracking-[-0.045em]">Test the failure cases</span>
           <span className="mt-2 block text-[13px] leading-snug text-ink/75">Withhold, replay or forge a webhook and watch LevyPass credit each payment once.</span>
           <span className="mt-4 flex h-10 items-center justify-between rounded-full bg-paper px-4 text-[14px] font-medium">
             Failure drills
-            <Icon name="arrowUpRight" size={14} stroke={2.4} className="transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+            <Icon name="arrowUpRight" size={14} className="transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
           </span>
         </Link>
         <form action={adminLogout} className="mt-5">
@@ -72,7 +72,7 @@ export default async function PanelLayout({ children }: { children: ReactNode })
       </aside>
 
       <div className="min-w-0">
-        <header className="no-print sticky top-0 z-30 border-b border-line bg-mist/90 backdrop-blur-md">
+        <header className="no-print sticky top-0 z-30 border-b border-line bg-paper/90 backdrop-blur-md">
           <div className="flex h-[76px] items-center gap-3 px-4 sm:px-6 lg:px-10 2xl:px-14">
             <Link href="/admin" className="flex min-h-11 items-center lg:hidden" aria-label="Collections">
               <Mark size={30} />
@@ -87,7 +87,7 @@ export default async function PanelLayout({ children }: { children: ReactNode })
               </span>
               <Chip href="/admin/fraud" label={`${openFlags} open fraud flags`}>
                 <span className={`flex h-6 w-6 items-center justify-center rounded-full ${openFlags ? "bg-coral text-white" : "bg-paper text-ink-2"}`} aria-hidden="true">
-                  <Icon name="flag" size={12} stroke={2.4} />
+                  <Icon name="flag" size={12} />
                 </span>
                 <span className="tnum">{openFlags}</span>
                 <span className="hidden md:inline">open flags</span>

@@ -1,5 +1,6 @@
 import "server-only";
 import { and, asc, eq, gt, inArray, isNull, lt, sql } from "drizzle-orm";
+import { REQUERY_FIRST_MS, REQUERY_GIVE_UP_MS, requeryDue } from "@/core/requery";
 import { db, pool } from "@/server/db/client";
 import * as s from "@/server/db/schema";
 import { errorFields, log } from "@/server/log";
@@ -54,29 +55,37 @@ async function healDemoData(): Promise<void> {
   });
 }
 
+/**
+ * Asks the bank about payments that are not final yet and settles the ones it confirms.
+ * How often each one is asked depends on its age (src/core/requery.ts). Whatever the answer, the
+ * payment goes to the back of the queue, so one that keeps failing cannot hold up the rest.
+ */
 export async function requeryPayments(limit = 4): Promise<number> {
   const now = Date.now();
-  const due = await db()
-    .select({ id: s.payments.id })
+  const open = await db()
+    .select({ id: s.payments.id, createdAt: s.payments.createdAt, updatedAt: s.payments.updatedAt })
     .from(s.payments)
     .where(
       and(
         inArray(s.payments.status, ["initiated", "pending", "unknown"]),
         isNull(s.payments.settledAt),
-        lt(s.payments.createdAt, new Date(now - 15_000)),
-        gt(s.payments.createdAt, new Date(now - 6 * 3_600_000)),
+        lt(s.payments.createdAt, new Date(now - REQUERY_FIRST_MS)),
+        gt(s.payments.createdAt, new Date(now - REQUERY_GIVE_UP_MS)),
         sql`${s.payments.provider} <> 'seed'`,
       ),
     )
     .orderBy(asc(s.payments.updatedAt))
-    .limit(limit);
+    .limit(200);
+  const due = open.filter((p) => requeryDue({ ageMs: now - p.createdAt.getTime(), sinceLastTryMs: now - p.updatedAt.getTime() })).slice(0, limit);
   for (const p of due) {
     try {
       const outcome = await settlePayment(p.id);
-      await db().update(s.payments).set({ updatedAt: sql`now()` }).where(eq(s.payments.id, p.id));
       if (outcome.kind === "settled") log("info", "poller.settled", { payment_id: p.id, via: "requery" });
     } catch (error) {
       log("warn", "poller.requery_failed", { payment_id: p.id, ...errorFields(error) });
+    } finally {
+      // updated_at doubles as "last asked". Best effort: a failure here must not stop the others.
+      await db().update(s.payments).set({ updatedAt: sql`now()` }).where(eq(s.payments.id, p.id)).catch(() => undefined);
     }
   }
   return due.length;

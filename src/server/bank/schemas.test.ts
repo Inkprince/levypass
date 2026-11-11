@@ -24,6 +24,20 @@ describe("bank schemas parse the captured sandbox responses", () => {
     expect(ok(S.paymentData, captured.card_success)).toMatchObject({ merchant_fee: 3_000, channel: "card" });
   });
 
+  it("a payment below the flat fee settles negative (captured 11 Nov)", () => {
+    expect(ok(S.paymentData, captured.ussd_below_fee)).toMatchObject({ status: "successful", amount: 2_000, amount_paid: 2_000, merchant_fee: 5_000, settlement_amount: -3_000 });
+  });
+
+  it("an expired checkout verifies as expired (captured 11 Nov)", () => {
+    expect(ok(S.paymentData, captured.verify_expired)).toMatchObject({ status: "expired", amount: 80_000, amount_paid: 0, merchant_fee: 0, settlement_amount: 0, paid_at: null });
+  });
+
+  it("amounts other than the net stay non-negative", () => {
+    const body = structuredClone(captured.verify_successful_ussd.body) as { data: { amount: number } };
+    body.data.amount = -500;
+    expect(S.successEnvelope(S.paymentData).safeParse(body).success).toBe(false);
+  });
+
   it("settlements, the settlement run and reconciliation", () => {
     const list = ok(z.array(S.settlementData), captured.settlements);
     expect(list[0]).toMatchObject({ gross_amount: 150_005, fees: 15_000, net_amount: 135_005 });

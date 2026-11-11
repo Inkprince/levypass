@@ -87,7 +87,7 @@ export function SearchReveal({ phase, searching, found, missing }: { phase: Reve
             <span
               className={`animate-pop absolute left-1/2 top-[46%] flex h-[88px] w-[88px] -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full border-[3px] border-ink ${phase === "found" ? "bg-lime text-ink" : "bg-stop text-white"}`}
             >
-              <Icon name={phase === "found" ? "check" : "x"} size={46} stroke={3.2} />
+              <Icon name={phase === "found" ? "check" : "x"} size={46} />
             </span>
           ) : null}
         </div>

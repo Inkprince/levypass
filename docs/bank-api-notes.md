@@ -277,3 +277,41 @@ See finding 8.
 
 - `POST /payments/checkout` accepts `callback_url` (201, `LPPROBE-PAY-CB1`). The response shape is unchanged.
 - References in our own format (`pay_` plus 20 lower-case characters) work for checkout and verify (201, then 200).
+
+## Addendum (11 Nov, 09:26 UTC): a payment below the fee settles negative
+
+Seen on the cluster during the end-to-end run (`ab1999f`), checkout `pay_b1e02avxd15mtnzphc83` for ₦20.00 paid
+through `simulate-ussd`:
+
+```json
+200  {"status":"success","message":"Payment successful","data":{"reference":"pay_b1e02avxd15mtnzphc83","status":"successful","amount":20,"amount_paid":20,"channel":"ussd","merchant_fee":50,"settlement_amount":-30,"paid_at":"2026-11-11T09:26:09Z",...},"request_id":"req_bcf1d66a"}
+```
+
+- The ₦50 flat fee is charged whatever the amount, so **`settlement_amount` goes negative** when a payment is
+  under ₦50. `verify` returns the same body. The settlement run includes it (batch `stl_0095`, gross ₦20, fee ₦50).
+- At the time our schema (`src/server/bank/schemas.ts`, `ngn` is `nonnegative`) rejected that body as
+  `UNEXPECTED_SHAPE`. The effect, all observed on `ab1999f`: USSD tells the trader "We could not start the
+  payment" although the bank took the money; the webhook fails to process; the poller retries `verify` every
+  8 s for 6 hours; the payment stays `pending` with no ledger entry, receipt or review item; reconciliation
+  shows "1 only at the bank", gap ₦30.00.
+- Fixed the same day: `settlement_amount` (and a settlement's `net_amount`, by the same arithmetic, though not
+  yet captured below zero) may be negative, and migration 0004 lets `payments.fee_kobo` exceed `amount_kobo`.
+  Such a payment now settles like any other: inflow ₦20, fee ₦50, receipt issued.
+- How a ₦20 payment came about: a daily levy "Motor park Ticket" at ₦20 was added on the cluster (11 Nov,
+  02:13 UTC), so every trader who is paid up is offered "Pay ahead ₦20.00".
+
+### An expired checkout reports `status: "expired"`
+
+Checkout `pay_8s36wzmcwna7bw6sq5yj` (₦800.00, opened and never paid), asked 3 minutes after `expires_at`:
+
+```json
+200  {"status":"success","message":"Request completed","data":{"reference":"pay_8s36wzmcwna7bw6sq5yj","status":"expired","amount":800.0,"amount_paid":0.0,"currency":"NGN","channel":null,"merchant_id":"mer_204","customer":{"name":"Taiwo Popoola","email":null},"merchant_fee":0.0,"settlement_amount":0.0,"paid_at":null,"card":null,"metadata":null},"meta":null,"request_id":"req_760f615d"}
+```
+
+- Statuses seen are now `pending`, `successful` and `expired`. At the time our verify schema allowed `pending`,
+  `successful`, `failed` and `reversed`, so this body was also rejected as `UNEXPECTED_SHAPE`: every pay page
+  that was opened and left became, 30 minutes later, a payment that stayed `pending` and was re-verified every
+  8 s for 6 hours.
+- Fixed the same day: `expired` is accepted and closes our payment as `failed` (the bank's word is kept in
+  `provider_data.bankStatus`). If `amount_paid` is above zero when a checkout expires, the payment also goes to
+  the review queue as `expired_part_paid`; that case has not been seen in the sandbox.

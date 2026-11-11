@@ -38,7 +38,7 @@ function Choice<T extends string>({ value, options, onChange, label }: { value: 
           onClick={() => onChange(v)}
           className={`inline-flex min-h-10 items-center gap-1.5 rounded-full px-3.5 text-[13px] font-semibold transition ${value === v ? "bg-forest text-white" : "bg-paper text-ink-2 hover:text-ink"}`}
         >
-          {value === v ? <Icon name="check" size={14} stroke={2.6} /> : null}
+          {value === v ? <Icon name="check" size={14} /> : null}
           {text}
         </button>
       ))}
@@ -72,7 +72,7 @@ function Settled({ id, startedAt }: { id: string; startedAt: string }) {
   if (done) {
     return (
       <li className="animate-pop flex gap-2.5 rounded-xl bg-go-bg px-3 py-2.5 font-semibold text-go-fg">
-        <Icon name="check" size={16} stroke={2.6} className="mt-0.5 shrink-0" />
+        <Icon name="check" size={16} className="mt-0.5 shrink-0" />
         {done.by === "you"
           ? `You asked: LevyPass called the bank's verify endpoint, got a confirmed payment, and settled it ${done.secs} s after the drill started.`
           : `The poller asked the bank, verified the payment and settled it ${done.secs} s after the drill started. No webhook needed.`}
@@ -126,7 +126,7 @@ function Result({ run }: { run: Run }) {
               <span className="font-mono text-[10.5px] text-ink-3 tnum">{clock(s.at)}</span>
             </span>
             <span className="flex min-w-0 gap-1.5 text-ink">
-              {s.ok === true ? <Icon name="check" size={16} stroke={2.6} className="mt-0.5 shrink-0 text-go" /> : s.ok === false ? <Icon name="x" size={16} stroke={2.6} className="mt-0.5 shrink-0 text-stop" /> : null}
+              {s.ok === true ? <Icon name="check" size={16} className="mt-0.5 shrink-0 text-go" /> : s.ok === false ? <Icon name="x" size={16} className="mt-0.5 shrink-0 text-stop" /> : null}
               <span className="break-words">{s.text}</span>
             </span>
           </li>
@@ -136,7 +136,7 @@ function Result({ run }: { run: Run }) {
       {run.exchanges?.length ? (
         <details className="group rounded-xl bg-paper">
           <summary className="flex cursor-pointer list-none items-center gap-2 px-3 py-2.5 text-[13px] font-semibold text-ink-2">
-            <Icon name="chevronRight" size={14} stroke={2.4} className="transition group-open:rotate-90" />
+            <Icon name="chevronRight" size={14} className="transition group-open:rotate-90" />
             Raw HTTP ({run.exchanges.length})
           </summary>
           <div className="flex flex-col gap-3 px-3 pb-3">

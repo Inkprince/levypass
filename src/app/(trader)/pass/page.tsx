@@ -41,7 +41,7 @@ export default async function PassPage({ searchParams }: { searchParams: Promise
         </div>
         <div className="mx-4 mb-4 mt-6 rounded-[22px] bg-paper p-5 text-ink">
           <div className={`mb-4 flex items-center justify-center gap-2 rounded-full py-2 text-[14px] font-bold uppercase tracking-wide ${paid ? "bg-go-bg text-go-fg" : "bg-stop-bg text-stop-fg"}`}>
-            <Icon name={paid ? "check" : "x"} size={18} stroke={2.6} />
+            <Icon name={paid ? "check" : "x"} size={18} />
             {paid ? "Paid today" : "Not paid today"}
           </div>
           <div className="mx-auto w-full max-w-[240px] [&_svg]:h-auto [&_svg]:w-full" dangerouslySetInnerHTML={{ __html: svg }} />

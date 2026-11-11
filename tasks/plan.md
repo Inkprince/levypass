@@ -127,16 +127,20 @@ request id, outcome), `otp_codes`, `review_items`, `sessions`.
 
 ## Demo script (target five minutes)
 
-1. Mama Bisi registers on the feature-phone simulator. The OTP lands in the simulator inbox. She
-   gets a QR pass and a virtual account number.
-2. She pays today's ₦500 market levy by USSD. The receipt SMS arrives; show the elapsed seconds.
+1. Mama Bisi registers on the web form. The code page opens the phone simulator on her number and
+   the OTP is in its inbox. She gets a QR pass. (No virtual account number: per-trader accounts were
+   dropped, see "Design consequences" in `docs/bank-api-notes.md`.)
+2. She pays what she owes by USSD. On freshly seeded data that is ₦2,500.00: today's ₦500 market levy
+   and this week's ₦2,000 sanitation levy, which a new trader also owes. The receipt SMS arrives; show
+   the elapsed seconds. (A levy added in the admin screen changes this figure. Run `demo:reset` before
+   the demo so the amounts are the seeded ones.)
 3. Officer Musa scans her QR on a real phone: **PAID**, under three seconds. He scans an unpaid
    trader: **NOT PAID**, with a pay-now code.
 4. A judge scans Musa's officer ID with their own phone: genuine and active. The admin suspends
    him; the next scan shows **SUSPENDED** and a fraud flag appears.
 5. Someone types a made-up receipt number into the public check page: not genuine, flagged.
-6. Mama Bisi is charged again for today. The second payment is flagged as a double charge and
-   credited to tomorrow.
+6. Mama Bisi is charged again for today: pick her by name in the "Paid twice for one day" drill.
+   The second payment is flagged as a double charge and credited to tomorrow.
 7. Break it: withhold a webhook (the poller settles it), replay a webhook (no double credit),
    send a forged signature (rejected).
 8. Dashboard: today's total has moved, compliance rate is up, and reconciliation shows the ledger
@@ -214,3 +218,5 @@ T1 to T13, T15, T17, T18, T21, T22.
 - [ ] New from T4: Huawei MaaS returns 401 `ModelArts.81003` for the team key. Report with the request IDs in the notes.
 - [ ] New from T4: settle the collection rail (checkout under `mer_204` versus per-trader virtual accounts); see "Design consequences" in the notes.
 - [ ] Languages: who on the team writes the Pidgin and Yoruba strings? They are hand-written, not machine-translated.
+  11 Nov: `src/messages/pcm.ts` and `yo.ts` now hold a first draft written with Claude so the language choice
+  does something. A fluent speaker still has to read and correct both files before the demo.

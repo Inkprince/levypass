@@ -5,6 +5,9 @@ import { ngnToKobo } from "@/core/money";
 // Unknown extra fields are allowed and ignored. Amounts are JSON numbers in naira.
 
 const ngn = z.number().nonnegative().transform((n) => ngnToKobo(n));
+// What is left after the bank's fee. The ₦50 flat fee is charged whatever the amount, so a payment
+// under ₦50 comes back negative (captured 11 Nov: amount 20, merchant_fee 50, settlement_amount -30).
+const netNgn = z.number().transform((n) => ngnToKobo(n, { allowNegative: true }));
 const isoDate = z.string().transform((s) => new Date(s));
 
 export const errorEnvelope = z.object({
@@ -29,11 +32,12 @@ export const checkoutData = z.object({
 
 export const paymentData = z.object({
   reference: z.string(),
-  status: z.enum(["pending", "successful", "failed", "reversed"]),
+  // "expired" is what verify reports once an unpaid checkout passes expires_at (captured 11 Nov).
+  status: z.enum(["pending", "successful", "failed", "reversed", "expired"]),
   amount: ngn,
   amount_paid: ngn,
   merchant_fee: ngn,
-  settlement_amount: ngn,
+  settlement_amount: netNgn,
   channel: z.string().nullable(),
   paid_at: z.string().nullable().transform((s) => (s ? new Date(s) : null)),
 });
@@ -47,7 +51,8 @@ export const settlementData = z.object({
   settlement_account: z.string(),
   gross_amount: ngn,
   fees: ngn,
-  net_amount: ngn,
+  // gross_amount - fees. Not yet captured below zero, but a batch holding only sub-₦50 payments must be.
+  net_amount: netNgn,
   transactions: z.array(z.object({ reference: z.string(), channel: z.string(), amount: ngn, fee: ngn })),
 });
 

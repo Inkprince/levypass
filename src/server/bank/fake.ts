@@ -9,7 +9,8 @@ import { BankError, type BankPort, type Settlement, type VerifiedPayment } from 
 
 // Deterministic stand-in for the sandbox, used locally and in tests. Behaviour copies what T4
 // recorded: checkouts, ₦50 flat fee on USSD and transfer, 1.5% on card (capped at ₦2,000),
-// partial payments stay pending, overpayments settle only the amount asked, signed webhooks.
+// partial payments stay pending, overpayments settle only the amount asked, signed webhooks,
+// and (captured 11 Nov) the flat fee applies below ₦50 too, and an unpaid checkout expires after 30 minutes.
 
 type FakePayment = {
   reference: string;
@@ -58,6 +59,24 @@ function save(): void {
 
 const state = (): FakeState => (g.levypassFakeBank ??= load());
 
+/** Test helper: make a checkout look as if it was created `ms` ago, to reach its 30-minute expiry. */
+export function ageFakePayment(reference: string, ms: number): void {
+  const p = state().payments.get(reference);
+  if (!p) throw new Error(`No fake payment ${reference}`);
+  p.createdAt = new Date(new Date(p.createdAt).getTime() - ms);
+  save();
+}
+
+const CHECKOUT_TTL_MS = 30 * 60_000;
+/** Like the sandbox: a checkout nobody completed within 30 minutes reports "expired" from then on. */
+function expireIfDue(p: FakePayment): FakePayment {
+  if (p.status === "pending" && Date.now() - new Date(p.createdAt).getTime() > CHECKOUT_TTL_MS) {
+    p.status = "expired";
+    save();
+  }
+  return p;
+}
+
 /** Test helper: start from an empty bank. */
 export function resetFakeBank(): void {
   g.levypassFakeBank = { payments: new Map(), settled: [], seq: 0 };
@@ -88,8 +107,10 @@ function deliver(event: string, data: Record<string, unknown>): void {
 }
 
 function pay(reference: string, channel: string, paidKobo?: Kobo): FakePayment {
-  const p = state().payments.get(reference);
-  if (!p) throw new BankError("NOT_FOUND", 404, `No payment with reference ${reference}`);
+  const found = state().payments.get(reference);
+  if (!found) throw new BankError("NOT_FOUND", 404, `No payment with reference ${reference}`);
+  const p = expireIfDue(found);
+  if (p.status === "expired") throw new BankError("CHECKOUT_EXPIRED", 422, `Checkout ${reference} has expired`);
   const amount = paidKobo ?? p.amountKobo - p.paidKobo;
   p.paidKobo += amount;
   p.channel = channel;
@@ -152,8 +173,9 @@ export function fakeBank(): BankPort {
       };
     },
     async verifyPayment(reference) {
-      const p = state().payments.get(reference);
-      if (!p) return null;
+      const found = state().payments.get(reference);
+      if (!found) return null;
+      const p = expireIfDue(found);
       return { reference, status: p.status, amountKobo: p.amountKobo, amountPaidKobo: p.paidKobo, feeKobo: p.status === "successful" ? p.feeKobo : 0, settlementKobo: p.status === "successful" ? p.amountKobo - p.feeKobo : 0, channel: p.channel, paidAt: p.paidAt };
     },
     async simulateUssd(reference) {

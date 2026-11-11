@@ -55,7 +55,7 @@ export default async function ReconciliationPage({ searchParams }: { searchParam
       <section className={`flex flex-wrap items-center justify-between gap-6 rounded-[var(--radius-card)] p-6 sm:p-8 ${ok ? "bg-go text-white" : "bg-stop text-white"}`} role="status">
         <div className="flex items-center gap-5">
           <span className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-white ${ok ? "text-go" : "text-stop"}`}>
-            <Icon name={ok ? "check" : "x"} size={30} stroke={2.8} />
+            <Icon name={ok ? "check" : "x"} size={30} />
           </span>
           <div>
             <p className="text-[14px] text-white/80">Gap between ledger and bank</p>
@@ -99,7 +99,7 @@ export default async function ReconciliationPage({ searchParams }: { searchParam
             {problems.map((p) => (
               <li key={`${p.kind}-${p.ref}`} className="flex flex-wrap items-center justify-between gap-2 py-3">
                 <span className="flex items-center gap-2">
-                  <Icon name="x" size={15} stroke={2.4} className="text-stop" />
+                  <Icon name="x" size={15} className="text-stop" />
                   <span className="font-mono text-[13px]">{p.ref}</span>
                 </span>
                 <span className="text-ink-2">

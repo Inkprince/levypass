@@ -65,14 +65,14 @@
 
 /*
  * The desk: revenue office and officer screens, after the Kalimo dashboard layout.
- * Cream ground and sand panels without borders; same rounded shapes as the rest of the site.
+ * White ground and sand panels without borders; same rounded shapes as the rest of the site.
  */
 .desk {
   --card-bg: var(--color-mist-2);
   --card-border: transparent;
   --color-line: #ddd3bd;
   --color-line-2: #c9bda3;
-  background: var(--color-mist);
+  background: var(--color-paper);
 }
 
 html {
@@ -254,6 +254,16 @@ body {
 @keyframes lp-slot { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 @keyframes lp-progress { from { transform: scaleX(0); } to { transform: scaleX(1); } }
 
+/* Hero headline: rotating payment channel. Three words, 2.5s each, sharing one grid cell. */
+@keyframes lp-word {
+  0% { opacity: 0; transform: translateY(0.35em); filter: blur(4px); }
+  5%, 28% { opacity: 1; transform: none; filter: none; }
+  33%, 100% { opacity: 0; transform: translateY(-0.35em); filter: blur(4px); }
+}
+.lp-words { display: inline-grid; }
+.lp-word { grid-area: 1 / 1; }
+.lp-word:not(:first-child) { opacity: 0; }
+
 .lp-puff, .lp-glow, .lp-sms, .lp-roll, .lp-stamp { transform-box: fill-box; transform-origin: center; }
 .lp-sms { transform-origin: 0% 100%; }
 .lp-rays, .lp-sway, .lp-paid { transform-box: view-box; }
@@ -288,6 +298,9 @@ body {
   .lp-lens { animation: lp-lens 0.8s ease-in-out infinite; }
   .lp-slot { animation: lp-slot 0.45s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
   .lp-progress { animation: lp-progress linear both; }
+  .lp-word { animation: lp-word 7.5s cubic-bezier(0.2, 0.8, 0.2, 1) infinite both; }
+  .lp-word:nth-child(2) { animation-delay: 2.5s; }
+  .lp-word:nth-child(3) { animation-delay: 5s; }
 }
 
 @media (prefers-reduced-motion: reduce) {

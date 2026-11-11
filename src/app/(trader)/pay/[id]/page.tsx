@@ -42,7 +42,7 @@ export default async function PayPage({ params }: { params: Promise<{ id: string
         <p className="money mt-1 text-[48px] leading-none">{formatNaira(p.amountKobo)}</p>
       </div>
       <Waiting id={p.id} startedAt={p.createdAt.getTime()} />
-      {!p.settledAt ? (
+      {!p.settledAt && p.status !== "failed" && p.status !== "reversed" ? (
         <>
           <Option n={1} icon="hash" title="USSD on any phone">
             <p className="rounded-xl bg-mist px-4 py-3 text-center font-mono text-[28px] font-bold tracking-wide">{c.ussdCode ?? "..."}</p>

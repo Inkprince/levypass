@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { StatusPanel, buttonClass } from "@/app/_ui/kit";
 
@@ -8,6 +9,11 @@ type Status = { status: string; settled: boolean; receipt: string | null };
 export function Waiting({ id, startedAt }: { id: string; startedAt: number }) {
   const [s, setS] = useState<Status | null>(null);
   const [now, setNow] = useState(startedAt);
+  const router = useRouter();
+  const closed = s !== null && !s.settled && (s.status === "failed" || s.status === "reversed");
+  useEffect(() => {
+    if (closed) router.refresh(); // the server page drops the ways to pay once the request is closed
+  }, [closed, router]);
   useEffect(() => {
     let stop = false;
     const poll = async () => {
@@ -30,6 +36,16 @@ export function Waiting({ id, startedAt }: { id: string; startedAt: number }) {
         <a href={`/r/${s.receipt}`} className="inline-flex min-h-11 items-center rounded-full bg-white/15 px-4 font-mono text-[15px] font-semibold hover:bg-white/25">
           {s.receipt}
         </a>
+        <a href="/pass" className={buttonClass("accent", "lg", "mt-3")}>
+          Back to my pass
+        </a>
+      </StatusPanel>
+    );
+  }
+  if (closed) {
+    // The bank expires a payment request after 30 minutes; LevyPass then closes it too.
+    return (
+      <StatusPanel tone="unpaid" word="Not paid" sub="This payment request has ended and nothing was credited from it. Go back to your pass to start a new one.">
         <a href="/pass" className={buttonClass("accent", "lg", "mt-3")}>
           Back to my pass
         </a>

@@ -50,12 +50,12 @@ export function MobileMenu({ links }: { links: MenuLink[] }) {
         onClick={() => setOpen((o) => !o)}
         className="flex h-11 w-11 items-center justify-center rounded-full text-ink hover:bg-fill"
       >
-        <Icon name={open ? "x" : "menu"} size={26} solid />
+        <Icon name={open ? "x" : "menu"} size={26} />
       </button>
       {open ? (
         <>
           <div className="animate-fadein absolute inset-x-0 top-full h-dvh bg-ink/25" aria-hidden="true" onClick={close} />
-          <div ref={panel} id={id} className="animate-fadein absolute inset-x-0 top-full max-h-[calc(100dvh-4rem)] overflow-y-auto border-b border-line bg-cream shadow-[0_24px_40px_-24px_rgb(12_28_21/0.35)]">
+          <div ref={panel} id={id} className="animate-fadein absolute inset-x-0 top-full max-h-[calc(100dvh-4rem)] overflow-y-auto border-b border-line bg-paper shadow-[0_24px_40px_-24px_rgb(12_28_21/0.35)]">
             <nav aria-label="Menu" className="gutter flex flex-col py-3">
               {links.map((l) => (
                 <Link key={l.href} href={l.href} onClick={close} className="flex min-h-14 items-center gap-3.5 border-b border-line text-[17px] font-semibold text-ink last:border-0">
@@ -63,7 +63,7 @@ export function MobileMenu({ links }: { links: MenuLink[] }) {
                     <Icon name={l.icon} size={18} />
                   </span>
                   {l.label}
-                  <Icon name="chevronRight" size={18} stroke={2} className="ml-auto text-ink-3" />
+                  <Icon name="chevronRight" size={18} className="ml-auto text-ink-3" />
                 </Link>
               ))}
             </nav>

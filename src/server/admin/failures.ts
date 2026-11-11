@@ -1,6 +1,6 @@
 import "server-only";
 import { createHmac } from "node:crypto";
-import { and, desc, eq, isNotNull, like, sql } from "drizzle-orm";
+import { and, desc, eq, isNotNull, like, notLike, sql } from "drizzle-orm";
 import { formatNaira, nairaToKobo, type Kobo } from "@/core/money";
 import { lagosDate } from "@/core/periods";
 import { getBank } from "@/server/bank";
@@ -63,14 +63,25 @@ async function waitSettled(paymentId: string, ms = 12_000) {
   return false;
 }
 
-async function seededStatuses(): Promise<TraderStatus[]> {
-  const rows = await db().select({ id: s.traders.id }).from(s.traders).where(like(s.traders.phone, "+234700000%")).orderBy(s.traders.phone).limit(60);
+const SEEDED = "+234700000%";
+
+async function statuses(ids: { id: string }[]): Promise<TraderStatus[]> {
   const out: TraderStatus[] = [];
-  for (const r of rows) {
+  for (const r of ids) {
     const st = await traderStatus(r.id);
     if (st) out.push(st);
   }
   return out;
+}
+
+/** The seeded market. A drill run without a chosen trader takes one of these, never somebody who just registered. */
+async function seededStatuses(): Promise<TraderStatus[]> {
+  return statuses(await db().select({ id: s.traders.id }).from(s.traders).where(like(s.traders.phone, SEEDED)).orderBy(s.traders.phone).limit(60));
+}
+
+/** Traders who registered through the app, newest first, so the trader from demo step 1 can be picked by name. */
+async function registeredStatuses(): Promise<TraderStatus[]> {
+  return statuses(await db().select({ id: s.traders.id }).from(s.traders).where(notLike(s.traders.phone, SEEDED)).orderBy(desc(s.traders.createdAt)).limit(12));
 }
 
 const asDrillTrader = (st: TraderStatus): DrillTrader => ({
@@ -83,7 +94,7 @@ const asDrillTrader = (st: TraderStatus): DrillTrader => ({
 
 /** What the panel offers to pick from: real traders and real webhook events, read now. */
 export async function drillOptions(): Promise<DrillOptions> {
-  const all = await seededStatuses();
+  const all = [...(await registeredStatuses()), ...(await seededStatuses())];
   const events = await db()
     .select({ eventId: s.webhookEvents.eventId, payload: s.webhookEvents.payload, receivedAt: s.webhookEvents.receivedAt })
     .from(s.webhookEvents)

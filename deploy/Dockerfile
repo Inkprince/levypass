@@ -27,6 +27,9 @@ ENV NODE_ENV=production \
     MIGRATIONS_DIR=/app/migrations
 COPY --from=build --chown=node:node /app/.next/standalone ./
 COPY --from=build --chown=node:node /app/.next/static ./.next/static
+# The standalone server does not include public/ (Next docs, output: "standalone"). Without this
+# /icon.svg, the officer app's manifest icon, is a 404.
+COPY --from=build --chown=node:node /app/public ./public
 COPY --from=build --chown=node:node /app/dist ./dist
 COPY --from=build --chown=node:node /app/src/server/db/migrations ./migrations
 USER node

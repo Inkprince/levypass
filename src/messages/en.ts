@@ -11,6 +11,13 @@ export const en = {
   "sms.receipt_credit": "LevyPass receipt {number}: {amount} received. We keep {credit} as credit for your next levy. Check it at {url}",
   "sms.welcome": "Welcome to LevyPass, {name}. Your trader ID is {id}. Show your QR pass to any officer. Dial {ussd} to pay.",
   "sms.double_charge": "LevyPass: you already paid {levy} for {period}. We have credited {amount} to your next period. Receipt {number}.",
+  // Pieces that fill {period} above: "weekly from 2026-11-09 + 2 more", "today".
+  "sms.period_from": "{period} from {date}",
+  "sms.period_more": "{period} + {count} more",
+  "sms.period_weekly": "weekly",
+  "sms.period_monthly": "monthly",
+  "sms.period_yearly": "yearly",
+  "sms.today": "today",
 
   // USSD (PY-03). CON keeps the session open, END closes it.
   "ussd.menu": "LevyPass\n1. Pay levy\n2. What I owe\n3. Last receipt\n4. Check an officer\n5. Report a collector\n6. Language",
@@ -18,6 +25,9 @@ export const en = {
   "ussd.owe": "You owe {amount}.\n{lines}",
   "ussd.owe_nothing": "You owe nothing today. Thank you.",
   "ussd.pay_choose": "Pay {amount} for {what}?\n1. Yes, pay now\n2. Cancel",
+  // Pieces that fill {what} above.
+  "ussd.pay_what_owed": "what you owe",
+  "ussd.pay_what_ahead": "{levy} (pay ahead)",
   "ussd.pay_started": "Payment of {amount} started. Your receipt will come by SMS.",
   "ussd.pay_failed": "We could not start the payment. Please try again in a minute.",
   "ussd.cancelled": "Cancelled. We did not charge you.",

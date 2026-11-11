@@ -68,7 +68,7 @@ export function LiveDashboard({ initial }: { initial: Summary }) {
             <div className="mt-7 flex flex-wrap gap-2">
               <Link href="/admin/reconciliation" className={buttonClass("primary", "lg", "pr-5")}>
                 Reconcile with the bank
-                <Icon name="arrowUpRight" size={15} stroke={2.4} />
+                <Icon name="arrowUpRight" size={15} />
               </Link>
               <Link href="/admin/fraud" className={buttonClass("outline", "lg")}>
                 Review flags
@@ -207,7 +207,7 @@ function RailCard({ href, title, value, tag }: { href: string; title: string; va
       </span>
       <span className="flex items-center gap-2">
         <span className="text-[34px] font-medium leading-none tracking-[-0.05em] tnum">{value}</span>
-        <Icon name="arrowUpRight" size={14} stroke={2.2} className="text-ink-2 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+        <Icon name="arrowUpRight" size={14} className="text-ink-2 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
       </span>
     </Link>
   );

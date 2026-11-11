@@ -33,7 +33,7 @@ export async function ussdReply(input: { phoneNumber: string; text: string }): P
     case "1": {
       const owed = await amountOwed(trader.id);
       const amount = owed.totalKobo > 0 ? owed.totalKobo : owed.nextKobo;
-      const what = owed.totalKobo > 0 ? "what you owe" : `${owed.nextLevy} (pay ahead)`;
+      const what = owed.totalKobo > 0 ? t(L, "ussd.pay_what_owed") : t(L, "ussd.pay_what_ahead", { levy: owed.nextLevy });
       if (rest[0] === undefined) return CON(t(L, "ussd.pay_choose", { amount: formatNaira(amount), what }));
       if (rest[0] !== "1") return END(t(L, "ussd.cancelled"));
       try {

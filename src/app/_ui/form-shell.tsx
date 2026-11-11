@@ -58,13 +58,13 @@ export function FormShell({ scene, title, lead, back, children }: { scene: FormS
   const s = SCENES[scene];
   const backLink = back ? (
     <Link href={back.href} className="inline-flex min-h-11 items-center gap-1 rounded-[var(--radius-btn)] px-3 text-sm font-semibold text-ink-2 hover:bg-fill hover:text-ink">
-      <Icon name="arrowLeft" size={16} stroke={2} />
+      <Icon name="arrowLeft" size={16} />
       {back.label}
     </Link>
   ) : null;
 
   return (
-    <div className="min-h-dvh bg-mist lg:grid lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
+    <div className="min-h-dvh bg-paper lg:grid lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
       {/* left: the scene, large screens only */}
       <aside className="hidden lg:sticky lg:top-0 lg:block lg:h-dvh lg:p-4">
         <div className="relative h-full overflow-hidden rounded-[32px] bg-forest">
@@ -82,7 +82,7 @@ export function FormShell({ scene, title, lead, back, children }: { scene: FormS
 
       {/* right: the form */}
       <div className="flex min-h-dvh flex-col">
-        <header className="sticky top-0 z-30 border-b border-line bg-mist/85 backdrop-blur-md lg:static lg:border-0 lg:bg-transparent lg:backdrop-blur-none">
+        <header className="sticky top-0 z-30 border-b border-line bg-paper/85 backdrop-blur-md lg:static lg:border-0 lg:bg-transparent lg:backdrop-blur-none">
           <div className="mx-auto flex h-14 max-w-md items-center justify-between px-4 lg:h-20 lg:max-w-none lg:justify-end lg:px-10">
             <Link href="/" aria-label="LevyPass home" className="flex min-h-11 items-center lg:hidden">
               <Logo size={26} />
