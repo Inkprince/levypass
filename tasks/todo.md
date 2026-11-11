@@ -202,12 +202,16 @@ Verified 11 Nov, 11:00 to 11:25 Lagos: `npm run typecheck && npm run lint && npm
   - Verified: schema test on the captured body; unit test (38 calls in 30 minutes, was 225); DB tests for
     expiry, the review item, the back-off and a throwing payment no longer blocking the next one; in a
     browser, an open pay page changed to NOT PAID when its payment was closed.
-  - Still to see on the cluster after a deploy: the two payments stuck since this morning close or settle.
+  - Seen on the cluster after deploying `886d327` (11 Nov, 11:55 Lagos): no payment left open; 731
+    successful, 1 failed. Migration `0004` applied and `/icon.svg` is 200.
 - [x] **F4 Pidgin and Yoruba do nothing.** Both dictionaries now cover every SMS and USSD string, and the
   English fragments that were built in code ("what you owe", "weekly from", "+ 2 more") moved into them.
   - Verified in a browser session: OTP, welcome SMS, menu, pay prompt and receipt in Pidgin; menu, balance,
     pay-ahead prompt and double-charge SMS in Yoruba.
-  - The strings are a draft written with Claude. A fluent speaker must read both files before the demo.
+  - The strings were written by Huawei MaaS (`deepseek-v4.1-flash`), called from the app pod: one call to
+    translate each language, a review call for Pidgin (4 lines changed), and for Yoruba 12 lines sent back
+    with a note on what was wrong. The model's own Yoruba review missed a dropped negative ("you owe nothing"
+    read as "you owe"), so a fluent speaker must still read both files before the demo.
 - [x] **F5 Step 6 cannot pick the trader from step 1.** The drill pickers list the 12 newest app-registered
   traders first, then the seeded ones. A drill run with no trader chosen still uses a seeded trader.
   - Verified in a browser: the trader just registered was first in the list; the double-charge drill ran

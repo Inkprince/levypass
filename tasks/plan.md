@@ -218,5 +218,6 @@ T1 to T13, T15, T17, T18, T21, T22.
 - [ ] New from T4: Huawei MaaS returns 401 `ModelArts.81003` for the team key. Report with the request IDs in the notes.
 - [ ] New from T4: settle the collection rail (checkout under `mer_204` versus per-trader virtual accounts); see "Design consequences" in the notes.
 - [ ] Languages: who on the team writes the Pidgin and Yoruba strings? They are hand-written, not machine-translated.
-  11 Nov: `src/messages/pcm.ts` and `yo.ts` now hold a first draft written with Claude so the language choice
-  does something. A fluent speaker still has to read and correct both files before the demo.
+  11 Nov: `src/messages/pcm.ts` and `yo.ts` now hold strings written by Huawei MaaS (`deepseek-v4.1-flash`:
+  translate, review, and for Yoruba a repair pass on 12 lines) so the language choice does something.
+  A fluent speaker still has to read and correct both files before the demo.
