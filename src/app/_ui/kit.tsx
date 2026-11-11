@@ -40,6 +40,7 @@ export function channelLabel(channel: string) {
 const paths = {
   check: ["m4.5 12.75 6 6 9-13.5"], // check
   x: ["M6 18 18 6M6 6l12 12"], // x-mark
+  menu: ["M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"], // bars-3
   alert: ["M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z"], // exclamation-triangle
   arrowRight: ["M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3"], // arrow-right
   arrowLeft: ["M10.5 19.5 3 12m0 0 7.5-7.5M3 12h18"], // arrow-left
@@ -74,7 +75,23 @@ const paths = {
 
 export type IconName = keyof typeof paths;
 
-export function Icon({ name, size = 20, stroke = 1.5, className = "" }: { name: IconName; size?: number; stroke?: number; className?: string }) {
+/** Heroicons 24 solid, for the few places that want a filled glyph. */
+const solidPaths: Partial<Record<IconName, string[]>> = {
+  menu: ["M3 6.75A.75.75 0 0 1 3.75 6h16.5a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 6.75ZM3 12a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75A.75.75 0 0 1 3 12Zm0 5.25a.75.75 0 0 1 .75-.75h16.5a.75.75 0 0 1 0 1.5H3.75a.75.75 0 0 1-.75-.75Z"], // bars-3
+  x: ["M5.47 5.47a.75.75 0 0 1 1.06 0L12 10.94l5.47-5.47a.75.75 0 1 1 1.06 1.06L13.06 12l5.47 5.47a.75.75 0 1 1-1.06 1.06L12 13.06l-5.47 5.47a.75.75 0 0 1-1.06-1.06L10.94 12 5.47 6.53a.75.75 0 0 1 0-1.06Z"], // x-mark
+};
+
+export function Icon({ name, size = 20, stroke = 1.5, solid = false, className = "" }: { name: IconName; size?: number; stroke?: number; solid?: boolean; className?: string }) {
+  const filled = solid ? solidPaths[name] : undefined;
+  if (filled) {
+    return (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true" className={`shrink-0 ${className}`}>
+        {filled.map((d) => (
+          <path key={d} d={d} fillRule="evenodd" clipRule="evenodd" />
+        ))}
+      </svg>
+    );
+  }
   return (
     <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={stroke} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" className={`shrink-0 ${className}`}>
       {paths[name].map((d) => (

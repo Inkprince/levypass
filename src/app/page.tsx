@@ -6,6 +6,7 @@ import { t } from "@/messages";
 import { ArrowLink, Icon, LinkButton, Logo, buttonClass, type IconName } from "@/app/_ui/kit";
 import { IlloHands, IlloScan, MarketScene } from "@/app/_ui/illustrations";
 import { dashboardSummary, type Summary } from "@/server/admin/summary";
+import { MobileMenu, type MenuLink } from "@/app/_ui/mobile-menu";
 import { PlayInView } from "@/app/_ui/play-in-view";
 import { PaymentCarousel, type HeroPayment } from "./hero-live";
 import { ReceiptSearch } from "./r/receipt-search";
@@ -50,6 +51,14 @@ export default async function Home() {
 
 /* --------------------------------------------------------------------- nav */
 
+const MENU: MenuLink[] = [
+  { href: "/#how", label: "How it works", icon: "info" },
+  { href: "/r", label: "Check a receipt", icon: "receipt" },
+  { href: "/demo", label: "Demo", icon: "bolt" },
+  { href: "/officer", label: "Officer", icon: "scan" },
+  { href: "/admin", label: "Revenue office", icon: "bank" },
+];
+
 function SiteNav() {
   return (
     <header className="sticky top-0 z-40 border-b border-line bg-cream/85 backdrop-blur-md">
@@ -57,7 +66,7 @@ function SiteNav() {
         <Link href="/" aria-label="LevyPass home" className="flex min-h-11 items-center">
           <Logo />
         </Link>
-        <nav className="hidden items-center gap-6 text-[14px] font-medium text-ink-2 md:flex">
+        <nav className="hidden items-center gap-6 text-[14px] font-medium text-ink-2 lg:flex">
           <a href="#how" className="py-2.5 hover:text-ink">How it works</a>
           <Link href="/r" className="py-2.5 hover:text-ink">Check a receipt</Link>
           <Link href="/demo" className="py-2.5 hover:text-ink">Demo</Link>
@@ -69,17 +78,15 @@ function SiteNav() {
           <Link href="/admin" className="hidden rounded-full px-3 py-2 text-[14px] font-medium text-ink-2 hover:bg-fill hover:text-ink lg:inline-flex">
             Revenue office
           </Link>
-          <LinkButton href="/demo" variant="secondary" size="sm" className="md:hidden">
-            Demo
-          </LinkButton>
           <LinkButton href="/login" size="sm" className="whitespace-nowrap">
             Log in
           </LinkButton>
-          <span className="hidden sm:block">
+          <span className="hidden lg:block">
             <LinkButton href="/register" variant="secondary" size="sm">
               Register
             </LinkButton>
           </span>
+          <MobileMenu links={MENU} />
         </div>
       </div>
     </header>
