@@ -1,5 +1,6 @@
 import { ActionForm } from "@/app/_ui/action-form";
-import { Card, Field, PageShell, Select } from "@/app/_ui/kit";
+import { Card, Field, Icon, PageShell, Select } from "@/app/_ui/kit";
+import { IlloStall } from "@/app/_ui/illustrations";
 import { markets } from "@/server/traders/register";
 import { registerStart } from "../actions";
 
@@ -8,8 +9,7 @@ export const dynamic = "force-dynamic";
 export default async function RegisterPage() {
   const list = await markets();
   return (
-    <PageShell title="Register as a trader" back={{ href: "/login", label: "Log in" }}>
-      <p className="text-slate-600">It takes one minute. We send a code to your phone to confirm it is yours.</p>
+    <PageShell art={<IlloStall />} title="Get your LevyPass" lead="It takes about a minute. We send a code to your phone to confirm it is yours." back={{ href: "/login", label: "Log in" }}>
       <Card>
         <ActionForm action={registerStart} submit="Send my code">
           <Field label="Full name" name="name" autoComplete="name" required placeholder="Bisi Adewale" />
@@ -21,8 +21,10 @@ export default async function RegisterPage() {
               </option>
             ))}
           </Select>
-          <Field label="Stall or vehicle number" name="stallOrVehicle" required placeholder="E-07" />
-          <Field label="Type of business" name="businessType" required placeholder="Fabrics" />
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Stall or vehicle" name="stallOrVehicle" required placeholder="E-07" />
+            <Field label="Business" name="businessType" required placeholder="Fabrics" />
+          </div>
           <Select label="Language for SMS" name="locale" defaultValue="en">
             <option value="en">English</option>
             <option value="pcm">Pidgin</option>
@@ -30,6 +32,22 @@ export default async function RegisterPage() {
           </Select>
         </ActionForm>
       </Card>
+      <ol className="grid grid-cols-3 gap-2 text-center text-[12px] text-ink-2">
+        {(
+          [
+            ["user", "Your details"],
+            ["message", "Code by SMS"],
+            ["qr", "Your QR pass"],
+          ] as const
+        ).map(([icon, label], i) => (
+          <li key={label} className="flex flex-col items-center gap-1.5">
+            <span className={`flex h-9 w-9 items-center justify-center rounded-full ${i === 0 ? "bg-forest text-lime" : "bg-mist-2 text-ink-3"}`}>
+              <Icon name={icon} size={17} />
+            </span>
+            {label}
+          </li>
+        ))}
+      </ol>
     </PageShell>
   );
 }

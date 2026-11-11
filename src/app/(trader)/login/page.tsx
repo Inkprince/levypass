@@ -1,17 +1,23 @@
 import { ActionForm } from "@/app/_ui/action-form";
 import { Card, Field, LinkButton, PageShell } from "@/app/_ui/kit";
+import { IlloFeaturePhone } from "@/app/_ui/illustrations";
 import { loginStart } from "../actions";
 
 export default function LoginPage() {
   return (
-    <PageShell title="Trader login">
+    <PageShell art={<IlloFeaturePhone />} title="Welcome back" lead="Log in with the phone number on your pass. We will text you a code." back={{ href: "/", label: "Home" }}>
       <Card>
         <ActionForm action={loginStart} submit="Send my code">
           <Field label="Phone number" name="phone" inputMode="tel" autoComplete="tel" required placeholder="0803 000 0000" />
         </ActionForm>
       </Card>
-      <LinkButton href="/register" variant="secondary">
-        New trader? Register
+      <div className="flex items-center gap-3 text-[13px] text-ink-3">
+        <span className="h-px flex-1 bg-line" />
+        New to LevyPass?
+        <span className="h-px flex-1 bg-line" />
+      </div>
+      <LinkButton href="/register" variant="outline" size="lg">
+        Register as a trader
       </LinkButton>
     </PageShell>
   );

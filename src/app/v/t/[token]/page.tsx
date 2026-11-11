@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import { lagosDate } from "@/core/periods";
-import { Badge, Card, PageShell } from "@/app/_ui/kit";
+import { Badge, Card, CardTitle, Icon, PageShell, StatusPanel } from "@/app/_ui/kit";
 import { traderFromToken, traderStatus } from "@/server/levy/status";
 import { allow, clientIp } from "@/server/ratelimit";
 
@@ -9,18 +9,14 @@ export const metadata = { title: "Levy status · LevyPass", robots: { index: fal
 
 /** What any phone camera sees after scanning a trader's QR: a limited, public view. */
 export default async function TraderPublicPage({ params }: { params: Promise<{ token: string }> }) {
-  if (!allow(`vt:${clientIp(await headers())}`, 60, 60_000)) return <PageShell title="Slow down">Too many checks. Wait a minute and try again.</PageShell>;
+  if (!allow(`vt:${clientIp(await headers())}`, 60, 60_000)) return <PageShell title="Slow down" lead="Too many checks from this connection. Wait a minute and try again." />;
   const { token } = await params;
   const traderId = await traderFromToken(decodeURIComponent(token));
   const status = traderId ? await traderStatus(traderId) : null;
   if (!status) {
     return (
       <PageShell>
-        <Card className="flex flex-col items-center gap-3 bg-slate-900 text-center text-white">
-          <span className="text-5xl" aria-hidden="true">!</span>
-          <p className="text-2xl font-black">NOT A VALID LEVYPASS</p>
-          <p className="text-sm opacity-80">This QR code is fake, damaged or has been replaced. Ask the trader for their current pass.</p>
-        </Card>
+        <StatusPanel tone="warn" word="Not a valid pass" sub="This QR code is fake, damaged or has been replaced. Ask the trader for their current LevyPass." />
       </PageShell>
     );
   }
@@ -28,28 +24,28 @@ export default async function TraderPublicPage({ params }: { params: Promise<{ t
   const shortName = `${first} ${rest.at(-1)?.[0] ?? ""}.`;
   return (
     <PageShell>
-      <Card className={`flex flex-col items-center gap-2 text-center text-white ${status.paidNow ? "bg-brand-700" : "bg-red-600"}`}>
-        <span className="animate-pop flex h-20 w-20 items-center justify-center rounded-full bg-white text-5xl" style={{ color: status.paidNow ? "#027a48" : "#dc2626" }} aria-hidden="true">
-          {status.paidNow ? "✔" : "✖"}
-        </span>
-        <p className="text-4xl font-black">{status.paidNow ? "PAID" : "NOT PAID"}</p>
-        <p className="text-sm opacity-90">for today, {lagosDate(new Date())}</p>
-      </Card>
+      <StatusPanel tone={status.paidNow ? "paid" : "unpaid"} word={status.paidNow ? "Paid" : "Not paid"} sub={`For today, ${lagosDate(new Date())}`} />
       <Card>
-        <p className="text-xl font-bold">{shortName}</p>
-        <p className="text-slate-600">
+        <p className="text-[22px] font-semibold tracking-[-0.02em]">{shortName}</p>
+        <p className="mt-0.5 text-[15px] text-ink-2">
           {status.trader.market} · Stall {status.trader.stallOrVehicle}
         </p>
-        <ul className="mt-3 flex flex-col gap-2 text-sm">
-          {status.current.map((c) => (
-            <li key={c.levy} className="flex items-center justify-between">
-              {c.levy}
-              <Badge tone={c.status === "paid" ? "paid" : "unpaid"}>{c.status.replace("_", " ")}</Badge>
-            </li>
-          ))}
-        </ul>
+        <div className="mt-5 border-t border-line pt-4">
+          <CardTitle>Levies this period</CardTitle>
+          <ul className="flex flex-col gap-3 text-[15px]">
+            {status.current.map((c) => (
+              <li key={c.levy} className="flex items-center justify-between gap-3">
+                {c.levy}
+                <Badge tone={c.status === "paid" ? "paid" : c.status === "part_paid" ? "warn" : "unpaid"}>{c.status.replace("_", " ")}</Badge>
+              </li>
+            ))}
+          </ul>
+        </div>
       </Card>
-      <p className="text-center text-xs text-slate-500">Verified by LevyPass against the revenue office ledger.</p>
+      <p className="flex items-center justify-center gap-1.5 text-center text-[13px] text-ink-3">
+        <Icon name="shield" size={15} />
+        Checked against the revenue office ledger just now.
+      </p>
     </PageShell>
   );
 }

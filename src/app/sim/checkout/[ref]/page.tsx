@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getBank } from "@/server/bank";
-import { Button, Card, PageShell } from "@/app/_ui/kit";
+import { Button, Card, Note, PageShell, Rows } from "@/app/_ui/kit";
 
 export const dynamic = "force-dynamic";
 
@@ -13,15 +13,16 @@ export default async function FakeCheckout({ params }: { params: Promise<{ ref: 
     redirect(`/pay/return?reference=${encodeURIComponent(ref)}&status=successful`);
   }
   return (
-    <PageShell title="Xtradot Bank checkout (sandbox)">
+    <PageShell title="Card checkout" lead="Xtradot Bank sandbox. This page stands in for the bank's hosted checkout.">
       <Card>
-        <p className="text-sm text-slate-600">Test card 5399 8300 0000 0008, any future expiry, CVV 123, OTP 123456.</p>
-        <form action={pay} className="mt-4">
-          <Button className="w-full" type="submit">
+        <Rows rows={[["Test card", <span key="n" className="font-mono">5399 8300 0000 0008</span>], ["Expiry", "Any future date"], ["CVV", <span key="c" className="font-mono">123</span>], ["OTP", <span key="o" className="font-mono">123456</span>]]} />
+        <form action={pay} className="mt-6">
+          <Button className="w-full" size="lg" type="submit">
             Pay now
           </Button>
         </form>
       </Card>
+      <Note icon="lock">Reference <span className="font-mono">{ref}</span>. LevyPass marks nothing paid until it verifies this payment with the bank.</Note>
     </PageShell>
   );
 }

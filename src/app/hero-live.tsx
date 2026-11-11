@@ -1,0 +1,173 @@
+"use client";
+
+import Link from "next/link";
+import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import { formatNaira } from "@/core/money";
+import { Icon, type IconName, buttonClass, channelLabel } from "@/app/_ui/kit";
+
+/** A real, settled payment from our own ledger. Fees are what the bank reported. */
+export type HeroPayment = { id: string; name: string; channel: string; at: string; amountKobo: number; feeKobo: number; receipt: string | null };
+
+const STEP_MS = 4200;
+const lagosTime = (iso: string) => new Date(iso).toLocaleTimeString("en-NG", { timeZone: "Africa/Lagos", hour: "2-digit", minute: "2-digit" });
+const lagosDay = (iso: string) => new Date(iso).toLocaleDateString("en-NG", { timeZone: "Africa/Lagos", day: "numeric", month: "short" });
+const shortName = (name: string) => {
+  const [first, ...rest] = name.split(" ");
+  return `${first} ${rest.at(-1)?.[0] ?? ""}.`;
+};
+
+const QUERY = "(prefers-reduced-motion: reduce)";
+const subscribe = (cb: () => void) => {
+  const m = window.matchMedia(QUERY);
+  m.addEventListener("change", cb);
+  return () => m.removeEventListener("change", cb);
+};
+
+function useReducedMotion() {
+  return useSyncExternalStore(
+    subscribe,
+    () => window.matchMedia(QUERY).matches,
+    () => false,
+  );
+}
+
+/** Tweens a whole-kobo amount towards its target. The settled value is always exact. */
+function useTween(target: number, duration = 700, from?: number) {
+  const reduce = useReducedMotion();
+  const [value, setValue] = useState(from ?? target);
+  const current = useRef(from ?? target);
+  useEffect(() => {
+    if (reduce) {
+      current.current = target;
+      return;
+    }
+    const start = current.current;
+    const t0 = performance.now();
+    let raf = 0;
+    const tick = (now: number) => {
+      const p = Math.min(1, (now - t0) / duration);
+      const eased = 1 - Math.pow(1 - p, 3);
+      const v = p === 1 ? target : Math.round(start + (target - start) * eased);
+      current.current = v;
+      setValue(v);
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, duration, reduce]);
+  return reduce ? target : value;
+}
+
+/** A naira figure that counts up from zero when the page loads. */
+export function CountUp({ kobo, className = "" }: { kobo: number; className?: string }) {
+  const v = useTween(kobo, 1400, 0);
+  return (
+    <span className={className}>
+      <span aria-hidden="true">{formatNaira(v)}</span>
+      <span className="sr-only">{formatNaira(kobo)}</span>
+    </span>
+  );
+}
+
+function Row({ icon, label, note, children, strong = false }: { icon: IconName; label: string; note?: string; children: ReactNode; strong?: boolean }) {
+  return (
+    <div className="flex items-center gap-3 border-b border-line py-3 last:border-0">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-line text-ink-2">
+        <Icon name={icon} size={17} />
+      </span>
+      <span className="min-w-0 flex-1 leading-tight">
+        <span className={`block text-[14px] ${strong ? "font-semibold text-ink" : "text-ink-2"}`}>{label}</span>
+        {note ? <span className="text-[12px] text-ink-3">{note}</span> : null}
+      </span>
+      <span className={`text-right tnum ${strong ? "text-[17px] font-extrabold tracking-[-0.02em]" : "text-[14px] font-semibold"}`}>{children}</span>
+    </div>
+  );
+}
+
+/**
+ * Cycles through the most recent settled payments, each broken down Wise-style:
+ * what the trader paid, the bank's fee, what reached the government account.
+ */
+export function PaymentCarousel({ payments }: { payments: HeroPayment[] }) {
+  const reduce = useReducedMotion();
+  const [i, setI] = useState(0);
+  const [hold, setHold] = useState(false);
+  const p = payments[i] ?? payments[0]!;
+  const paused = hold || reduce || payments.length < 2;
+
+  useEffect(() => {
+    if (paused) return;
+    const t = setTimeout(() => setI((n) => (n + 1) % payments.length), STEP_MS);
+    return () => clearTimeout(t);
+  }, [i, paused, payments.length]);
+
+  const amount = useTween(p.amountKobo);
+  const fee = useTween(p.feeKobo);
+  const net = useTween(p.amountKobo - p.feeKobo);
+  const today = lagosDay(p.at) === lagosDay(new Date().toISOString());
+
+  return (
+    <div
+      className="relative overflow-hidden rounded-[28px] border border-line bg-paper shadow-[0_24px_60px_-28px_rgb(12_28_21/0.35)]"
+      onMouseEnter={() => setHold(true)}
+      onMouseLeave={() => setHold(false)}
+      onFocus={() => setHold(true)}
+      onBlur={() => setHold(false)}
+    >
+      <div className="relative bg-forest px-6 pb-6 pt-6 text-white">
+        <div className="flex items-center justify-between gap-3">
+          <p className="text-[13px] font-medium text-white/70">{i === 0 ? "Latest payment" : "Earlier payment"}</p>
+          <span className="inline-flex items-center gap-1 rounded-full bg-lime px-2.5 py-1 text-[12px] font-bold text-forest">
+            <Icon name="check" size={14} stroke={2.8} />
+            Verified with the bank
+          </span>
+        </div>
+        <p className="money mt-4 text-[52px] leading-none">
+          <span aria-hidden="true">{formatNaira(amount)}</span>
+          <span className="sr-only">{formatNaira(p.amountKobo)}</span>
+        </p>
+        <p key={p.id} className="lp-slot mt-2 text-[14px] text-white/75">
+          {shortName(p.name)} · {channelLabel(p.channel)} · {today ? "" : `${lagosDay(p.at)}, `}
+          {lagosTime(p.at)}
+        </p>
+        {payments.length > 1 ? (
+          <div className="mt-5 flex items-center gap-1.5">
+            {payments.map((x, n) => (
+              <button
+                key={x.id}
+                type="button"
+                onClick={() => setI(n)}
+                aria-label={`Show payment ${n + 1} of ${payments.length}`}
+                aria-current={n === i ? "true" : undefined}
+                className={`relative h-1.5 overflow-hidden rounded-full transition-all duration-300 ${n === i ? "w-8 bg-white/20" : "w-1.5 bg-white/30 hover:bg-white/50"}`}
+              >
+                {n === i ? <span key={`${x.id}-${i}`} className="lp-progress absolute inset-0 origin-left rounded-full bg-lime" style={{ animationDuration: `${STEP_MS}ms`, animationPlayState: paused ? "paused" : "running" }} /> : null}
+              </button>
+            ))}
+          </div>
+        ) : null}
+      </div>
+      <div className="flex flex-col gap-1 px-6 pb-6 pt-5">
+        <Row icon="bank" label="Bank fee" note="read from the bank">
+          − {formatNaira(fee)}
+        </Row>
+        <Row icon="shield" label="Government account receives" strong>
+          {formatNaira(net)}
+        </Row>
+        <Row icon="receipt" label="Receipt">
+          <span key={p.id} className="lp-slot inline-block font-mono text-[13px]">
+            {p.receipt}
+          </span>
+        </Row>
+        <div className="mt-4 grid grid-cols-2 gap-2">
+          <Link href={p.receipt ? `/r/${p.receipt}` : "/r"} className={buttonClass("accent", "md", "w-full")}>
+            Check receipt
+          </Link>
+          <Link href="/register" className={buttonClass("secondary", "md", "w-full")}>
+            Get a pass
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}

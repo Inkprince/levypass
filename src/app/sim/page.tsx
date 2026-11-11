@@ -1,16 +1,26 @@
-import { Logo } from "@/app/_ui/kit";
+import Link from "next/link";
+import { Icon, Logo } from "@/app/_ui/kit";
 import { Phone } from "./phone";
 
 export const metadata = { title: "Phone simulator · LevyPass" };
 
 export default function SimPage() {
   return (
-    <main className="flex min-h-dvh flex-col items-center gap-6 bg-slate-950 px-4 py-8">
-      <div className="text-center">
-        <Logo light />
-        <p className="mt-1 text-sm text-slate-400">Feature-phone simulator: SMS inbox and USSD, for any trader number.</p>
-      </div>
-      <Phone />
-    </main>
+    <div className="min-h-dvh bg-mist">
+      <header className="border-b border-line bg-paper">
+        <div className="gutter flex h-14 items-center justify-between">
+          <Link href="/" aria-label="LevyPass home">
+            <Logo size={26} />
+          </Link>
+          <Link href="/demo" className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-sm font-semibold text-ink-2 hover:bg-fill hover:text-ink">
+            <Icon name="arrowLeft" size={16} stroke={2} />
+            Demo
+          </Link>
+        </div>
+      </header>
+      <main className="gutter py-8 lg:py-12">
+        <Phone />
+      </main>
+    </div>
   );
 }

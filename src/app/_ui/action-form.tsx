@@ -2,15 +2,22 @@
 
 import { useActionState, type ReactNode } from "react";
 import { useFormStatus } from "react-dom";
-import { ErrorNote } from "./kit";
+import { buttonClass, ErrorNote } from "./kit";
 
 type State = { error?: string };
 
 function Submit({ label }: { label: string }) {
   const { pending } = useFormStatus();
   return (
-    <button type="submit" disabled={pending} className="inline-flex min-h-12 items-center justify-center rounded-xl bg-brand-700 px-5 py-3 text-base font-semibold text-white transition hover:bg-brand-800 disabled:opacity-60">
-      {pending ? "Please wait..." : label}
+    <button type="submit" disabled={pending} className={buttonClass("primary", "lg", "mt-1 w-full")}>
+      {pending ? (
+        <>
+          <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" aria-hidden="true" />
+          Please wait
+        </>
+      ) : (
+        label
+      )}
     </button>
   );
 }

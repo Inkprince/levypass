@@ -1,5 +1,5 @@
 import { eq } from "drizzle-orm";
-import { Badge, Card, PageShell } from "@/app/_ui/kit";
+import { Badge, Mark, PageShell } from "@/app/_ui/kit";
 import { requireSubject } from "@/server/auth/session";
 import { db } from "@/server/db/client";
 import * as s from "@/server/db/schema";
@@ -15,14 +15,21 @@ export default async function OfficerIdPage() {
   const svg = await qrSvg(await officerIdUrl(o.id, o.qrTokenId));
   return (
     <PageShell back={{ href: "/officer", label: "Back to scan" }}>
-      <Card className="flex flex-col items-center gap-3 text-center">
-        <p className="text-sm font-semibold uppercase tracking-wide text-slate-500">Levy officer</p>
-        <p className="text-2xl font-extrabold">{o.name}</p>
-        <p className="font-mono text-slate-600">{o.staffId}</p>
-        <Badge tone={o.status === "active" ? "paid" : "unpaid"}>{o.status}</Badge>
-        <div className="w-64" dangerouslySetInnerHTML={{ __html: svg }} />
-        <p className="text-sm text-slate-500">Traders: scan this with your phone camera to check that I am a real, active officer.</p>
-      </Card>
+      <section className="overflow-hidden rounded-[28px] bg-forest text-white">
+        <div className="flex items-start justify-between px-6 pt-6">
+          <div>
+            <p className="text-[13px] text-white/65">Levy officer</p>
+            <p className="mt-1 text-[24px] font-bold tracking-[-0.03em]">{o.name}</p>
+            <p className="font-mono text-[14px] text-white/75">{o.staffId}</p>
+          </div>
+          <Mark size={34} tone="lime" />
+        </div>
+        <div className="mx-4 mb-4 mt-6 flex flex-col items-center gap-4 rounded-[22px] bg-paper p-5 text-ink">
+          <Badge tone={o.status === "active" ? "paid" : "unpaid"}>{o.status}</Badge>
+          <div className="w-full max-w-[240px] [&_svg]:h-auto [&_svg]:w-full" dangerouslySetInnerHTML={{ __html: svg }} />
+          <p className="text-center text-[14px] text-ink-2">Traders: scan this with your phone camera to check that I am a real, active officer.</p>
+        </div>
+      </section>
     </PageShell>
   );
 }

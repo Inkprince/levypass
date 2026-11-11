@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
-import { Card, PageShell } from "@/app/_ui/kit";
+import { Card, CardTitle, Icon, PageShell, StatusPanel } from "@/app/_ui/kit";
 import { db } from "@/server/db/client";
 import * as s from "@/server/db/schema";
 import { officerFromToken } from "@/server/levy/status";
@@ -13,18 +13,15 @@ export const metadata = { title: "Officer check · LevyPass", robots: { index: f
 
 /** OF-07: a trader checks the officer in front of them. A suspended ID raises a flag (FR-03). */
 export default async function OfficerPublicPage({ params }: { params: Promise<{ token: string }> }) {
-  if (!allow(`vo:${clientIp(await headers())}`, 60, 60_000)) return <PageShell title="Slow down">Too many checks. Wait a minute and try again.</PageShell>;
+  if (!allow(`vo:${clientIp(await headers())}`, 60, 60_000)) return <PageShell title="Slow down" lead="Too many checks from this connection. Wait a minute and try again." />;
   const { token } = await params;
   const officer = await officerFromToken(decodeURIComponent(token));
   if (!officer) {
     return (
       <PageShell>
-        <Card className="flex flex-col items-center gap-2 bg-red-600 text-center text-white">
-          <span className="text-5xl" aria-hidden="true">✖</span>
-          <p className="text-3xl font-black">NOT A LEVYPASS OFFICER</p>
-          <p className="opacity-90">Do not pay this person. Report them below.</p>
-        </Card>
+        <StatusPanel tone="unpaid" word="Not an officer" sub="This ID was not issued by LevyPass. Do not pay this person. Report them below." />
         <Card>
+          <CardTitle>Report this collector</CardTitle>
           <ReportForm />
         </Card>
       </PageShell>
@@ -35,21 +32,34 @@ export default async function OfficerPublicPage({ params }: { params: Promise<{ 
   const [aut] = await db().select({ name: s.authorities.name }).from(s.authorities).where(eq(s.authorities.id, officer.authorityId));
   return (
     <PageShell>
-      <Card className={`flex flex-col items-center gap-2 text-center text-white ${suspended ? "bg-red-600" : "bg-brand-700"}`}>
-        <span className="animate-pop flex h-20 w-20 items-center justify-center rounded-full bg-white text-5xl" style={{ color: suspended ? "#dc2626" : "#027a48" }} aria-hidden="true">
-          {suspended ? "✖" : "✔"}
-        </span>
-        <p className="text-4xl font-black">{suspended ? "SUSPENDED" : "GENUINE OFFICER"}</p>
-        <p className="opacity-90">{suspended ? "Do not pay this person. The revenue office has been alerted." : "This officer is active and allowed to check levies."}</p>
+      <StatusPanel
+        tone={suspended ? "unpaid" : "paid"}
+        word={suspended ? "Suspended" : "Genuine officer"}
+        sub={suspended ? "Do not pay this person. The revenue office has been alerted." : "This officer is active and allowed to check levies."}
+      />
+      <Card>
+        <div className="flex items-center gap-4">
+          <span className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-mist-2 text-[18px] font-bold text-forest">
+            {officer.name
+              .split(" ")
+              .map((p) => p[0])
+              .slice(0, 2)
+              .join("")}
+          </span>
+          <div className="min-w-0">
+            <p className="text-[20px] font-semibold tracking-[-0.02em]">{officer.name}</p>
+            <p className="text-[14px] text-ink-2">
+              <span className="font-mono">{officer.staffId}</span> · {aut?.name}
+            </p>
+          </div>
+        </div>
+        <p className="mt-5 flex items-start gap-2.5 rounded-xl bg-mist px-4 py-3 text-[14px] text-ink-2">
+          <Icon name="info" size={18} className="mt-px text-forest" />
+          Officers never collect cash. Pay only by USSD *347*13#, transfer or card.
+        </p>
       </Card>
       <Card>
-        <p className="text-xl font-bold">{officer.name}</p>
-        <p className="font-mono text-slate-600">{officer.staffId}</p>
-        <p className="text-slate-600">{aut?.name}</p>
-        <p className="mt-2 text-sm text-slate-500">Officers never collect cash. Pay only by USSD *347*13#, transfer or card.</p>
-      </Card>
-      <Card>
-        <p className="mb-2 font-semibold">Problem with this officer?</p>
+        <CardTitle>Problem with this officer?</CardTitle>
         <ReportForm officerId={officer.id} />
       </Card>
     </PageShell>

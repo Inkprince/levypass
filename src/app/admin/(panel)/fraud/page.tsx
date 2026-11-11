@@ -1,6 +1,6 @@
 import { desc, eq, sql } from "drizzle-orm";
 import { formatNaira } from "@/core/money";
-import { Badge, Card } from "@/app/_ui/kit";
+import { Badge, Card, Icon, type IconName, PageHeader, buttonClass } from "@/app/_ui/kit";
 import { db } from "@/server/db/client";
 import * as s from "@/server/db/schema";
 import { closeCase } from "../../actions";
@@ -14,6 +14,13 @@ const label: Record<string, string> = {
   suspended_officer_scan: "Suspended officer seen",
   unknown_officer_scan: "Unknown officer seen",
 };
+const flagIcon: Record<string, IconName> = {
+  double_charge: "refresh",
+  unknown_receipt: "receipt",
+  reused_receipt: "receipt",
+  suspended_officer_scan: "user",
+  unknown_officer_scan: "user",
+};
 const when = (d: Date) => d.toLocaleString("en-NG", { timeZone: "Africa/Lagos", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
 
 function Close({ kind, id }: { kind: string; id: string }) {
@@ -24,7 +31,7 @@ function Close({ kind, id }: { kind: string; id: string }) {
           <input type="hidden" name="kind" value={kind} />
           <input type="hidden" name="id" value={id} />
           <input type="hidden" name="status" value={st} />
-          <button className={`rounded-lg px-3 py-1 text-xs font-semibold ${st === "resolved" ? "bg-brand-700 text-white" : "border border-slate-300"}`}>{st === "resolved" ? "Resolve" : "Dismiss"}</button>
+          <button className={buttonClass(st === "resolved" ? "primary" : "outline", "sm")}>{st === "resolved" ? "Resolve" : "Dismiss"}</button>
         </form>
       ))}
     </div>
@@ -45,31 +52,34 @@ export default async function FraudPage() {
   const [{ n } = { n: 0 }] = await db().select({ n: sql<number>`count(*)::int` }).from(s.fraudFlags).where(sql`${s.fraudFlags.status} <> 'open'`);
 
   return (
-    <div className="flex flex-col gap-6">
-      <div>
-        <h1 className="text-2xl font-extrabold">Fraud and complaints</h1>
-        <p className="text-slate-500">{n} cases closed so far. Every action here is written to the audit log.</p>
-      </div>
+    <div className="flex flex-col gap-8">
+      <PageHeader title="Fraud and complaints" lead={`${n} cases closed so far. Every action here is written to the audit log.`} />
+
       <section>
-        <h2 className="mb-2 text-lg font-bold">Fraud flags ({flags.length})</h2>
-        <div className="grid gap-3 md:grid-cols-2">
+        <SectionTitle count={flags.length}>Fraud flags</SectionTitle>
+        <div className="grid gap-4 md:grid-cols-2">
           {flags.map(({ f, trader, officer, staffId }) => (
-            <Card key={f.id} className="animate-fadein">
-              <div className="flex items-start justify-between gap-2">
-                <Badge tone="warn">{label[f.type] ?? f.type}</Badge>
-                <span className="text-xs text-slate-500">{when(f.createdAt)}</span>
+            <Card key={f.id} className="animate-fadein flex flex-col gap-3">
+              <div className="flex items-start justify-between gap-3">
+                <span className="flex items-center gap-3">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-warn-bg text-warn-fg">
+                    <Icon name={flagIcon[f.type] ?? "flag"} size={17} />
+                  </span>
+                  <span className="font-semibold">{label[f.type] ?? f.type}</span>
+                </span>
+                <span className="text-[12px] text-ink-3 tnum">{when(f.createdAt)}</span>
               </div>
-              <p className="mt-2 text-sm">
-                {trader ? <b>{trader}</b> : null}
+              <p className="text-[14px] text-ink">
+                {trader ? <b className="font-semibold">{trader}</b> : null}
                 {officer ? (
                   <>
                     {" "}
-                    Officer <b>{officer}</b> ({staffId})
+                    Officer <b className="font-semibold">{officer}</b> <span className="font-mono text-ink-2">{staffId}</span>
                   </>
                 ) : null}
                 {f.receiptNumber ? <span className="font-mono"> {f.receiptNumber}</span> : null}
               </p>
-              <p className="mt-1 text-xs text-slate-500">
+              <p className="text-[13px] text-ink-2">
                 {f.type === "double_charge"
                   ? `Paid again for a period already paid. Credited to ${((f.details as { creditedTo?: string[] }).creditedTo ?? []).join(", ")}.`
                   : f.type === "suspended_officer_scan"
@@ -78,58 +88,63 @@ export default async function FraudPage() {
                       ? "Someone checked a receipt number that LevyPass never issued."
                       : ""}
               </p>
-              <div className="mt-3">
+              <div className="mt-auto border-t border-line pt-3">
                 <Close kind="flag" id={f.id} />
               </div>
             </Card>
           ))}
-          {flags.length === 0 ? <p className="text-slate-500">No open flags.</p> : null}
+          {flags.length === 0 ? <Empty>No open flags.</Empty> : null}
         </div>
       </section>
+
       <section>
-        <h2 className="mb-2 text-lg font-bold">Complaints ({complaints.length})</h2>
-        <div className="grid gap-3 md:grid-cols-2">
+        <SectionTitle count={complaints.length}>Complaints</SectionTitle>
+        <div className="grid gap-4 md:grid-cols-2">
           {complaints.map(({ c, officer }) => (
-            <Card key={c.id}>
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex flex-wrap gap-1">
-                  {c.triageSeverity ? <Badge tone={c.triageSeverity === "high" ? "unpaid" : c.triageSeverity === "medium" ? "warn" : "neutral"}>{c.triageSeverity}</Badge> : <Badge tone="neutral">triaging...</Badge>}
+            <Card key={c.id} className="flex flex-col gap-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex flex-wrap gap-1.5">
+                  {c.triageSeverity ? <Badge tone={c.triageSeverity === "high" ? "unpaid" : c.triageSeverity === "medium" ? "warn" : "neutral"}>{c.triageSeverity}</Badge> : <Badge tone="neutral">triaging</Badge>}
                   {c.triageCategory ? <Badge tone="neutral">{c.triageCategory.replace("_", " ")}</Badge> : null}
                 </div>
-                <span className="text-xs text-slate-500">{when(c.createdAt)}</span>
+                <span className="text-[12px] text-ink-3 tnum">{when(c.createdAt)}</span>
               </div>
-              {c.triageSummary ? <p className="mt-2 font-semibold">{c.triageSummary}</p> : null}
-              <p className="mt-1 text-sm italic text-slate-600">&ldquo;{c.description}&rdquo;</p>
-              <p className="mt-1 text-xs text-slate-500">
+              {c.triageSummary ? <p className="font-semibold leading-snug">{c.triageSummary}</p> : null}
+              <blockquote className="border-l-2 border-line-2 pl-3 text-[14px] italic text-ink-2">{c.description}</blockquote>
+              <p className="text-[12px] text-ink-3">
                 {officer ? `About officer ${officer}. ` : ""}
                 {c.triageSource ? `Summary by ${c.triageSource === "model" ? "Huawei MaaS" : "keyword rules (model unavailable)"}, language: ${c.triageLanguage}.` : ""}
               </p>
-              <div className="mt-3">
+              <div className="mt-auto border-t border-line pt-3">
                 <Close kind="complaint" id={c.id} />
               </div>
             </Card>
           ))}
-          {complaints.length === 0 ? <p className="text-slate-500">No open complaints.</p> : null}
+          {complaints.length === 0 ? <Empty>No open complaints.</Empty> : null}
         </div>
       </section>
+
       <section>
-        <h2 className="mb-2 text-lg font-bold">Money to review ({review.length})</h2>
-        <Card className="p-0">
-          <table className="w-full text-sm">
+        <SectionTitle count={review.length}>Money to review</SectionTitle>
+        <Card className="overflow-x-auto p-0 sm:p-0">
+          <table className="w-full min-w-[520px] text-[14px]">
             <tbody>
               {review.map((r) => (
-                <tr key={r.id} className="border-t border-slate-100 first:border-0">
-                  <td className="px-5 py-3 font-semibold">{r.kind.replaceAll("_", " ")}</td>
-                  <td className="font-mono text-xs">{r.providerRef}</td>
-                  <td className="tabular-nums">{r.amountKobo !== null ? formatNaira(r.amountKobo) : ""}</td>
-                  <td className="pr-5">
+                <tr key={r.id} className="border-t border-line first:border-0">
+                  <td className="px-6 py-3.5 font-semibold capitalize">{r.kind.replaceAll("_", " ")}</td>
+                  <td className="font-mono text-[12px] text-ink-2">{r.providerRef}</td>
+                  <td className="font-semibold tnum">{r.amountKobo !== null ? formatNaira(r.amountKobo) : ""}</td>
+                  <td className="pr-6">
                     <Close kind="review" id={r.id} />
                   </td>
                 </tr>
               ))}
               {review.length === 0 ? (
                 <tr>
-                  <td className="px-5 py-3 text-slate-500">Nothing to review. No money is unaccounted for.</td>
+                  <td className="flex items-center gap-2 px-6 py-5 text-ink-2">
+                    <Icon name="check" size={17} stroke={2.4} className="text-go" />
+                    Nothing to review. No money is unaccounted for.
+                  </td>
                 </tr>
               ) : null}
             </tbody>
@@ -137,5 +152,23 @@ export default async function FraudPage() {
         </Card>
       </section>
     </div>
+  );
+}
+
+function SectionTitle({ children, count }: { children: React.ReactNode; count: number }) {
+  return (
+    <h2 className="mb-4 flex items-center gap-2 text-[17px] font-semibold tracking-[-0.02em]">
+      {children}
+      <span className="rounded-full bg-mist-2 px-2 py-0.5 text-[12px] font-semibold text-ink-2 tnum">{count}</span>
+    </h2>
+  );
+}
+
+function Empty({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="flex items-center gap-2 rounded-[var(--radius-card)] border border-dashed border-line-2 px-6 py-5 text-[14px] text-ink-2">
+      <Icon name="check" size={17} stroke={2.4} className="text-go" />
+      {children}
+    </p>
   );
 }

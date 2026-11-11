@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { Icon } from "@/app/_ui/kit";
 
 type Sms = { id: string; text: string; at: string | null };
 type Contact = { phone: string; name: string };
@@ -73,77 +74,109 @@ export function Phone() {
   };
 
   const name = useMemo(() => contacts.find((c) => c.phone === phone)?.name ?? "New number", [contacts, phone]);
-  const keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "*", "0", "#"];
+  const keys: [string, string][] = [
+    ["1", ""], ["2", "abc"], ["3", "def"], ["4", "ghi"], ["5", "jkl"], ["6", "mno"], ["7", "pqrs"], ["8", "tuv"], ["9", "wxyz"], ["*", ""], ["0", "+"], ["#", ""],
+  ];
 
   return (
-    <div className="flex flex-col items-center gap-4">
-      <label className="flex w-80 flex-col gap-1 text-sm font-semibold text-slate-300">
-        SIM card (trader phone)
-        <select value={phone} onChange={(e) => setPhone(e.target.value)} className="rounded-lg bg-slate-800 px-3 py-2 text-white">
-          {contacts.map((c) => (
-            <option key={c.phone} value={c.phone}>
-              {c.name} · {c.phone}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      <div className="w-80 rounded-[2.5rem] border-4 border-slate-700 bg-slate-900 p-4 shadow-2xl">
-        <div className="mb-2 flex justify-between px-1 text-[11px] text-slate-400">
-          <span>{name.split(" ")[0]} · MTN NG</span>
-          <span>▮▮▮ 92%</span>
-        </div>
-        <div className="h-96 overflow-y-auto rounded-xl bg-[#c9d8b6] p-3 font-mono text-[13px] leading-snug text-slate-900">
-          {screen === "inbox" && (
-            <div className="flex flex-col gap-2">
-              <p className="font-bold">Messages ({inbox.length})</p>
-              {inbox.length === 0 && <p className="opacity-70">No messages yet.</p>}
-              {inbox.map((m) => (
-                <div key={m.id} className={`rounded-md bg-white/60 p-2 ${m.id === fresh ? "animate-pop ring-2 ring-brand-600" : ""}`}>
-                  <p className="text-[10px] font-bold opacity-70">LevyPass · {m.at ? new Date(m.at).toLocaleTimeString("en-NG", { timeZone: "Africa/Lagos" }) : ""}</p>
-                  <p className="whitespace-pre-wrap break-words">{m.text}</p>
-                </div>
+    <div className="grid items-start gap-10 lg:grid-cols-2 lg:gap-16">
+      <div className="max-w-md lg:pt-6">
+        <h1 className="text-[32px] font-semibold leading-tight tracking-[-0.03em]">Phone simulator</h1>
+        <p className="mt-2 text-[16px] text-ink-2">A basic phone with an SMS inbox and USSD. Pick any trader&apos;s SIM to see what they receive.</p>
+        <label className="mt-8 flex flex-col gap-1.5">
+          <span className="text-sm font-semibold">SIM card</span>
+          <span className="relative">
+            <select value={phone} onChange={(e) => setPhone(e.target.value)} className="min-h-12 w-full appearance-none rounded-xl border border-line-2 bg-paper px-4 pr-10 text-base outline-none focus:border-forest focus:ring-4 focus:ring-forest/10">
+              {contacts.map((c) => (
+                <option key={c.phone} value={c.phone}>
+                  {c.name} · {c.phone}
+                </option>
               ))}
+            </select>
+            <Icon name="chevronRight" size={16} stroke={2.2} className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 rotate-90 text-ink-3" />
+          </span>
+        </label>
+        <ol className="mt-8 flex flex-col gap-4 border-t border-line pt-6 text-[15px] text-ink-2">
+          {[
+            ["Pay a levy", <>Dial <b className="font-mono text-ink">{OUR_CODE}</b>, press Call, then reply <b className="text-ink">1</b>.</>],
+            ["Confirm the amount", <>Reply <b className="text-ink">1</b> again. In the sandbox the bank approves at once.</>],
+            ["Get the receipt", <>The SMS lands in the inbox, usually within seconds.</>],
+          ].map(([title, body], i) => (
+            <li key={i} className="flex gap-4">
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-forest font-mono text-[12px] font-semibold text-lime">{i + 1}</span>
+              <span>
+                <span className="block font-semibold text-ink">{title}</span>
+                {body}
+              </span>
+            </li>
+          ))}
+        </ol>
+      </div>
+
+      <div className="mx-auto w-[300px] rounded-[44px] bg-gradient-to-b from-[#26302b] to-[#141a17] p-[14px] shadow-[0_40px_80px_-30px_rgb(7_23_16/0.6),inset_0_1px_0_rgb(255_255_255/0.08)]">
+        <div className="mx-auto mb-3 mt-1 h-1.5 w-14 rounded-full bg-black/40" aria-hidden="true" />
+        <div className="rounded-[20px] bg-black/30 p-2.5">
+          <div className="flex h-[360px] flex-col overflow-hidden rounded-xl bg-[#c5d4b4] font-mono text-[13px] leading-snug text-[#1d2a16] shadow-[inset_0_2px_8px_rgb(0_0_0/0.18)]">
+            <div className="flex justify-between border-b border-[#1d2a16]/15 px-3 py-1.5 text-[10.5px]">
+              <span>{name.split(" ")[0]} · MTN NG</span>
+              <span>▮▮▮ 92%</span>
             </div>
-          )}
-          {screen === "dial" && (
-            <div className="flex h-full flex-col justify-between">
-              <p className="opacity-70">Dial a code. LevyPass is {OUR_CODE}. Bank codes look like *7272*000*1234#.</p>
-              <p className="break-all text-center text-2xl font-bold">{dial || " "}</p>
-            </div>
-          )}
-          {screen === "ussd" && ussd && (
-            <div className="flex h-full flex-col gap-2">
-              <p className="whitespace-pre-wrap">{ussd.text}</p>
-              {ussd.open && (
-                <form
-                  className="mt-auto flex gap-2"
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    void send([...ussd.trail, reply], ussd.session);
-                    setReply("");
-                  }}
-                >
-                  <input autoFocus value={reply} onChange={(e) => setReply(e.target.value)} className="min-w-0 flex-1 rounded border border-slate-600 bg-white/70 px-2 py-1" aria-label="USSD reply" />
-                  <button disabled={busy} className="rounded bg-slate-900 px-3 py-1 text-white">
-                    Send
-                  </button>
-                </form>
+            <div className="flex-1 overflow-y-auto p-3">
+              {screen === "inbox" && (
+                <div className="flex flex-col gap-2">
+                  <p className="font-bold">Messages ({inbox.length})</p>
+                  {inbox.length === 0 && <p className="opacity-70">No messages yet.</p>}
+                  {inbox.map((m) => (
+                    <div key={m.id} className={`rounded-md bg-white/45 p-2 ${m.id === fresh ? "animate-pop ring-2 ring-[#1d2a16]" : ""}`}>
+                      <p className="text-[10px] font-bold opacity-70">LevyPass · {m.at ? new Date(m.at).toLocaleTimeString("en-NG", { timeZone: "Africa/Lagos" }) : ""}</p>
+                      <p className="whitespace-pre-wrap break-words">{m.text}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {screen === "dial" && (
+                <div className="flex h-full flex-col justify-between">
+                  <p className="text-[12px] opacity-70">Dial a code. LevyPass is {OUR_CODE}. Bank codes look like *7272*000*1234#.</p>
+                  <p className="break-all text-center text-[26px] font-bold">{dial || " "}</p>
+                </div>
+              )}
+              {screen === "ussd" && ussd && (
+                <div className="flex h-full flex-col gap-2">
+                  <p className="whitespace-pre-wrap">{ussd.text}</p>
+                  {ussd.open && (
+                    <form
+                      className="mt-auto flex gap-2"
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        void send([...ussd.trail, reply], ussd.session);
+                        setReply("");
+                      }}
+                    >
+                      <input autoFocus value={reply} onChange={(e) => setReply(e.target.value)} className="min-w-0 flex-1 rounded border border-[#1d2a16]/40 bg-white/60 px-2 py-1 outline-none" aria-label="USSD reply" />
+                      <button disabled={busy} className="rounded bg-[#1d2a16] px-3 py-1 text-[#c5d4b4]">
+                        Send
+                      </button>
+                    </form>
+                  )}
+                </div>
               )}
             </div>
-          )}
+          </div>
         </div>
-        <div className="mt-3 grid grid-cols-3 gap-2">
-          <button onClick={() => setScreen("inbox")} className="rounded-lg bg-slate-700 py-2 text-xs font-semibold text-white">
+        <div className="mt-4 grid grid-cols-3 gap-2 px-1">
+          <button onClick={() => setScreen("inbox")} className="flex h-10 items-center justify-center gap-1.5 rounded-full bg-white/10 text-[12px] font-semibold text-white hover:bg-white/15">
+            <Icon name="message" size={14} />
             Inbox
           </button>
-          <button onClick={() => (screen === "dial" ? void call() : setScreen("dial"))} disabled={busy} className="rounded-lg bg-brand-600 py-2 text-xs font-bold text-white">
+          <button onClick={() => (screen === "dial" ? void call() : setScreen("dial"))} disabled={busy} className="flex h-10 items-center justify-center rounded-full bg-lime text-[12px] font-bold text-forest hover:bg-lime-2 disabled:opacity-60">
             {screen === "dial" ? "Call" : "Dial"}
           </button>
-          <button onClick={() => (screen === "dial" ? setDial((d) => d.slice(0, -1)) : setScreen("inbox"))} className="rounded-lg bg-red-700 py-2 text-xs font-semibold text-white">
+          <button onClick={() => (screen === "dial" ? setDial((d) => d.slice(0, -1)) : setScreen("inbox"))} className="flex h-10 items-center justify-center rounded-full bg-[#b3261e] text-[12px] font-semibold text-white hover:bg-[#9c2115]">
             {screen === "dial" ? "Del" : "End"}
           </button>
-          {keys.map((k) => (
+        </div>
+        <div className="mt-3 grid grid-cols-3 gap-2 px-1 pb-2">
+          {keys.map(([k, letters]) => (
             <button
               key={k}
               onClick={() => {
@@ -154,9 +187,10 @@ export function Phone() {
                   setDial((d) => d + k);
                 }
               }}
-              className="rounded-lg bg-slate-800 py-2 text-lg font-semibold text-white active:bg-slate-600"
+              className="flex h-12 flex-col items-center justify-center rounded-2xl bg-white/[0.06] text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.06)] transition hover:bg-white/10 active:bg-white/20"
             >
-              {k}
+              <span className="text-[19px] font-semibold leading-none">{k}</span>
+              {letters ? <span className="mt-0.5 text-[9px] uppercase tracking-[0.12em] text-white/45">{letters}</span> : null}
             </button>
           ))}
         </div>

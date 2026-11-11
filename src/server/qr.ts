@@ -5,7 +5,7 @@ import { env } from "./env";
 import { qrSigningKeys } from "./keys";
 
 export async function qrSvg(text: string): Promise<string> {
-  return QRCode.toString(text, { type: "svg", margin: 1, errorCorrectionLevel: "M", color: { dark: "#0f172a", light: "#ffffff" } });
+  return QRCode.toString(text, { type: "svg", margin: 1, errorCorrectionLevel: "M", color: { dark: "#0c1c15", light: "#ffffff" } });
 }
 
 /** Public URL a trader's QR encodes: any phone camera opens it (TR-03). */
