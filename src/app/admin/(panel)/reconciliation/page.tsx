@@ -120,7 +120,7 @@ export default async function ReconciliationPage({ searchParams }: { searchParam
                 <span className="font-mono text-[13px]">{b.settlementId ?? "Pending batch"}</span>
                 <Badge tone={b.status === "settled" ? "paid" : "warn"}>{b.status}</Badge>
                 <span className="text-ink-2 tnum">
-                  {b.transactions.length} payments · net {formatNaira(b.netKobo)} to {b.settlementAccount}
+                  {b.transactions.length} {b.transactions.length === 1 ? "payment" : "payments"} · net {formatNaira(b.netKobo)} to {b.settlementAccount}
                 </span>
               </li>
             ))}

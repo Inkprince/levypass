@@ -292,7 +292,7 @@ function LiveBand({ d }: { d: Summary | null }) {
   const paid = d.compliance.reduce((x, c) => x + c.paid, 0);
   const stats: [string, string, string][] = [
     [formatNaira(d.collected.month), "collected this month", "from the append-only ledger"],
-    [formatNaira(d.collected.week), "collected this week", `${d.paymentsDay} payments so far today`],
+    [formatNaira(d.collected.week), "collected this week", `${d.paymentsDay} ${d.paymentsDay === 1 ? "payment" : "payments"} so far today`],
     [traders ? `${Math.round((paid / traders) * 100)}%` : "0%", "of traders paid today", `${paid} of ${traders} in the market`],
     [String(d.open.scansToday), "officer scans today", "each one logged with time and place"],
   ];
