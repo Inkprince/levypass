@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { formatNaira } from "@/core/money";
 import { t } from "@/messages";
 import { ArrowLink, Icon, LinkButton, Logo, buttonClass, type IconName } from "@/app/_ui/kit";
-import { IlloCoins, IlloFeaturePhone, IlloGovernment, IlloHands, IlloReceipt, IlloScan, MarketScene } from "@/app/_ui/illustrations";
+import { IlloHands, IlloScan, MarketScene } from "@/app/_ui/illustrations";
 import { dashboardSummary, type Summary } from "@/server/admin/summary";
 import { CountUp, PaymentCarousel, type HeroPayment } from "./hero-live";
 import { db } from "@/server/db/client";
@@ -36,11 +36,8 @@ export default async function Home() {
       <SiteNav />
       <Hero d={d} payments={payments} levy={levy ?? null} qr={checkQr} />
       <MarketScene className="block h-[230px] w-full sm:h-auto sm:max-h-[640px]" />
-      <TrustRow />
       <HowItWorks d={d} levy={levy ?? null} latestReceipt={latest?.receipt ?? null} host={base.replace(/^https?:\/\//, "")} />
       <LiveBand d={d} />
-      <Integrity />
-      <Audiences />
       <ReceiptCheck qr={checkQr} />
       <SiteFooter />
     </div>
@@ -58,7 +55,6 @@ function SiteNav() {
         </Link>
         <nav className="hidden items-center gap-6 text-[14px] font-medium text-ink-2 md:flex">
           <a href="#how" className="hover:text-ink">How it works</a>
-          <a href="#integrity" className="hover:text-ink">Integrity</a>
           <Link href="/r" className="hover:text-ink">Check a receipt</Link>
           <Link href="/demo" className="hover:text-ink">Demo</Link>
         </nav>
@@ -109,9 +105,6 @@ function Hero({ d, payments, levy, qr }: { d: Summary | null; payments: HeroPaym
               Every naira traced.
             </span>
           </h1>
-          <p style={{ animationDelay: "280ms" }} className="animate-rise mt-7 max-w-[34rem] text-[18px] leading-relaxed text-ink-2">
-            Market and motor-park traders pay by USSD, transfer or card. The money settles straight to the government&apos;s account, and an officer confirms it with one QR scan.
-          </p>
           <div style={{ animationDelay: "360ms" }} className="animate-rise mt-9 flex flex-wrap items-center gap-3">
             <LinkButton href="/register" size="lg">
               Register a trader
@@ -194,35 +187,12 @@ function BreakdownRow({ icon, label, value }: { icon: IconName; label: string; v
   );
 }
 
-/* --------------------------------------------------------------- trust row */
-
-function TrustRow() {
-  const items: [(p: { className?: string }) => ReactNode, string, string][] = [
-    [IlloGovernment, "Money goes to the government's account", "Every payment settles to the authority's own collection account. No officer ever handles cash."],
-    [IlloReceipt, "Receipts anyone can check", "Each receipt carries a number you can check online. A made-up number is flagged to the revenue office the moment it is tried."],
-    [IlloFeaturePhone, "Works on any phone", "USSD on a basic handset, bank transfer or card. The receipt arrives by SMS within seconds."],
-  ];
-  return (
-    <section className="rails border-t border-line">
-      <div className="grid gap-px bg-line sm:grid-cols-3">
-        {items.map(([Art, title, body]) => (
-          <div key={title} className="bg-cream px-[var(--gutter)] py-9">
-            <Art className="-ml-2 h-[88px] w-auto" />
-            <p className="mt-4 text-[16px] font-semibold tracking-[-0.01em]">{title}</p>
-            <p className="mt-1.5 text-[15px] leading-relaxed text-ink-2">{body}</p>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
 /* ------------------------------------------------------------ how it works */
 
-function SectionHead({ id, title, soft, className = "" }: { id?: string; title: string; soft: string; className?: string }) {
+function SectionHead({ id, title }: { id?: string; title: string }) {
   return (
-    <h2 id={id} className={`headline max-w-3xl scroll-mt-24 text-[30px] sm:text-[40px] ${className}`}>
-      {title} <span className="soft">{soft}</span>
+    <h2 id={id} className="headline max-w-3xl scroll-mt-24 text-[30px] sm:text-[40px]">
+      {title}
     </h2>
   );
 }
@@ -234,7 +204,7 @@ function HowItWorks({ d, levy, latestReceipt, host }: { d: Summary | null; levy:
   const paidRate = d ? d.compliance.reduce((x, c) => x + c.paid, 0) : 0;
   return (
     <section className="rails gutter border-t border-line py-20 lg:py-28">
-      <SectionHead id="how" title="Three steps from stall to proof." soft="The trader pays, the bank confirms, the officer scans. Nobody handles cash." />
+      <SectionHead id="how" title="Three steps from stall to proof." />
       <ol className="mt-14 grid gap-4 md:grid-cols-3">
         <Step n="01" tone="sand" title="Pay on any phone" body="Dial the LevyPass code, pick what to pay and approve with a bank PIN. Transfer and card work too.">
           <Lcd>{t("en", "ussd.menu")}</Lcd>
@@ -302,7 +272,7 @@ function LiveBand({ d }: { d: Summary | null }) {
       <div className="gutter py-20 lg:py-24">
         <div className="flex flex-wrap items-end justify-between gap-6">
           <h2 className="headline max-w-2xl text-[30px] sm:text-[40px]">
-            Live from the ledger. <span className="text-white/50">Every figure here is recomputed from ledger entries when the page loads.</span>
+            Live from the ledger.
           </h2>
           <ArrowLink href="/admin" className="text-lime">
             Open the revenue dashboard
@@ -345,91 +315,6 @@ function LiveBand({ d }: { d: Summary | null }) {
   );
 }
 
-/* --------------------------------------------------------------- integrity */
-
-function Integrity() {
-  const rules: [IconName, string, string][] = [
-    ["ledger", "Append-only ledger", "Entries are never updated or deleted; a database trigger refuses it. Every total is recomputed from them."],
-    ["shield", "Verify before value", "A webhook is only a hint. A levy is marked paid after LevyPass asks the bank, server to server, and it confirms."],
-    ["refresh", "Idempotent both ways", "Every call that moves money carries a key saved before it is sent. A replayed webhook changes nothing."],
-    ["lock", "Signed webhooks", "HMAC-SHA256 over the raw body, compared in constant time. Anything older than five minutes is refused."],
-    ["flag", "Fraud flags in real time", "Double charges, made-up receipts and suspended officers raise a flag in the revenue office as they happen."],
-    ["scale", "Reconciled to the kobo", "Each day the ledger is matched line by line with the bank's own settlement. Any gap is listed with its reference."],
-  ];
-  return (
-    <section className="rails gutter py-20 lg:py-28">
-      <SectionHead id="integrity" title="Built like a bank ledger." soft="The rules a payments engineer would check are enforced in code and in the database." />
-      <div className="mt-14 grid gap-px overflow-hidden rounded-[24px] border border-line bg-line sm:grid-cols-2 lg:grid-cols-3">
-        {rules.map(([icon, title, body]) => (
-          <div key={title} className="bg-paper p-7">
-            <Icon name={icon} size={22} className="text-forest" />
-            <p className="mt-5 text-[16px] font-semibold tracking-[-0.01em]">{title}</p>
-            <p className="mt-1.5 text-[15px] leading-relaxed text-ink-2">{body}</p>
-          </div>
-        ))}
-      </div>
-      <p className="mt-6 text-[14px] text-ink-3">
-        Try to break it yourself: the revenue office has a{" "}
-        <Link href="/admin/failures" className="font-semibold text-forest underline decoration-line-2 underline-offset-4 hover:decoration-forest">
-          failure drill panel
-        </Link>{" "}
-        that withholds, replays and forges webhooks live.
-      </p>
-    </section>
-  );
-}
-
-/* --------------------------------------------------------------- audiences */
-
-function Audiences() {
-  return (
-    <section className="rails gutter border-t border-line py-20 lg:py-28">
-      <div className="grid gap-4 lg:grid-cols-2">
-        <article className="relative flex flex-col overflow-hidden rounded-[28px] bg-mist-2 p-8 sm:p-10">
-          <IlloGovernment className="absolute right-4 top-6 hidden h-[110px] w-auto sm:block" />
-          <p className="text-[13px] font-semibold text-forest">For the revenue office</p>
-          <h3 className="headline mt-3 text-[28px] sm:max-w-[75%] sm:text-[34px]">
-            Collections you can see. <span className="soft">Leakage you can stop.</span>
-          </h3>
-          <ul className="mt-8 flex flex-col gap-3.5 text-[15px] text-ink-2">
-            {["Money lands in the government's own account, never with a person.", "A live dashboard of every market, levy and officer, recomputed from the ledger.", "Fake receipts and ghost collectors surface as flags the moment they appear."].map((x) => (
-              <li key={x} className="flex gap-3">
-                <Icon name="check" size={18} stroke={2.4} className="mt-0.5 text-go" />
-                {x}
-              </li>
-            ))}
-          </ul>
-          <div className="mt-auto pt-10">
-            <LinkButton href="/admin" variant="outline">
-              Revenue office sign in
-            </LinkButton>
-          </div>
-        </article>
-        <article className="relative flex flex-col overflow-hidden rounded-[28px] bg-forest p-8 text-white sm:p-10">
-          <IlloCoins className="absolute right-4 top-6 hidden h-[110px] w-auto sm:block" />
-          <p className="text-[13px] font-semibold text-lime">For Access Bank</p>
-          <h3 className="headline mt-3 text-[28px] sm:max-w-[75%] sm:text-[34px]">
-            A front door to the market. <span className="text-white/55">Millions of traders, one daily habit.</span>
-          </h3>
-          <ul className="mt-8 flex flex-col gap-3.5 text-[15px] text-white/80">
-            {["Collection balances held at the bank, settled every day.", "A digital first step for traders who have never had an account.", "A consented payment history that can support savings and micro-credit."].map((x) => (
-              <li key={x} className="flex gap-3">
-                <Icon name="check" size={18} stroke={2.4} className="mt-0.5 text-lime" />
-                {x}
-              </li>
-            ))}
-          </ul>
-          <div className="mt-auto pt-10">
-            <LinkButton href="/demo" variant="accent">
-              Walk through the demo
-            </LinkButton>
-          </div>
-        </article>
-      </div>
-    </section>
-  );
-}
-
 /* ----------------------------------------------------------- receipt check */
 
 function ReceiptCheck({ qr }: { qr: string }) {
@@ -438,7 +323,6 @@ function ReceiptCheck({ qr }: { qr: string }) {
       <div className="mx-auto flex max-w-2xl flex-col items-center text-center">
         <IlloHands className="h-auto w-full max-w-[420px]" />
         <h2 className="display mt-8 text-[40px] sm:text-[56px]">Holding a levy receipt?</h2>
-        <p className="mt-4 text-[17px] text-ink-2">Type its number to see if it is genuine. Anyone can check, no account needed.</p>
         <form action="/r" method="get" className="mt-8 flex w-full max-w-lg items-center gap-2 rounded-full border border-line-2 bg-paper p-1.5 pl-5 focus-within:border-forest focus-within:ring-4 focus-within:ring-forest/10">
           <Icon name="receipt" size={20} className="text-ink-3" />
           <input name="number" required aria-label="Receipt number" placeholder="Receipt number, e.g. LP-7K3M-9QX2T" autoCapitalize="characters" className="min-w-0 flex-1 bg-transparent py-2 font-medium outline-none placeholder:font-normal placeholder:text-ink-3" />

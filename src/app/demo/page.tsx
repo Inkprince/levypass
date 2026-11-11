@@ -23,7 +23,7 @@ const roles: [string, string, string, IconName][] = [
 
 export default function DemoPage() {
   return (
-    <PageShell title="Five-minute demo" lead="Open each role in its own tab, then follow the script top to bottom." wide back={{ href: "/", label: "Home" }}>
+    <PageShell title="Five-minute demo" wide back={{ href: "/", label: "Home" }}>
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {roles.map(([label, sub, href, icon]) => (
           <Link key={href} href={href} target="_blank" className="group flex flex-col gap-6 rounded-[var(--radius-card)] border border-line bg-paper p-5 transition-colors hover:border-forest">

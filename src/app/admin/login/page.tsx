@@ -5,7 +5,7 @@ import { adminLogin } from "../actions";
 
 export default function AdminLogin() {
   return (
-    <PageShell art={<IlloGovernment />} title="Revenue office" lead="Sign in to see collections, reconciliation and the fraud queue." back={{ href: "/", label: "Home" }}>
+    <PageShell art={<IlloGovernment />} title="Revenue office" back={{ href: "/", label: "Home" }}>
       <Card>
         <ActionForm action={adminLogin} submit="Sign in">
           <Field label="Email" name="email" type="email" autoComplete="username" required placeholder="revenue@levypass.test" />

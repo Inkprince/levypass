@@ -82,7 +82,6 @@ export function Phone() {
     <div className="grid items-start gap-10 lg:grid-cols-2 lg:gap-16">
       <div className="max-w-md lg:pt-6">
         <h1 className="text-[32px] font-semibold leading-tight tracking-[-0.03em]">Phone simulator</h1>
-        <p className="mt-2 text-[16px] text-ink-2">A basic phone with an SMS inbox and USSD. Pick any trader&apos;s SIM to see what they receive.</p>
         <label className="mt-8 flex flex-col gap-1.5">
           <span className="text-sm font-semibold">SIM card</span>
           <span className="relative">

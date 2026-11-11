@@ -5,7 +5,7 @@ import { loginStart } from "../actions";
 
 export default function LoginPage() {
   return (
-    <PageShell art={<IlloFeaturePhone />} title="Welcome back" lead="Log in with the phone number on your pass. We will text you a code." back={{ href: "/", label: "Home" }}>
+    <PageShell art={<IlloFeaturePhone />} title="Welcome back" back={{ href: "/", label: "Home" }}>
       <Card>
         <ActionForm action={loginStart} submit="Send my code">
           <Field label="Phone number" name="phone" inputMode="tel" autoComplete="tel" required placeholder="0803 000 0000" />

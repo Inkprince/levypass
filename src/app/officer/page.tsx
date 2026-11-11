@@ -36,7 +36,6 @@ export default async function OfficerPage() {
       <main className="mx-auto flex max-w-md flex-col gap-4 px-4 pb-10 pt-6">
         <div>
           <h1 className="text-[40px] font-medium leading-none tracking-[-0.05em]">Scan a trader</h1>
-          <p className="mt-1 text-[15px] text-ink-2">Point the camera at the trader&apos;s QR pass.</p>
         </div>
         <Scanner />
         <div className="mt-2 flex items-center justify-between text-[14px] font-semibold">

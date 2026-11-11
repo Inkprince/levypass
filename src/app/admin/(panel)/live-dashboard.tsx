@@ -63,7 +63,7 @@ export function LiveDashboard({ initial }: { initial: Summary }) {
               <span className="tnum">{naira(today ? d.collected.day : d.collected.month)}</span> collected {today ? "today" : "this month"}
             </h1>
             <p className="mt-4 max-w-xl text-[16px] text-ink-2">
-              {d.paymentsDay} {d.paymentsDay === 1 ? "payment" : "payments"} today, bank fees {naira(d.feesDay)}. Recomputed from the append-only ledger every 3 seconds.
+              {d.paymentsDay} {d.paymentsDay === 1 ? "payment" : "payments"} today, bank fees {naira(d.feesDay)}.
             </p>
             <div className="mt-7 flex flex-wrap gap-2">
               <Link href="/admin/reconciliation" className={buttonClass("primary", "lg", "pr-5")}>

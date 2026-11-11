@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 export default async function RegisterPage() {
   const list = await markets();
   return (
-    <PageShell art={<IlloStall />} title="Get your LevyPass" lead="It takes about a minute. We send a code to your phone to confirm it is yours." back={{ href: "/login", label: "Log in" }}>
+    <PageShell art={<IlloStall />} title="Get your LevyPass" back={{ href: "/login", label: "Log in" }}>
       <Card>
         <ActionForm action={registerStart} submit="Send my code">
           <Field label="Full name" name="name" autoComplete="name" required placeholder="Bisi Adewale" />

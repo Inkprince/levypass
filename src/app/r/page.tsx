@@ -16,7 +16,7 @@ export default async function ReceiptCheck({ searchParams }: { searchParams: Pro
   const { number } = await searchParams;
   if (number !== undefined) redirect(target(number));
   return (
-    <PageShell art={<IlloReceipt />} title="Is this receipt genuine?" lead="Type the number printed on the receipt or in the SMS. No account needed." back={{ href: "/", label: "Home" }}>
+    <PageShell art={<IlloReceipt />} title="Is this receipt genuine?" back={{ href: "/", label: "Home" }}>
       <Card>
         <form action={go} className="flex flex-col gap-4">
           <Field label="Receipt number" name="number" required placeholder="LP-7K3M-9QX2T" autoCapitalize="characters" autoComplete="off" className="font-mono uppercase tracking-wide" />
