@@ -112,7 +112,7 @@ export default async function PassPage({ searchParams }: { searchParams: Promise
 
       <p className="flex items-center justify-center gap-2 text-center text-[14px] text-ink-2">
         <Icon name="phone" size={17} className="text-forest" />
-        Feature phone? Dial <span className="font-mono font-semibold text-ink">*347*13#</span> to pay.
+        No smartphone? Dial <span className="font-mono font-semibold text-ink">*347*13#</span> from any phone to pay.
       </p>
       <form action={traderLogout} className="text-center">
         <button className="rounded-full px-4 py-2 text-[14px] font-semibold text-ink-3 hover:bg-fill hover:text-ink">Log out</button>

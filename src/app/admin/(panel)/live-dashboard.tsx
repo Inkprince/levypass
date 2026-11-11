@@ -49,36 +49,27 @@ export function LiveDashboard({ initial }: { initial: Summary }) {
         </svg>
         <div className="relative grid gap-8 xl:grid-cols-[1fr_auto] xl:items-center">
           <div>
-            <div className="flex flex-wrap items-center gap-3">
-              <p className="text-[16px] text-ink">{greeting(d.asOf)}, revenue office.</p>
-              <span className="inline-flex items-center gap-2 rounded-full bg-paper px-2.5 py-1 text-[12px] font-medium text-ink-2">
-                <span className="relative flex h-2 w-2" aria-hidden="true">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-go opacity-60" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-go" />
-                </span>
-                Live at <span className="tnum">{time(d.asOf)}</span>
-              </span>
-            </div>
+            <p className="text-[16px] text-ink">{greeting(d.asOf)}.</p>
             <h1 key={flash} className={`mt-5 max-w-[15ch] text-[44px] font-medium leading-[0.98] tracking-[-0.055em] sm:text-[60px] ${flash ? "animate-flash" : ""}`}>
               <span className="tnum">{naira(today ? d.collected.day : d.collected.month)}</span> collected {today ? "today" : "this month"}
             </h1>
             <p className="mt-4 max-w-xl text-[16px] text-ink-2">
-              {d.paymentsDay} {d.paymentsDay === 1 ? "payment" : "payments"} today, bank fees {naira(d.feesDay)}.
+              {d.paymentsDay} {d.paymentsDay === 1 ? "payment" : "payments"} today. Bank fees: {naira(d.feesDay)}.
             </p>
             <div className="mt-7 flex flex-wrap gap-2">
               <Link href="/admin/reconciliation" className={buttonClass("primary", "lg", "pr-5")}>
-                Reconcile with the bank
+                Check against the bank
                 <Icon name="arrowUpRight" size={15} />
               </Link>
               <Link href="/admin/fraud" className={buttonClass("outline", "lg")}>
-                Review flags
+                Review fraud flags
               </Link>
             </div>
           </div>
           <div className="grid gap-3 sm:grid-cols-3 xl:w-[620px]">
-            <HeroTile n="01" label="This week" value={naira(d.collected.week)} tone="cream" art={<IlloCoins className="h-[96px] w-auto" />} />
-            <HeroTile n="02" label="Traders paid today" value={`${rate}%`} sub={`${totalPaid} of ${totalTraders}`} tone="lime" art={<IlloStall className="h-[96px] w-auto" />} />
-            <HeroTile n="03" label="Officer scans today" value={String(d.open.scansToday)} tone="forest" art={<IlloBadge className="h-[96px] w-auto" />} />
+            <HeroTile label="Collected this week" value={naira(d.collected.week)} tone="cream" art={<IlloCoins className="h-[96px] w-auto" />} />
+            <HeroTile label="Traders paid today" value={`${rate}%`} sub={`${totalPaid} of ${totalTraders} traders`} tone="lime" art={<IlloStall className="h-[96px] w-auto" />} />
+            <HeroTile label="Receipts scanned today" value={String(d.open.scansToday)} tone="forest" art={<IlloBadge className="h-[96px] w-auto" />} />
           </div>
         </div>
       </section>
@@ -89,11 +80,11 @@ export function LiveDashboard({ initial }: { initial: Summary }) {
           <section className="py-9">
             <div className="flex flex-wrap items-baseline justify-between gap-3">
               <div>
-                <p className="text-[14px] text-ink-2">Last 14 days, Lagos time</p>
-                <h2 className="mt-1 text-[28px] font-medium tracking-[-0.045em]">Collections</h2>
+                <p className="text-[14px] text-ink-2">Last 14 days</p>
+                <h2 className="mt-1 text-[28px] font-medium tracking-[-0.045em]">Money collected each day</h2>
               </div>
               <p className="text-[14px] text-ink-2">
-                This month <span className="font-semibold text-ink tnum">{naira(d.collected.month)}</span>
+                This month: <span className="font-semibold text-ink tnum">{naira(d.collected.month)}</span>
               </p>
             </div>
             <div className="mt-7">
@@ -103,8 +94,8 @@ export function LiveDashboard({ initial }: { initial: Summary }) {
 
           <section className="border-t border-line py-9">
             <div className="flex flex-wrap items-baseline justify-between gap-3">
-              <h2 className="text-[28px] font-medium tracking-[-0.045em]">Latest confirmed payments</h2>
-              <span className="text-[14px] text-ink-2">Verified with the bank</span>
+              <h2 className="text-[28px] font-medium tracking-[-0.045em]">Recent payments</h2>
+              <span className="text-[14px] text-ink-2">Each one confirmed by the bank</span>
             </div>
             <ol className="mt-6 flex flex-col">
               {d.recent.map((p, i) => (
@@ -128,7 +119,7 @@ export function LiveDashboard({ initial }: { initial: Summary }) {
                         {p.receipt}
                       </a>
                     ) : null}
-                    <span className="block">bank fee {naira(p.feeKobo)}</span>
+                    <span className="block">Bank fee {naira(p.feeKobo)}</span>
                   </span>
                   <span className="text-right text-[17px] font-semibold tracking-[-0.02em] tnum">{naira(p.amountKobo)}</span>
                 </li>
@@ -141,12 +132,12 @@ export function LiveDashboard({ initial }: { initial: Summary }) {
         <aside className="border-t border-line px-4 py-9 sm:px-6 lg:border-l lg:px-8">
           <h2 className="text-[28px] font-medium tracking-[-0.045em]">Needs attention</h2>
           <div className="mt-6 flex flex-col gap-2.5">
-            <RailCard href="/admin/fraud" title="Open fraud flags" value={d.open.flags} tag={<Tag tone={d.open.flags ? "warn" : "paid"}>{d.open.flags ? "Review" : "Clear"}</Tag>} />
-            <RailCard href="/admin/fraud" title="Open complaints" value={d.open.complaints} tag={<Tag tone={d.open.complaints ? "warn" : "paid"}>{d.open.complaints ? "Waiting" : "Clear"}</Tag>} />
-            <RailCard href="/admin/fraud" title="Money to review" value={d.open.review} tag={<Tag tone={d.open.review ? "unpaid" : "paid"}>{d.open.review ? "Unmatched" : "All matched"}</Tag>} />
+            <RailCard href="/admin/fraud" title="Fraud flags" value={d.open.flags} tag={<Tag tone={d.open.flags ? "warn" : "paid"}>{d.open.flags ? "Needs review" : "All clear"}</Tag>} />
+            <RailCard href="/admin/fraud" title="Complaints" value={d.open.complaints} tag={<Tag tone={d.open.complaints ? "warn" : "paid"}>{d.open.complaints ? "Needs a reply" : "All clear"}</Tag>} />
+            <RailCard href="/admin/fraud" title="Payments we could not match" value={d.open.review} tag={<Tag tone={d.open.review ? "unpaid" : "paid"}>{d.open.review ? "Needs review" : "All matched"}</Tag>} />
           </div>
 
-          <h3 className="mt-10 text-[15px] text-ink-2">Compliance today</h3>
+          <h3 className="mt-10 text-[15px] text-ink-2">Who has paid today</h3>
           <div className="mt-3 flex flex-col gap-2.5">
             {d.compliance.map((c) => (
               <div key={c.market} className="rounded-[var(--radius-card)] bg-mist-2 p-5">
@@ -154,7 +145,7 @@ export function LiveDashboard({ initial }: { initial: Summary }) {
                   <span className="text-[16px] font-medium tracking-[-0.02em]">{c.market}</span>
                   <span className="text-[15px] font-semibold tnum">{Math.round(c.rate * 100)}%</span>
                 </div>
-                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-paper" role="progressbar" aria-valuenow={Math.round(c.rate * 100)} aria-valuemin={0} aria-valuemax={100} aria-label={`${c.market} compliance`}>
+                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-paper" role="progressbar" aria-valuenow={Math.round(c.rate * 100)} aria-valuemin={0} aria-valuemax={100} aria-label={`${c.market}: traders paid today`}>
                   <div className="h-full rounded-full bg-forest transition-all duration-700" style={{ width: `${Math.round(c.rate * 100)}%` }} />
                 </div>
                 <p className="mt-2 text-[13px] text-ink-2">
@@ -165,7 +156,7 @@ export function LiveDashboard({ initial }: { initial: Summary }) {
             {d.compliance.length === 0 ? <p className="text-[14px] text-ink-2">No active traders yet.</p> : null}
           </div>
 
-          <h3 className="mt-10 text-[15px] text-ink-2">Revenue by levy, today</h3>
+          <h3 className="mt-10 text-[15px] text-ink-2">Collected today, by levy</h3>
           <dl className="mt-3 rounded-[var(--radius-card)] bg-mist-2 px-5">
             {d.byLevy.map((l) => (
               <div key={l.levy} className="flex justify-between gap-3 border-b border-line py-3.5 text-[15px] last:border-0">
@@ -186,11 +177,10 @@ const tileTone = {
   forest: "bg-forest text-white",
 };
 
-function HeroTile({ n, label, value, sub, tone, art }: { n: string; label: string; value: string; sub?: string; tone: keyof typeof tileTone; art: ReactNode }) {
+function HeroTile({ label, value, sub, tone, art }: { label: string; value: string; sub?: string; tone: keyof typeof tileTone; art: ReactNode }) {
   return (
     <div className={`relative flex min-h-[132px] min-w-0 flex-col overflow-hidden rounded-[20px] p-4 sm:min-h-[230px] ${tileTone[tone]}`}>
-      <span className="text-[14px] font-medium">{n}</span>
-      <span className="mt-3 text-[15px] font-medium leading-tight tracking-[-0.02em]">{label}</span>
+      <span className="text-[15px] font-medium leading-tight tracking-[-0.02em]">{label}</span>
       <span className="money mt-1 text-[26px] leading-none sm:truncate">{value}</span>
       {sub ? <span className={`mt-1 text-[12px] ${tone === "forest" ? "text-white/70" : "text-ink/65"}`}>{sub}</span> : null}
       <span className="absolute bottom-0 right-3 sm:static sm:-mb-2 sm:mt-auto sm:flex sm:justify-end">{art}</span>

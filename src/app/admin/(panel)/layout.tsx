@@ -56,8 +56,8 @@ export default async function PanelLayout({ children }: { children: ReactNode })
           <span className="absolute -top-6 left-4 flex h-12 w-12 items-center justify-center rounded-full border-[2.5px] border-ink bg-paper" aria-hidden="true">
             <Icon name="bolt" size={20} />
           </span>
-          <span className="block text-[22px] font-medium leading-[1.02] tracking-[-0.045em]">Test the failure cases</span>
-          <span className="mt-2 block text-[13px] leading-snug text-ink/75">Withhold, replay or forge a webhook and watch LevyPass credit each payment once.</span>
+          <span className="block text-[22px] font-medium leading-[1.02] tracking-[-0.045em]">Test what happens when things go wrong</span>
+          <span className="mt-2 block text-[13px] leading-snug text-ink/75">Delay, repeat or fake a bank message. Each payment still counts only once.</span>
           <span className="mt-4 flex h-10 items-center justify-between rounded-full bg-paper px-4 text-[14px] font-medium">
             Failure drills
             <Icon name="arrowUpRight" size={14} className="transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
