@@ -9,9 +9,10 @@ export const adminNav: [string, string, IconName][] = [
   ["/admin/reconciliation", "Reconciliation", "scale"],
   ["/admin/fraud", "Fraud and complaints", "flag"],
   ["/admin/officers", "Officers", "users"],
+  ["/admin/remittances", "Advance remittances", "bank"],
   ["/admin/levies", "Levies", "tag"],
   ["/admin/failures", "Failure drills", "bolt"],
-  ["/admin/stickers", "QR stickers", "print"],
+  ["/admin/stickers", "QR stickers and cards", "print"],
 ];
 
 const isActive = (path: string, href: string) => (href === "/admin" ? path === "/admin" : path.startsWith(href));

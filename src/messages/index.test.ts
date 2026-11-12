@@ -3,6 +3,8 @@ import { en, type MessageKey } from "./en";
 import { isLocale, t } from "./index";
 import { pcm } from "./pcm";
 import { yo } from "./yo";
+import { ig } from "./ig";
+import { ha } from "./ha";
 
 describe("t", () => {
   it("returns the English string", () => {
@@ -22,8 +24,8 @@ describe("t", () => {
 const placeholders = (text: string) => [...text.matchAll(/\{(\w+)\}/g)].map((m) => m[1]).sort();
 const traderFacing = (Object.keys(en) as MessageKey[]).filter((k) => k.startsWith("sms.") || k.startsWith("ussd."));
 
-describe.each(["pcm", "yo"] as const)("%s dictionary", (locale) => {
-  const dict = { pcm, yo }[locale];
+describe.each(["pcm", "yo", "ig", "ha"] as const)("%s dictionary", (locale) => {
+  const dict = { pcm, yo, ig, ha }[locale];
 
   it("has every SMS and USSD string, so nothing a trader reads falls back to English", () => {
     expect(traderFacing.filter((k) => !dict[k])).toEqual([]);

@@ -231,13 +231,15 @@ The hardest constraints come from the street: cheap phones, weak networks, busy 
 
 ## 6. Security, fraud and data protection
 
-The core security rule is simple: **no person ever holds levy money.** Money moves only between the trader's bank or wallet and the government's collection account, through licensed providers.
+The core security rule is simple: **no person ever holds government money.** Money reaches the government's collection account only through licensed providers. A trader with no bank may pay an officer cash, but only after that officer has made an **advance remittance** of at least that amount into the collection account, approved by the revenue office and confirmed by the bank. The cash is the officer's own money coming back; each cash levy is paid from the officer's advance, receipted by SMS naming the officer, and every remittance is accounted for collection by collection.
 
 ### 6.1 Threats and controls
 
 | Threat | How LevyPass stops it |
 | --- | --- |
-| Fake collector demands cash | Traders learn that LevyPass levies are never paid in cash; any trader can verify an officer by scanning the officer's ID QR or texting a short code |
+| Fake collector demands cash | Traders learn that cash counts only with an SMS receipt naming the officer, sent there and then; any trader can verify an officer by scanning the officer's ID QR or texting a short code |
+| Officer pockets cash and records nothing | The trader gets no SMS and the next scan still shows NOT PAID; cash can only be recorded against a fresh scan of that trader, inside the officer's market |
+| Officer records more cash than the government received | Impossible by construction: cash is paid out of an advance remittance the bank has confirmed, and the advance cannot go below zero |
 | Fake receipt or screenshot | Receipts are checked against the live ledger, never trusted from the image; each receipt number is single-use |
 | Forged or copied trader QR | QR carries a signed token (HMAC or Ed25519), not just an ID; the officer app checks the signature and shows the trader's photo |
 | Spoofed payment webhook | Webhooks verified by provider signature; payment then confirmed by a server-to-server status call before marking paid |

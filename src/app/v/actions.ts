@@ -2,6 +2,7 @@
 
 import { headers } from "next/headers";
 import { newId } from "@/core/ids";
+import { sessionRow } from "@/server/auth/session";
 import { db } from "@/server/db/client";
 import * as s from "@/server/db/schema";
 import { queueJob } from "@/server/notify/outbox";
@@ -14,7 +15,10 @@ export async function reportCollector(_: { error?: string; done?: string }, form
   if (description.length < 10) return { error: "Tell us a little more: who, where and how much." };
   const officerId = String(form.get("officerId") ?? "") || null;
   const id = newId("cmp");
-  await db().insert(s.complaints).values({ id, officerId, collectorDescription: String(form.get("collector") ?? "") || null, description: description.slice(0, 1000) });
+  // A logged-in trader is named on the report, so the revenue office's answer reaches them.
+  const trader = await sessionRow("trader");
+  const reporterTraderId = trader && !trader.revokedAt && trader.expiresAt > new Date() ? trader.subjectId : null;
+  await db().insert(s.complaints).values({ id, reporterTraderId, officerId, collectorDescription: String(form.get("collector") ?? "") || null, description: description.slice(0, 1000) });
   await queueJob(db(), "job.triage_complaint", { complaintId: id }, `triage:${id}`);
   return { done: id.slice(-6).toUpperCase() };
 }

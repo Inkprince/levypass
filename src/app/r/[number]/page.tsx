@@ -18,7 +18,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ number
   const number = parseReceiptNumber(typed);
   const [r] = number
     ? await db()
-        .select({ number: s.receipts.number, amount: s.receipts.amountKobo, issuedAt: s.receipts.issuedAt, paymentId: s.receipts.paymentId, name: s.traders.name, market: s.markets.name, stall: s.traders.stallOrVehicle, channel: s.payments.channel })
+        .select({ number: s.receipts.number, amount: s.receipts.amountKobo, issuedAt: s.receipts.issuedAt, paymentId: s.receipts.paymentId, name: s.traders.name, market: s.markets.name, stall: s.traders.stallOrVehicle, channel: s.payments.channel, cashOfficer: sql<string | null>`${s.payments.providerData}->>'staffId'` })
         .from(s.receipts)
         .innerJoin(s.traders, eq(s.traders.id, s.receipts.traderId))
         .innerJoin(s.markets, eq(s.markets.id, s.traders.marketId))
@@ -53,7 +53,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ number
   const [first, ...rest] = r.name.split(" ");
   return (
     <PageShell back={{ href: "/r", label: "Check another" }}>
-      <StatusPanel tone="paid" word="Genuine" sub="LevyPass issued this receipt after the bank confirmed the payment.">
+      <StatusPanel tone="paid" word="Genuine" sub={r.channel === "cash" ? "LevyPass issued this receipt for cash paid to an officer. The officer's advance remittance, already confirmed by the bank, paid the government." : "LevyPass issued this receipt after the bank confirmed the payment."}>
         <p className="rounded-full bg-white/15 px-3.5 py-1 font-mono text-[15px] font-semibold">{r.number}</p>
       </StatusPanel>
       <Card>
@@ -65,7 +65,7 @@ export default async function ReceiptPage({ params }: { params: Promise<{ number
             ["Paid on", lagosDate(r.issuedAt)],
             ["Trader", `${first} ${rest.at(-1)?.[0] ?? ""}.`],
             ["Market", `${r.market}, stall ${r.stall}`],
-            ["Channel", channelLabel(r.channel)],
+            ["Channel", r.channel === "cash" && r.cashOfficer ? `Cash to officer ${r.cashOfficer}` : channelLabel(r.channel)],
           ]}
         />
       </Card>

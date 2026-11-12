@@ -7,6 +7,8 @@ import { issueOtp, verifyOtp } from "@/server/auth/otp";
 import { createSession, endSession, requireSubject } from "@/server/auth/session";
 import { normalisePhone } from "@/server/phone";
 import { startPayment } from "@/server/payments/start";
+import { answerHandover, askToPayCash, cancelCashAsk } from "@/server/cash/handovers";
+import { reissueCard } from "@/server/traders/reissue";
 import { createTrader, openRegistration, phoneTaken, registrationInput, stallTaken, sealRegistration, traderByPhone } from "@/server/traders/register";
 import { isLocale } from "@/messages";
 
@@ -73,4 +75,33 @@ export async function completeUssd(form: FormData): Promise<void> {
 export async function traderLogout(): Promise<void> {
   await endSession("trader");
   redirect("/");
+}
+
+/** TR-08: the trader cancels a lost or damaged card and gets a new one. Asked twice, never by accident. */
+export async function reissueMyCard(form: FormData): Promise<void> {
+  const traderId = await requireSubject("trader");
+  if (form.get("confirm") !== "yes") redirect("/pass/card");
+  await reissueCard(traderId, { type: "trader", id: traderId });
+  redirect("/pass/card?new=1");
+}
+
+/** The trader will pay cash to an officer: officers of their market now see them waiting. */
+export async function askCash(): Promise<void> {
+  const traderId = await requireSubject("trader");
+  const r = await askToPayCash(traderId);
+  redirect(r.ok ? "/pass" : `/pass?cash=${encodeURIComponent(r.error)}`);
+}
+
+export async function cancelCash(): Promise<void> {
+  const traderId = await requireSubject("trader");
+  await cancelCashAsk(traderId);
+  redirect("/pass");
+}
+
+/** "Did you hand this cash to this officer?" A "no" goes to the revenue office as a fraud flag. */
+export async function answerCash(form: FormData): Promise<void> {
+  const traderId = await requireSubject("trader");
+  const answer = form.get("answer") === "no" ? "no" : "yes";
+  await answerHandover(traderId, String(form.get("handoverId") ?? ""), answer);
+  redirect(answer === "no" ? "/pass?disputed=1" : "/pass");
 }

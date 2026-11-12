@@ -31,7 +31,7 @@ export function Logo({ light = false, size = 28 }: { light?: boolean; size?: num
 
 /** Payment channel as people say it: USSD, Card, Transfer. */
 export function channelLabel(channel: string) {
-  return ({ ussd: "USSD", card: "Card", transfer: "Transfer", virtual_account: "Virtual account", bank_transfer: "Transfer" } as Record<string, string>)[channel] ?? channel.replaceAll("_", " ");
+  return ({ cash: "Cash to officer", ussd: "USSD", card: "Card", transfer: "Transfer", virtual_account: "Virtual account", bank_transfer: "Transfer" } as Record<string, string>)[channel] ?? channel.replaceAll("_", " ");
 }
 
 /* ------------------------------------------------------------------ icons */
@@ -290,11 +290,13 @@ export function PageHeader({ title, lead, actions }: { title: string; lead?: Rea
 }
 
 /** Shell for the phone-first screens: traders, officers and public checks. */
-export function PageShell({ children, title, lead, back, art, wide = false }: { children?: ReactNode; title?: string; lead?: ReactNode; back?: { href: string; label: string }; art?: ReactNode; wide?: boolean }) {
+/** `printBare`: on paper, leave out the header and title, so only the page's printable content is printed. */
+export function PageShell({ children, title, lead, back, art, wide = false, printBare = false }: { children?: ReactNode; title?: string; lead?: ReactNode; back?: { href: string; label: string }; art?: ReactNode; wide?: boolean; printBare?: boolean }) {
   const width = wide ? "max-w-none gutter" : "max-w-md px-4";
+  const bare = printBare ? " no-print" : "";
   return (
     <div className="min-h-dvh bg-paper">
-      <header className="sticky top-0 z-30 border-b border-line bg-paper/85 backdrop-blur-md">
+      <header className={`sticky top-0 z-30 border-b border-line bg-paper/85 backdrop-blur-md${bare}`}>
         <div className={`mx-auto flex h-14 items-center justify-between ${width}`}>
           <Link href="/" aria-label="LevyPass home" className="flex min-h-11 items-center">
             <Logo size={26} />
@@ -310,7 +312,7 @@ export function PageShell({ children, title, lead, back, art, wide = false }: { 
       <main className={`mx-auto flex flex-col gap-4 pb-12 pt-6 ${width}`}>
         {art ? <div className="-mb-2 flex justify-start [&_svg]:h-[104px] [&_svg]:w-auto">{art}</div> : null}
         {title ? (
-          <div className="mb-1">
+          <div className={`mb-1${bare}`}>
             <h1 className="text-[28px] font-semibold leading-tight tracking-[-0.03em] text-ink">{title}</h1>
             {lead ? <p className="mt-1.5 text-[15px] text-ink-2">{lead}</p> : null}
           </div>

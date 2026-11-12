@@ -4,7 +4,8 @@ import { lagosDate } from "@/core/periods";
 import { sessionRow } from "@/server/auth/session";
 import { db } from "@/server/db/client";
 import * as s from "@/server/db/schema";
-import { traderFromToken, traderStatus } from "@/server/levy/status";
+import { waitingAsk } from "@/server/cash/handovers";
+import { traderStatus, traderTokenCheck } from "@/server/levy/status";
 import { raiseOfficerFlag } from "@/server/ussd/menu";
 
 export const dynamic = "force-dynamic";
@@ -27,10 +28,15 @@ export async function GET(request: Request): Promise<Response> {
   const manual = q.get("id")?.trim();
   let traderId: string | null = null;
   let result: "paid" | "not_paid" | "unknown_trader" | "invalid_token" = "unknown_trader";
+  let cancelledFor: string | null = null; // a genuine card that has since been replaced (TR-08)
   if (token) {
     const fromUrl = /\/v\/t\/([^/?#]+)/.exec(token)?.[1] ?? token;
-    traderId = await traderFromToken(decodeURIComponent(fromUrl));
-    if (!traderId) result = "invalid_token";
+    const check = await traderTokenCheck(decodeURIComponent(fromUrl));
+    if (check.kind === "ok") traderId = check.traderId;
+    else {
+      result = "invalid_token";
+      if (check.kind === "cancelled") cancelledFor = check.traderId;
+    }
   } else if (manual) {
     if (isId("trd", manual)) traderId = manual;
     else {
@@ -48,10 +54,11 @@ export async function GET(request: Request): Promise<Response> {
   if (status) result = status.paidNow ? "paid" : "not_paid";
   const lat = Number(q.get("lat"));
   const lng = Number(q.get("lng"));
+  const scanId = newId("scn");
   await db().insert(s.scans).values({
-    id: newId("scn"),
+    id: scanId,
     officerId: officer.id,
-    traderId: status ? status.trader.id : null,
+    traderId: status ? status.trader.id : cancelledFor,
     result,
     latitude: Number.isFinite(lat) && q.get("lat") ? lat : null,
     longitude: Number.isFinite(lng) && q.get("lng") ? lng : null,
@@ -59,14 +66,22 @@ export async function GET(request: Request): Promise<Response> {
     scannedAt: new Date(),
   });
 
+  if (cancelledFor) {
+    const [t] = await db().select({ name: s.traders.name, stall: s.traders.stallOrVehicle }).from(s.traders).where(eq(s.traders.id, cancelledFor));
+    return json({ result, cancelled: true, cancelledName: t?.name, cancelledStall: t?.stall, ms: Date.now() - started });
+  }
   if (!status) return json({ result, ms: Date.now() - started });
+  // The trader asked in the app (or by USSD) to pay cash: tell the officer so they do not send them to the bank.
+  const ask = status.owedKobo > 0 ? await waitingAsk(db(), status.trader.id) : null;
   return json({
     result,
+    scanId, // a cash collection must name the scan it follows
     ms: Date.now() - started,
     trader: { id: status.trader.id, name: status.trader.name, stall: status.trader.stallOrVehicle, market: status.trader.market, business: status.trader.businessType },
     date: lagosDate(new Date()),
     levies: status.current.map((c) => ({ levy: c.levy, status: c.status })),
     owedKobo: status.owedKobo,
     payCode: "*347*13#",
+    ...(ask ? { cashAsk: { requestedAt: ask.requestedAt.toISOString() } } : {}),
   });
 }

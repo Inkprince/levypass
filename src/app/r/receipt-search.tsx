@@ -31,7 +31,7 @@ export function ReceiptSearch({ variant }: { variant: "pill" | "card" | "bar" })
 
   if (variant === "bar") {
     return (
-      <form action="/r" method="get" onSubmit={onSubmit} className="flex min-w-0 flex-1 items-center gap-3" role="search">
+      <form action="/r" method="get" onSubmit={onSubmit} className="-mx-2 flex min-w-0 flex-1 items-center gap-3 rounded-xl px-2 focus-within:ring-2 focus-within:ring-forest/30" role="search">
         <Icon name="search" size={19} className="shrink-0 text-ink-2" />
         <input name="number" value={value} onChange={(e) => setValue(e.target.value)} aria-label="Look up a receipt number" placeholder="Look up a receipt, e.g. LP-7K3M-9QX2T" autoCapitalize="characters" autoComplete="off" className="min-w-0 flex-1 bg-transparent py-2 text-[15px] outline-none placeholder:text-ink-2" />
         {overlay}

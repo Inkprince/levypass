@@ -221,8 +221,7 @@ export function Drills({ options }: { options: DrillOptions }) {
       <p className="flex items-start gap-2.5 rounded-2xl border border-line bg-paper px-4 py-3 text-[14px] text-ink-2">
         <Icon name="info" size={18} className="mt-0.5 shrink-0 text-forest" />
         <span>
-          Nothing here is scripted. Pick the trader, the event, the attack and the amount yourself. Every run uses the {options.provider === "xtradot" ? "Xtradot sandbox" : "fake bank"}, our real webhook handler and the live ledger, and prints the server clock and ledger count so you can check
-          them on the other screens.
+          Nothing here is scripted. Each run goes through the {options.provider === "xtradot" ? "Xtradot sandbox" : "fake bank"}, our real webhook handler and the live ledger.
         </span>
       </p>
       <div className="grid gap-6 xl:grid-cols-2">
@@ -337,7 +336,7 @@ export function Drills({ options }: { options: DrillOptions }) {
                 </select>
               </Pick>
               <Pick label="Charge (₦)">
-                <input inputMode="numeric" value={doubleAmount} onChange={(e) => setDoubleAmount(e.target.value.replace(/\D/g, ""))} placeholder="one day" className={`${field} tnum`} />
+                <input inputMode="numeric" value={doubleAmount} onChange={(e) => setDoubleAmount(e.target.value.replace(/\D/g, ""))} placeholder="Daily levy" className={`${field} tnum`} />
               </Pick>
             </div>
           }

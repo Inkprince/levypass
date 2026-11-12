@@ -1,11 +1,20 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Icon } from "@/app/_ui/kit";
 
 type Sms = { id: string; text: string; at: string | null };
 type Contact = { phone: string; name: string };
 const OUR_CODE = "*347*13#";
+
+// Feature-phone multi-tap for USSD replies: press a key again within TAP_MS to cycle its letters.
+// # switches 123 -> abc -> ABC, like the shift on a button phone.
+type Mode = "123" | "abc" | "ABC";
+const NEXT_MODE: Record<Mode, Mode> = { "123": "abc", abc: "ABC", ABC: "123" };
+const TAP_MS = 900;
+const MULTI_TAP: Record<string, string> = {
+  "1": ".,-?!1", "2": "abc2", "3": "def3", "4": "ghi4", "5": "jkl5", "6": "mno6", "7": "pqrs7", "8": "tuv8", "9": "wxyz9", "0": " 0",
+};
 
 export function Phone() {
   const [contacts, setContacts] = useState<Contact[]>([]);
@@ -16,6 +25,8 @@ export function Phone() {
   const [dial, setDial] = useState(OUR_CODE);
   const [ussd, setUssd] = useState<{ text: string; open: boolean; session: string; trail: string[] } | null>(null);
   const [reply, setReply] = useState("");
+  const [mode, setMode] = useState<Mode>("123");
+  const tap = useRef<{ key: string; at: number; index: number } | null>(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -52,6 +63,8 @@ export function Phone() {
       const r = await fetch("/api/ussd", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ sessionId: session, phoneNumber: phone, text: trail.join("*"), serviceCode: OUR_CODE }) });
       const text = await r.text();
       setUssd({ text: text.replace(/^(CON|END) /, ""), open: text.startsWith("CON"), session, trail });
+      setMode("123");
+      tap.current = null;
       setScreen("ussd");
     } finally {
       setBusy(false);
@@ -73,6 +86,32 @@ export function Phone() {
     setScreen("ussd");
   };
 
+  const typeKey = (k: string) => {
+    if (k === "#") {
+      setMode((m) => NEXT_MODE[m]);
+      tap.current = null;
+      return;
+    }
+    const letters = MULTI_TAP[k];
+    if (mode === "123" || !letters) {
+      tap.current = null;
+      setReply((r) => r + k);
+      return;
+    }
+    const chars = mode === "ABC" ? letters.toUpperCase() : letters;
+    const now = Date.now();
+    const last = tap.current;
+    if (last && last.key === k && now - last.at < TAP_MS) {
+      const index = (last.index + 1) % chars.length;
+      tap.current = { key: k, at: now, index };
+      setReply((r) => r.slice(0, -1) + chars[index]);
+    } else {
+      tap.current = { key: k, at: now, index: 0 };
+      setReply((r) => r + chars[0]);
+    }
+  };
+
+  const editingReply = screen === "ussd" && !!ussd?.open && reply.length > 0;
   const name = useMemo(() => contacts.find((c) => c.phone === phone)?.name ?? "New number", [contacts, phone]);
   const keys: [string, string][] = [
     ["1", ""], ["2", "abc"], ["3", "def"], ["4", "ghi"], ["5", "jkl"], ["6", "mno"], ["7", "pqrs"], ["8", "tuv"], ["9", "wxyz"], ["*", ""], ["0", "+"], ["#", ""],
@@ -111,6 +150,9 @@ export function Phone() {
             </li>
           ))}
         </ol>
+        <p className="mt-6 border-t border-line pt-5 text-[14px] text-ink-2">
+          <span className="font-semibold text-ink">Typing letters.</span> When a menu asks for text, press <b className="font-mono text-ink">#</b> to switch between 123, abc and ABC, then tap a key again to move to its next letter. For an officer check, the number alone works: <b className="font-mono text-ink">001</b> for OTT-001.
+        </p>
       </div>
 
       <div className="mx-auto w-[300px] rounded-[44px] bg-gradient-to-b from-[#26302b] to-[#141a17] p-[14px] shadow-[0_40px_80px_-30px_rgb(7_23_16/0.6),inset_0_1px_0_rgb(255_255_255/0.08)]">
@@ -136,7 +178,7 @@ export function Phone() {
               )}
               {screen === "dial" && (
                 <div className="flex h-full flex-col justify-between">
-                  <p className="text-[12px] opacity-70">Dial a code. LevyPass is {OUR_CODE}. Bank codes look like *7272*000*1234#.</p>
+                  <p className="text-[12px] opacity-70">Dial a code. LevyPass is {OUR_CODE}.</p>
                   <p className="break-all text-center text-[26px] font-bold">{dial || " "}</p>
                 </div>
               )}
@@ -152,7 +194,12 @@ export function Phone() {
                         setReply("");
                       }}
                     >
-                      <input autoFocus value={reply} onChange={(e) => setReply(e.target.value)} className="min-w-0 flex-1 rounded border border-[#1d2a16]/40 bg-white/60 px-2 py-1 outline-none" aria-label="USSD reply" />
+                      <span className="relative min-w-0 flex-1">
+                        <input autoFocus value={reply} onChange={(e) => setReply(e.target.value)} className="w-full rounded border border-[#1d2a16]/40 bg-white/60 py-1 pl-2 pr-9 outline-none focus:border-[#1d2a16] focus:ring-2 focus:ring-[#1d2a16]/40" aria-label="USSD reply" />
+                        <span className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 rounded-sm bg-[#1d2a16] px-1 text-[9px] font-bold leading-[14px] text-[#c5d4b4]" aria-live="polite" title="Press # to switch">
+                          {mode}
+                        </span>
+                      </span>
                       <button disabled={busy} className="rounded bg-[#1d2a16] px-3 py-1 text-[#c5d4b4]">
                         Send
                       </button>
@@ -171,8 +218,16 @@ export function Phone() {
           <button onClick={() => (screen === "dial" ? void call() : setScreen("dial"))} disabled={busy} className="flex h-10 items-center justify-center rounded-full bg-lime text-[12px] font-bold text-forest hover:bg-lime-2 disabled:opacity-60">
             {screen === "dial" ? "Call" : "Dial"}
           </button>
-          <button onClick={() => (screen === "dial" ? setDial((d) => d.slice(0, -1)) : setScreen("inbox"))} className="flex h-10 items-center justify-center rounded-full bg-[#b3261e] text-[12px] font-semibold text-white hover:bg-[#9c2115]">
-            {screen === "dial" ? "Del" : "End"}
+          <button
+            onClick={() => {
+              if (screen === "dial") setDial((d) => d.slice(0, -1));
+              else if (editingReply) {
+                tap.current = null;
+                setReply((r) => r.slice(0, -1));
+              } else setScreen("inbox");
+            }}
+            className="flex h-10 items-center justify-center rounded-full bg-[#b3261e] text-[12px] font-semibold text-white hover:bg-[#9c2115]">
+            {screen === "dial" || editingReply ? "Del" : "End"}
           </button>
         </div>
         <div className="mt-3 grid grid-cols-3 gap-2 px-1 pb-2">
@@ -180,7 +235,7 @@ export function Phone() {
             <button
               key={k}
               onClick={() => {
-                if (screen === "ussd" && ussd?.open) setReply((r) => r + k);
+                if (screen === "ussd" && ussd?.open) typeKey(k);
                 else {
                   if (screen !== "dial") setDial("");
                   setScreen("dial");
@@ -190,7 +245,10 @@ export function Phone() {
               className="flex h-12 flex-col items-center justify-center rounded-2xl bg-white/[0.06] text-white shadow-[inset_0_1px_0_rgb(255_255_255/0.06)] transition hover:bg-white/10 active:bg-white/20"
             >
               <span className="text-[19px] font-semibold leading-none">{k}</span>
-              {letters ? <span className="mt-0.5 text-[9px] uppercase tracking-[0.12em] text-white/45">{letters}</span> : null}
+              {(() => {
+                const label = k === "#" && screen === "ussd" && ussd?.open ? "mode" : letters;
+                return label ? <span className="mt-0.5 text-[9px] uppercase tracking-[0.12em] text-white/45">{label}</span> : null;
+              })()}
             </button>
           ))}
         </div>

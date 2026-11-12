@@ -71,7 +71,7 @@ export async function requeryPayments(limit = 4): Promise<number> {
         isNull(s.payments.settledAt),
         lt(s.payments.createdAt, new Date(now - REQUERY_FIRST_MS)),
         gt(s.payments.createdAt, new Date(now - REQUERY_GIVE_UP_MS)),
-        sql`${s.payments.provider} <> 'seed'`,
+        sql`${s.payments.provider} NOT IN ('seed', 'cash')`, // cash is settled in the transaction that records it
       ),
     )
     .orderBy(asc(s.payments.updatedAt))

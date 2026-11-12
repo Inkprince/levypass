@@ -224,6 +224,158 @@ Verified 11 Nov, 11:00 to 11:25 Lagos: `npm run typecheck && npm run lint && npm
 - [x] **F8 Script and data disagree.** `tasks/plan.md` steps 1, 2 and 6 now match the app: no virtual account
   number, ₦2,500.00 on seeded data, pick the trader by name. `demo:reset` removes the ₦20 levy from the cluster.
 
+### Finals (top 10, 12 Nov)
+
+- [x] **T23 Officer cash floats.** (L) Cash payers without a bank. The officer pays a float into the
+  government account first (request → revenue office approves → bank-verified deposit loads it), then
+  takes cash from traders only up to that float. Each cash levy is tied to a fresh scan, paid from the
+  float in one transaction, and SMS-receipted naming the officer. Each float is accounted first in,
+  first out (`src/core/floats.ts`). Enum additions (`cash`, `float_load`, `cash_collection`) approved
+  in the session.
+  - 12 Nov, in progress (uncommitted): core + 7 unit tests, migration 0005, settlement changes,
+    `src/server/floats/floats.ts` + 13 DB tests (passed three runs in a row). Full suite and lint not
+    yet re-run after the change.
+  - Built 12 Nov: scan API returns `scanId`; scanner "No bank? Take ₦X cash" with confirm;
+    `/officer/float` (balance, request, pay in, statement per float); `/admin/floats` (approve or
+    decline, audited; balances; statements); dashboard counts `cash_collection`; receipt page says
+    "Cash to officer OTT-001"; `/v/o` copy; PRD section 6; demo step 3b in the plan and speaker script.
+  - Verified 12 Nov, 16:05 to 16:08 Lagos, `next dev` with the fake bank, headless Chrome at 390 px and
+    1440 px, twice: request ₦20,000 → admin approves (audit row `float.approve`) → pay in → sandbox
+    approve → float ₦20,000 → stall D-40 NOT PAID → take ₦500 cash → PAID IN CASH, float ₦19,500 →
+    receipt page GENUINE, "Cash to officer OTT-001" → SMS names OTT-001 in the trader's language
+    (Yoruba and English seen). Second run reloaded while the first float had money: held ₦39,000.
+    `npm run typecheck && npm run lint && npm test` pass (207 tests). Only console error: the old
+    `/favicon.ico` 404. Not yet deployed (cluster access pending). Pidgin and Yoruba cash SMS need a
+    fluent read.
+  - Renamed for the finals, 12 Nov: on screen it is an **advance remittance**, the balance is the
+    officer's **Advance**, labels read `OTT-001-R01`, pages are `/officer/advance` and
+    `/admin/remittances`. Code and database keep the name `float`. Re-verified in the browser
+    (stall A-05, ₦1,000 cash, receipt page and admin totals) and 207 tests pass.
+  - Pay ahead in cash and the LevyPass card, 12 Nov. A trader who is paid today can hand cash for
+    tomorrow or the next 7 days; the amount is quoted in allocation order (`aheadQuote`, 5 unit tests)
+    so it settles exactly the quoted days, with no double-charge flag (2 more DB tests). The trader's
+    QR prints as a bank-card-size **LevyPass card** (`/pass/card`, and a tab on the admin stickers
+    page). Verified in headless Chrome: A-01 PAID → "Take cash to pay ahead" → 7 days ₦5,500.00
+    (seven daily levies plus next week's ₦2,000 sanitation levy) → paid ahead to 19 Nov → a second
+    try says the week is already paid; card measures 85.6 × 54 mm, 8 per A4 page; OTP login → pass
+    page → "Print my LevyPass card". 218 tests pass.
+  - TR-08 re-issue a lost card, 12 Nov: the trader (`/pass/card`, confirm step) or the revenue office
+    (cards tab, search, confirm step) makes a new token ID; the old QR shows **CANCELLED CARD** on the
+    public page and in the officer scan (logged against the trader, "do not take cash"); audit row
+    `card.reissue` without token IDs; SMS to the trader each time. 3 DB tests. Verified in headless
+    Chrome on a freshly restarted dev server (the running one had served a stale `status.ts` to the
+    scan route): old card PAID → trader re-issues → old card CANCELLED, new card PAID, officer scan of
+    the old card `cancelled: true` → admin re-issues → trader's card CANCELLED, newest PAID.
+
+- [x] **F10 Usability pass (Krug).** NOT PAID screen no longer closes on a stray tap while cash
+  can still be taken (the scan was lost); `/demo` lists step 3b and its arrow links have names on
+  phones; admin sidebar promo that repeated "Failure drills" removed; dashboard names itself
+  "Collections" with the Lagos date instead of "Good afternoon."; fraud buttons read "Dealt with" and
+  "False alarm"; shorter drills intro and "Daily levy" hint; officer ID page says "Report this
+  officer"; focus rings on the admin receipt search and the USSD reply box.
+  - Verified 12 Nov, `next dev` with the fake bank, headless Chrome at 390 px and 1440 px: stall B-02
+    NOT PAID stayed open after a background tap and closed on "Scan the next trader"; no page errors.
+    `npm run typecheck && npm run lint && npm test` pass (207 tests).
+- [x] **F10 The phone sim cannot type an officer's staff ID.** Keypad keys only added digits. USSD
+  option 4 now accepts `OTT-001`, `ott001`, `OTT 001` or the number alone (`001`, `1`); a bare
+  number matches only the trader's own authority and asks again if two officers share it
+  (`src/core/staff-id.ts`). The sim keypad does multi-tap in replies: `#` cycles 123/abc/ABC, the
+  red key deletes while there is text. Prompt updated in all five languages.
+  - Verified 12 Nov, `next dev` with the fake bank: curl `/api/ussd` with `4*001`, `4*1`,
+    `4*ott001`, `4*OTT 001`, `4*ott-002` all named the right officer, `4*999` warned, `4*-` and
+    `4*-*002` re-asked then matched. Headless Chrome on `/sim`: keyed `OTT-0011`, Del to `OTT-001`,
+    Send showed Musa Danjuma ACTIVE. `npm run typecheck && npm run lint && npm test` pass (211 tests).
+
+- [x] **F11 Public home page shows no revenue data.** The "Collections in the ledger" band (naira totals,
+  compliance rate, scans today, daily revenue chart) is now "LevyPass so far": all-time counts of traders,
+  markets, receipts and officer checks (`src/server/public/stats.ts`). "How a trader pays" no longer shows
+  a real receipt number or today's paid count. Footer lists only the two staff logins.
+  - Verified 12 Nov at 390 px and 1440 px: no ₦ in the band, no page errors, no sideways scroll; lint and
+    218 tests pass.
+
+- [x] **F12 Usability check of the pay-ahead, card and re-issue work.** On a PAID scan, "Take cash to pay
+  ahead" is a quiet link so "Scan the next trader" stays the obvious next step; both cash error messages
+  lose their semicolon; both re-issue confirm steps (trader and revenue office) now say the stall sticker
+  stops working too, since the sticker, the card and the pass share one QR; the pass page's "No
+  smartphone?" line no longer splits into three columns at 390 px.
+  - Verified 12 Nov in headless Chrome: D-40 PAID with the pay-ahead link and picker, trader OTP login to
+    `/pass` and `/pass/card?replace=1`, admin cards tab confirm. No page errors; lint and tests pass.
+    Not done: `sms.card_reissued` still says only "the old card" in all five languages.
+
+- [x] **F13 Igbo and Hausa switched on, re-issue SMS names the sticker.** `ig` and `ha` join `locales`;
+  USSD language menu lists 4 Igbo and 5 Hausa in every language and saves them; register form offers
+  both; complaint box says "in any language"; triage prompt and keyword fallback know Igbo and Hausa
+  (Igbo is checked before Yoruba because both use ọ; 3 new tests written first); fraud page shows the
+  language name, not the code. `sms.card_reissued` says the stall sticker stops working too, in all five
+  languages (it was missing from Igbo and Hausa). Dictionary tests now cover `ig` and `ha`.
+  - Verified 12 Nov: migration 0006 applied locally (locale enum en, pcm, yo, ig, ha); the real
+    `ussdReply` switched a trader to Igbo then Hausa and showed each menu, then back to Yoruba;
+    `/register` lists Igbo and Hausa. Lint and 234 tests pass. The running `next dev` still served the
+    old USSD route until restarted. New Yoruba, Pidgin, Igbo and Hausa sentences need a fluent read.
+
+- [x] **F14 Home page hero card anonymised.** Still live, but `page.tsx` strips each payment on the server to
+  channel, time, amount and bank fee before it reaches the client carousel: the card reads "A trader", the
+  receipt shows as `LP-••••-•••••`, and "Check receipt" opens the blank check page `/r`.
+  - Verified 12 Nov: the home page HTML (including the client payload) contains none of the 12 latest
+    payments' trader names, receipt numbers or payment IDs; card seen at 390 px; lint and 234 tests pass.
+
+- [x] **F15 Cash payments sync between trader and officer.** Cash was officer-only: the trader could not say
+  "I will pay cash", their pass did not say who took their cash, and nobody asked them to confirm it. New
+  `cash_handovers` table (migration 0007, no change to ledger, payments or obligations) and
+  `src/server/cash/handovers.ts`. Trader taps **Pay cash to an officer** on `/pass` (or USSD option 7) →
+  officers of that market see **Waiting to pay cash** on `/officer` (refreshes every 8 s), tap **Open** →
+  overlay says "Asked in the app at 23:07" → **Take ₦X cash**. The cash collection marks the request
+  `recorded` in the same transaction as the settlement (cash nobody asked for gets a new `recorded` row);
+  a bank payment closes a waiting request; requests end with the Lagos day. `/pass` refreshes every 5 s,
+  flips to PAID and asks **Did you hand ₦X cash to Musa Danjuma (OTT-001)?** Yes → confirmed; No →
+  `cash_disputed` fraud flag on the officer with the receipt. Receipts list says "cash to OTT-001";
+  `/admin/remittances` shows trader confirmed / trader denies / not confirmed per cash levy.
+  - Verified 12 Nov, restarted `next dev`, headless Chrome, two 390 px phones: B-06 asked → OTT-001 list
+    showed her (₦3,500.00, asked 23:07) → Open → took cash → trader's pass flipped to PAID TODAY with the
+    confirm card 2.3 s later, no reload → Yes → receipt line "cash to OTT-001", gone from officer list.
+    B-18 cash with no request → trader said No → fraud page "Cash the trader denies", remittances shows
+    both answers. 11 new DB tests; `npm run typecheck && npm run lint && npm test` pass (245 tests). New
+    USSD strings in pcm, yo, ig, ha need a fluent read. Not deployed; migration 0007 must run on the cluster.
+
+- [x] **F16 Traders hear back on reports; USSD traders can deny cash.** Closing a complaint or a cash dispute
+  ("Dealt with" / "False alarm") now SMSes the trader who raised it in their language, once
+  (`src/server/admin/cases.ts`, closes only open cases, dedupe `case:<id>`); `/pass` lists **Your reports**
+  (being looked at / dealt with / no problem found). The web report form names the trader when they are
+  logged in, so they get the answer. USSD option 8 **Confirm cash paid** asks "Did you hand ₦X cash to
+  officer OTT-001 on <date>? 1 Yes 2 No"; No raises the same `cash_disputed` flag. The cash receipt SMS
+  ends "Did not pay this? Dial *347*13#, choose 8."
+  - Verified 12 Nov: 4 new DB tests (249 pass), typecheck and lint clean. Headless Chrome: B-18 pass showed
+    LP-ZT29-NBJC3 "Being looked at" → admin "Dealt with" → SMS "the revenue office has dealt with your
+    report LP-ZT29-NBJC3" → pass showed "Dealt with" without a reload, no page errors. `curl /api/ussd`
+    shows option 8. New pcm, yo, ig, ha strings need a fluent read.
+
+- [x] **F17 Only the officer standing with the trader can take their cash.** The F15 "Waiting to pay cash"
+  list showed every officer in the market, and an officer could record cash from anywhere by typing a
+  stall. Now nobody sees a list; recording cash needs the request's 4-digit **cash code**, which exists only
+  on the trader's phone (pass page, USSD option 7 reply, SMS). A trader who asked holds the code already;
+  otherwise the officer's "Take cash" texts it to the trader, valid 10 minutes and for that officer only.
+  Five wrong codes cancel the request. Code = HMAC of the request ID with the server secret (never stored),
+  checked in constant time inside the cash transaction. Migration 0008 adds `code_attempts`, `expires_at`.
+  `collectCash` split into `startCashCollection` (same checks, then the code) and `collectCash` (needs the
+  code). New SMS `sms.cash_code`; `ussd.cash_asked` now gives the code, in all five languages.
+  - Verified 12 Nov: 253 tests pass (16 handover tests: far officer with a wrong code refused and counted,
+    code sent for one officer refused for another, 10-minute expiry, lock after five, no code before "Take
+    cash"); typecheck and lint clean. Headless Chrome, two 390 px phones: B-26 tapped "Pay cash", code 8542
+    on screen and by SMS; OTT-001 home showed no list; overlay "Asked in the app at 23:33"; wrong code →
+    "That code is wrong… (4 tries left)", attempt counted; 8542 → PAID IN CASH; trader's phone PAID TODAY.
+    B-38 not asked: "Take cash" → SMS code 2015 → typed → PAID IN CASH. No page errors. Demo step 3b and
+    `/demo` updated. New pcm, yo, ig, ha strings need a fluent read. Not deployed (migrations 0007, 0008).
+
+- [x] **F18 Traders print their own stall sticker.** `/pass/card` has two tabs, **LevyPass card** and **Stall
+  sticker**. The sticker is the revenue office's design (`src/app/_ui/stall-sticker.tsx`, now shared with
+  `/admin/stickers`) printed at A6 width: 100 mm, QR 70 mm. `PageShell printBare` leaves the header and title
+  off the paper. Pass page link reads "Print my card or stall sticker"; after a re-issue the page tells the
+  trader to print a new sticker here instead of asking the revenue office.
+  - Verified 12 Nov, headless Chrome: B-06 pass → link → Stall sticker tab, sticker 100.0 mm wide, QR 70.0 mm,
+    no sideways scroll at 390 px; print media hides header, title, tabs and button; A4 PDF shows only the
+    sticker; card tab still prints the card; `/admin/stickers` renders 24 stickers. No page errors; typecheck,
+    lint and 253 tests pass.
+
 ### Checkpoint E
 
 - [ ] Three clean full run-throughs on the demo devices. Backup video saved off the cluster. No deploys after this except a fix for a failed run-through.

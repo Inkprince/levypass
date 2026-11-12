@@ -18,11 +18,11 @@ export async function dashboardSummary(now = new Date()) {
   const [totals] = (
     await db().execute(sql`
     SELECT
-      coalesce(sum(amount_kobo) FILTER (WHERE kind = 'inflow' AND created_at >= ${day}), 0) AS in_day,
-      coalesce(sum(amount_kobo) FILTER (WHERE kind = 'inflow' AND created_at >= ${week}), 0) AS in_week,
-      coalesce(sum(amount_kobo) FILTER (WHERE kind = 'inflow' AND created_at >= ${month}), 0) AS in_month,
+      coalesce(sum(amount_kobo) FILTER (WHERE kind IN ('inflow', 'cash_collection') AND created_at >= ${day}), 0) AS in_day,
+      coalesce(sum(amount_kobo) FILTER (WHERE kind IN ('inflow', 'cash_collection') AND created_at >= ${week}), 0) AS in_week,
+      coalesce(sum(amount_kobo) FILTER (WHERE kind IN ('inflow', 'cash_collection') AND created_at >= ${month}), 0) AS in_month,
       coalesce(sum(amount_kobo) FILTER (WHERE kind = 'fee' AND created_at >= ${day}), 0) AS fee_day,
-      count(DISTINCT payment_id) FILTER (WHERE kind = 'inflow' AND created_at >= ${day}) AS payments_day
+      count(DISTINCT payment_id) FILTER (WHERE kind IN ('inflow', 'cash_collection') AND created_at >= ${day}) AS payments_day
     FROM ledger_entries`)
   ).rows as Record<string, unknown>[];
 
@@ -51,7 +51,7 @@ export async function dashboardSummary(now = new Date()) {
   const series = (
     await db().execute(sql`
     SELECT to_char(created_at AT TIME ZONE 'Africa/Lagos', 'YYYY-MM-DD') AS d, sum(amount_kobo) AS kobo
-    FROM ledger_entries WHERE kind = 'inflow' AND created_at >= ${new Date(day.getTime() - 13 * 86_400_000)}
+    FROM ledger_entries WHERE kind IN ('inflow', 'cash_collection') AND created_at >= ${new Date(day.getTime() - 13 * 86_400_000)}
     GROUP BY 1 ORDER BY 1`)
   ).rows as { d: string; kobo: unknown }[];
 

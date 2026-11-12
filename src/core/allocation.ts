@@ -53,6 +53,28 @@ export function allocate(input: { amountKobo: Kobo; open: readonly OpenObligatio
   return { allocations, unallocatedKobo: remaining };
 }
 
+export type AheadQuote = { amountKobo: Kobo; periods: number; throughEnd: Date | null };
+
+/**
+ * What it costs to pay a trader ahead up to `cutoff`: the periods `allocate` fills first, in its own
+ * order (open, then future), taken while each starts before `cutoff`. Paying exactly this amount
+ * settles every quoted period and leaves nothing unallocated, so the trader gets what they were told.
+ */
+export function aheadQuote(input: { open: readonly OpenObligation[]; future: readonly FutureObligation[]; cutoff: Date }): AheadQuote {
+  let amount = 0;
+  let periods = 0;
+  let throughEnd: Date | null = null;
+  const queue = [...[...input.open].sort(compareObligations).map((o) => ({ start: o.periodStart, end: o.periodEnd, owed: o.amountDueKobo - o.amountPaidKobo })), ...[...input.future].sort(compareObligations).map((f) => ({ start: f.periodStart, end: f.periodEnd, owed: f.amountDueKobo }))];
+  for (const item of queue) {
+    if (item.owed <= 0) continue;
+    if (item.start >= input.cutoff) break;
+    amount += assertKobo(item.owed);
+    periods++;
+    if (!throughEnd || item.end > throughEnd) throughEnd = item.end;
+  }
+  return { amountKobo: amount, periods, throughEnd };
+}
+
 export type CurrentObligation = {
   id: string;
   levyTypeId: string;

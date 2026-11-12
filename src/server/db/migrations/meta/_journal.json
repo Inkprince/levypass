@@ -36,6 +36,34 @@
       "when": 1794391783695,
       "tag": "0004_payment_fee_may_exceed_amount",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794494667398,
+      "tag": "0005_officer_cash_floats",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794499973658,
+      "tag": "0006_trader_locales_ig_ha",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1794520845271,
+      "tag": "0007_cash_handovers",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1794522142016,
+      "tag": "0008_cash_code",
+      "breakpoints": true
     }
   ]
 }

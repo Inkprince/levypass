@@ -10,11 +10,7 @@ const naira = (k: number) => `₦${(k / 100).toLocaleString("en-NG", { minimumFr
 const nairaShort = (k: number) => (k >= 1_000_000_00 ? `₦${(k / 1_000_000_00).toFixed(1)}m` : k >= 1_000_00 ? `₦${(k / 1_000_00).toFixed(1)}k` : `₦${(k / 100).toFixed(0)}`);
 const time = (iso: string) => new Date(iso).toLocaleTimeString("en-NG", { timeZone: "Africa/Lagos", hour: "2-digit", minute: "2-digit", second: "2-digit" });
 const dayLabel = (date: string) => new Date(`${date}T12:00:00Z`).toLocaleDateString("en-NG", { day: "numeric", month: "short", timeZone: "UTC" });
-const lagosHour = (iso: string) => Number(new Date(iso).toLocaleString("en-GB", { timeZone: "Africa/Lagos", hour: "2-digit", hour12: false }));
-const greeting = (iso: string) => {
-  const h = lagosHour(iso);
-  return h < 12 ? "Good morning" : h < 17 ? "Good afternoon" : "Good evening";
-};
+const lagosDay = (iso: string) => new Date(iso).toLocaleDateString("en-GB", { timeZone: "Africa/Lagos", weekday: "long", day: "numeric", month: "long" });
 const channelIcon = (c: string): IconName => (c === "ussd" ? "hash" : c === "card" ? "card" : "transfer");
 
 export function LiveDashboard({ initial }: { initial: Summary }) {
@@ -49,7 +45,9 @@ export function LiveDashboard({ initial }: { initial: Summary }) {
         </svg>
         <div className="relative grid gap-8 xl:grid-cols-[1fr_auto] xl:items-center">
           <div>
-            <p className="text-[16px] text-ink">{greeting(d.asOf)}.</p>
+            <p className="text-[16px] text-ink">
+              <span className="font-semibold">Collections</span>, {lagosDay(d.asOf)}
+            </p>
             <h1 key={flash} className={`mt-5 max-w-[15ch] text-[44px] font-medium leading-[0.98] tracking-[-0.055em] sm:text-[60px] ${flash ? "animate-flash" : ""}`}>
               <span className="tnum">{naira(today ? d.collected.day : d.collected.month)}</span> collected {today ? "today" : "this month"}
             </h1>

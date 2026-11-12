@@ -3,9 +3,10 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 import { formatNaira } from "@/core/money";
 import { t } from "@/messages";
-import { ArrowLink, Icon, LinkButton, Logo, buttonClass, type IconName } from "@/app/_ui/kit";
+import { Icon, LinkButton, Logo, buttonClass, type IconName } from "@/app/_ui/kit";
 import { IlloHands, IlloScan, MarketScene } from "@/app/_ui/illustrations";
-import { dashboardSummary, type Summary } from "@/server/admin/summary";
+import { dashboardSummary } from "@/server/admin/summary";
+import { publicStats, type PublicStats } from "@/server/public/stats";
 import { MobileMenu, type MenuLink } from "@/app/_ui/mobile-menu";
 import { PlayInView } from "@/app/_ui/play-in-view";
 import { PaymentCarousel, type HeroPayment } from "./hero-live";
@@ -21,7 +22,7 @@ const lagosDay = (d: Date) => d.toLocaleDateString("en-NG", { timeZone: "Africa/
 
 export default async function Home() {
   // Reads our own database only; no page load reaches the bank or a model.
-  const d = await dashboardSummary().catch(() => null);
+  const [d, stats] = await Promise.all([dashboardSummary().catch(() => null), publicStats().catch(() => null)]);
   const [levy] = await db()
     .select({ name: s.levyTypes.name, amountKobo: s.levyTypes.amountKobo })
     .from(s.levyTypes)
@@ -31,8 +32,12 @@ export default async function Home() {
     .catch(() => []);
   const base = env().PUBLIC_BASE_URL.replace(/\/$/, "");
   const checkQr = await qrSvg(`${base}/r`);
-  const payments: HeroPayment[] = (d?.recent ?? []).filter((p) => p.receipt).slice(0, 6);
-  const latest = payments[0] ?? null;
+  // Anonymised here, on the server: the carousel is a client component, so whatever it is given ends
+  // up in the page's HTML. Only the channel, time, amount and bank fee leave the server.
+  const payments: HeroPayment[] = (d?.recent ?? [])
+    .filter((p) => p.receipt)
+    .slice(0, 6)
+    .map((p, i) => ({ key: `p${i}`, channel: p.channel, at: p.at, amountKobo: p.amountKobo, feeKobo: p.feeKobo }));
 
   return (
     <div className="bg-paper text-ink">
@@ -41,8 +46,8 @@ export default async function Home() {
       <PlayInView>
         <MarketScene className="block h-[230px] w-full sm:h-auto sm:max-h-[640px]" />
       </PlayInView>
-      <HowItWorks d={d} levy={levy ?? null} latestReceipt={latest?.receipt ?? null} host={base.replace(/^https?:\/\//, "")} />
-      <LiveBand d={d} />
+      <HowItWorks levy={levy ?? null} host={base.replace(/^https?:\/\//, "")} />
+      <UsageBand stats={stats} />
       <ReceiptCheck qr={checkQr} />
       <SiteFooter />
     </div>
@@ -215,11 +220,11 @@ function SectionHead({ id, title }: { id?: string; title: string }) {
   );
 }
 
-function HowItWorks({ d, levy, latestReceipt, host }: { d: Summary | null; levy: { name: string; amountKobo: number } | null; latestReceipt: string | null; host: string }) {
+function HowItWorks({ levy, host }: { levy: { name: string; amountKobo: number } | null; host: string }) {
   const amount = formatNaira(levy?.amountKobo ?? 50_000);
-  const number = latestReceipt ?? "LP-7K3M-9QX2T";
+  // A sample number: a real one would open that trader's receipt, with their name and stall.
+  const number = "LP-7K3M-9QX2T";
   const sms = t("en", "sms.receipt", { number, amount, levy: levy?.name ?? "Daily market levy", period: lagosDay(new Date()), url: `${host}/r/${number}` });
-  const paidRate = d ? d.compliance.reduce((x, c) => x + c.paid, 0) : 0;
   return (
     <section className="rails gutter border-t border-line py-20 lg:py-28">
       <SectionHead id="how" title="How a trader pays" />
@@ -237,7 +242,7 @@ function HowItWorks({ d, levy, latestReceipt, host }: { d: Summary | null; levy:
             <SmsBubble>{sms}</SmsBubble>
           </div>
         </Step>
-        <Step n="03" tone="forest" title="One scan to prove it" body={`An officer scans the trader's QR and sees PAID or NOT PAID in under three seconds.${paidRate ? ` ${paidRate} traders have paid today.` : ""}`}>
+        <Step n="03" tone="forest" title="One scan to prove it" body="An officer scans the trader's QR and sees PAID or NOT PAID in under three seconds.">
           <div className="flex h-full flex-col items-center justify-center gap-1">
             <IlloScan className="h-[150px] w-auto" />
             <p className="rounded-full border-2 border-ink bg-lime px-3 py-0.5 text-[12px] font-bold text-ink">PAID {amount} today</p>
@@ -294,60 +299,28 @@ function Lcd({ children }: { children: string }) {
 
 /* --------------------------------------------------------------- live band */
 
-function LiveBand({ d }: { d: Summary | null }) {
-  if (!d) return null;
-  const traders = d.compliance.reduce((x, c) => x + c.traders, 0);
-  const paid = d.compliance.reduce((x, c) => x + c.paid, 0);
-  const stats: [string, string, string][] = [
-    [formatNaira(d.collected.month), "collected this month", "from the append-only ledger"],
-    [formatNaira(d.collected.week), "collected this week", `${d.paymentsDay} ${d.paymentsDay === 1 ? "payment" : "payments"} so far today`],
-    [traders ? `${Math.round((paid / traders) * 100)}%` : "0%", "of traders paid today", `${paid} of ${traders} in the market`],
-    [String(d.open.scansToday), "officer scans today", "each one logged with time and place"],
+/** Public usage counts. Revenue, compliance and daily figures stay behind the revenue office login. */
+function UsageBand({ stats }: { stats: PublicStats | null }) {
+  if (!stats) return null;
+  const count = (n: number) => n.toLocaleString("en-NG");
+  const items: [string, string][] = [
+    [count(stats.traders), stats.traders === 1 ? "trader registered" : "traders registered"],
+    [count(stats.places), stats.places === 1 ? "market or motor park" : "markets and motor parks"],
+    [count(stats.receipts), stats.receipts === 1 ? "receipt issued" : "receipts issued"],
+    [count(stats.checks), stats.checks === 1 ? "pass checked by an officer" : "passes checked by officers"],
   ];
-  const max = Math.max(...d.days.map((x) => x.kobo), 1);
   return (
     <section className="bg-night text-white">
       <div className="gutter py-20 lg:py-24">
-        <div className="flex flex-wrap items-end justify-between gap-6">
-          <h2 className="headline max-w-2xl text-[30px] sm:text-[40px]">
-            Collections in the ledger
-          </h2>
-          <ArrowLink href="/admin" className="text-lime">
-            Open the revenue dashboard
-          </ArrowLink>
-        </div>
+        <h2 className="headline max-w-2xl text-[30px] sm:text-[40px]">LevyPass so far</h2>
         <dl className="mt-14 grid grid-cols-1 gap-x-6 gap-y-10 border-t border-white/10 pt-10 min-[400px]:grid-cols-2 lg:grid-cols-4">
-          {stats.map(([value, label, sub]) => (
-            <div key={label} className="min-w-0">
-              <dd className="money text-[30px] leading-none text-white sm:text-[38px]">{value}</dd>
+          {items.map(([value, label]) => (
+            <div key={label} className="flex min-w-0 flex-col-reverse">
               <dt className="mt-3 text-[15px] font-medium text-white/85">{label}</dt>
-              <p className="mt-0.5 text-[13px] text-white/50">{sub}</p>
+              <dd className="money text-[30px] leading-none text-white sm:text-[38px]">{value}</dd>
             </div>
           ))}
         </dl>
-        <figure className="mt-14">
-          <figcaption className="mb-3 text-[13px] text-white/55">Collections, last 14 days</figcaption>
-          <div className="flex h-24 items-end gap-[2px]" role="img" aria-label="Daily collections for the last 14 days">
-            {d.days.map((x, i) => (
-              <div key={x.date} className="group relative flex h-full flex-1 items-end">
-                <div className={`w-full rounded-t-[4px] ${i === d.days.length - 1 ? "bg-lime" : "bg-lime/25 group-hover:bg-lime/45"}`} style={{ height: `${Math.max(3, (x.kobo / max) * 100)}%` }} />
-                <span className={`pointer-events-none absolute bottom-full mb-2 whitespace-nowrap rounded-md bg-white px-2 py-1 text-[11px] font-semibold text-ink opacity-0 transition group-hover:opacity-100 ${i < d.days.length / 2 ? "left-0" : "right-0"}`}>
-                  {x.date.slice(5)}: {formatNaira(x.kobo)}
-                </span>
-              </div>
-            ))}
-          </div>
-          <table className="sr-only">
-            <tbody>
-              {d.days.map((x) => (
-                <tr key={x.date}>
-                  <td>{x.date}</td>
-                  <td>{formatNaira(x.kobo)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </figure>
       </div>
     </section>
   );
@@ -381,14 +354,13 @@ function ReceiptCheck({ qr }: { qr: string }) {
 function SiteFooter() {
   const cols: [string, [string, string][]][] = [
     ["Traders", [["Log in", "/login"], ["Register", "/register"], ["Check a receipt", "/r"], ["Phone simulator", "/sim"]]],
-    ["Officers", [["Scanner", "/officer"], ["Officer login", "/officer/login"]]],
-    ["Revenue office", [["Dashboard", "/admin"], ["Reconciliation", "/admin/reconciliation"], ["Fraud and complaints", "/admin/fraud"], ["Failure drills", "/admin/failures"]]],
+    ["Staff", [["Officer login", "/officer/login"], ["Revenue office login", "/admin/login"]]],
     ["Project", [["Five-minute demo", "/demo"]]],
   ];
   return (
     <footer className="bg-mist">
       <div className="gutter pb-10 pt-16">
-        <div className="grid gap-10 md:grid-cols-[1.4fr_repeat(4,1fr)]">
+        <div className="grid gap-10 md:grid-cols-[1.4fr_repeat(3,1fr)]">
           <div>
             <Logo />
             <p className="mt-4 max-w-xs text-[14px] leading-relaxed text-ink-2">Digital levy collection for markets and motor parks, with proof in one scan.</p>

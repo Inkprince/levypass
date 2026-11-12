@@ -32,7 +32,7 @@ describe("seed", () => {
     expect(first).toBeDefined(); // other test files may have seeded first, so count the tables instead
     const counts = await db.execute<{ t: string; n: number }>(sql`
       SELECT 'authorities' AS t, count(*)::int AS n FROM authorities UNION ALL SELECT 'markets', count(*)::int FROM markets
-      UNION ALL SELECT 'levy_types', count(*)::int FROM levy_types UNION ALL SELECT 'officers', count(*)::int FROM officers
+      UNION ALL SELECT 'levy_types', count(*)::int FROM levy_types UNION ALL SELECT 'officers', count(*)::int FROM officers WHERE staff_id LIKE 'OTT-%'
       UNION ALL SELECT 'admins', count(*)::int FROM admins UNION ALL SELECT 'seeded_traders', count(*)::int FROM traders WHERE phone LIKE '+234700000%'`);
     expect(Object.fromEntries(counts.rows.map((r) => [r.t, r.n]))).toEqual({ authorities: 1, markets: 1, levy_types: 2, officers: 3, admins: 1, seeded_traders: 40 });
   });

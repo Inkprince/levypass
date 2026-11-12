@@ -23,6 +23,8 @@ export const idPrefixes = [
   "otp", // one-time code
   "rev", // review item
   "ses", // session
+  "flt", // officer cash float
+  "csh", // cash handover (trader asked to pay cash, or confirms cash an officer took)
 ] as const;
 
 export type IdPrefix = (typeof idPrefixes)[number];

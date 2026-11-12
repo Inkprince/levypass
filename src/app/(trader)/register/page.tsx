@@ -29,6 +29,8 @@ export default async function RegisterPage() {
             <option value="en">English</option>
             <option value="pcm">Pidgin</option>
             <option value="yo">Yoruba</option>
+            <option value="ig">Igbo</option>
+            <option value="ha">Hausa</option>
           </Select>
         </ActionForm>
       </Card>

@@ -30,11 +30,12 @@ const tstz = () => timestamp({ withTimezone: true });
 
 export const authorityTier = pgEnum("authority_tier", ["state", "local_government"]);
 export const marketType = pgEnum("market_type", ["market", "motor_park", "street"]);
-export const locale = pgEnum("locale", ["en", "pcm", "yo"]);
+export const locale = pgEnum("locale", ["en", "pcm", "yo", "ig", "ha"]);
 export const traderStatus = pgEnum("trader_status", ["pending_verification", "active", "suspended"]);
 export const levyPeriod = pgEnum("levy_period", ["daily", "weekly", "monthly", "yearly"]);
 export const obligationStatus = pgEnum("obligation_status", ["due", "part_paid", "paid", "waived"]);
-export const paymentChannel = pgEnum("payment_channel", ["virtual_account", "ussd", "card", "bank_transfer", "qr"]);
+// `cash`: handed to an officer and paid out of that officer's float, which is already in the government account.
+export const paymentChannel = pgEnum("payment_channel", ["virtual_account", "ussd", "card", "bank_transfer", "qr", "cash"]);
 export const paymentStatus = pgEnum("payment_status", [
   "initiated", // we created a reference; nothing confirmed yet
   "pending", // the bank says pending
@@ -51,8 +52,17 @@ export const ledgerEntryKind = pgEnum("ledger_entry_kind", [
   "suspense_release", // suspense matched later: suspense -> trader
   "reversal", // the bank reversed a payment
   "correction", // manual correction, always paired with an audit_log row
+  "float_load", // an officer's float deposit reached the collection account: collection -> officer_float
+  "cash_collection", // cash an officer took, paid from their float: officer_float -> trader
 ]);
 export const officerStatus = pgEnum("officer_status", ["active", "suspended"]);
+// requested by the officer -> approved or declined by the revenue office -> loaded once the bank confirms the deposit.
+export const floatStatus = pgEnum("float_status", ["requested", "approved", "declined", "loaded"]);
+// The trader's side of a cash levy. waiting: the trader asked to pay cash, no officer has taken it yet.
+// cancelled / expired / closed: the trader cancelled, the Lagos day ended, or they paid another way.
+// recorded: an officer took the cash (payment settled); the trader has not answered yet.
+// confirmed / disputed: the trader said yes, or said they never handed over that cash.
+export const cashHandoverStatus = pgEnum("cash_handover_status", ["waiting", "cancelled", "expired", "closed", "recorded", "confirmed", "disputed"]);
 export const adminRole = pgEnum("admin_role", ["super_admin", "market_admin", "finance", "auditor"]);
 export const scanResult = pgEnum("scan_result", ["paid", "not_paid", "unknown_trader", "invalid_token"]);
 export const scanSource = pgEnum("scan_source", ["online", "offline_sync"]);
@@ -62,6 +72,7 @@ export const fraudFlagType = pgEnum("fraud_flag_type", [
   "reused_receipt", // FR-02
   "suspended_officer_scan", // FR-03
   "unknown_officer_scan", // FR-03
+  "cash_disputed", // the trader says they never handed over cash an officer recorded against them
 ]);
 export const caseStatus = pgEnum("case_status", ["open", "resolved", "dismissed"]);
 export const triageSource = pgEnum("triage_source", ["model", "fallback"]);
@@ -269,7 +280,7 @@ export const payments = pgTable(
  * Append-only double-entry ledger (money rule 2). Each row moves `amount_kobo` from
  * `debit_account` to `credit_account`, so the sum over all accounts is zero by construction.
  * Accounts: `trader:<id>`, `levy_revenue:<authority_id>`, `bank_fees`, `suspense`,
- * `collection:<authority_id>`. A trigger (migration 0002) rejects UPDATE, DELETE and TRUNCATE.
+ * `collection:<authority_id>`, `officer_float:<officer_id>`. A trigger (migration 0002) rejects UPDATE, DELETE and TRUNCATE.
  */
 export const ledgerEntries = pgTable(
   "ledger_entries",
@@ -351,6 +362,72 @@ export const officerMarkets = pgTable(
       .references(() => markets.id),
   },
   (t) => [primaryKey({ columns: [t.officerId, t.marketId] })],
+);
+
+/**
+ * Officer cash floats. The officer asks, the revenue office approves, the officer pays the amount into
+ * the government account, and only a bank-verified deposit loads the float (money rule 3). The float's
+ * money lives on the ledger (`officer_float:<officer id>`); this row is the request and its paperwork.
+ */
+export const floats = pgTable(
+  "floats",
+  {
+    id: text().primaryKey(),
+    officerId: text()
+      .notNull()
+      .references(() => officers.id),
+    seq: integer().notNull(), // 1, 2, 3 ... per officer: OTT-001-F03
+    amountKobo: kobo().notNull(),
+    status: floatStatus().notNull().default("requested"),
+    requestedAt: tstz().notNull().defaultNow(),
+    decidedBy: text().references(() => admins.id),
+    decidedAt: tstz(),
+    declineReason: text(),
+    paymentId: text().references(() => payments.id), // the latest deposit attempt
+    loadedAt: tstz(),
+  },
+  (t) => [
+    uniqueIndex().on(t.officerId, t.seq),
+    uniqueIndex().on(t.paymentId),
+    index().on(t.status, t.requestedAt),
+    check("floats_amount_positive", sql`${t.amountKobo} > 0`),
+    check("floats_loaded_has_time", sql`${t.status} <> 'loaded' OR (${t.loadedAt} IS NOT NULL AND ${t.paymentId} IS NOT NULL)`),
+  ],
+);
+
+/**
+ * Keeps the trader and the officer in step on a cash levy. The trader can ask to pay cash (a `waiting`
+ * row the officers of that market see); the officer's cash collection turns it into `recorded` in the
+ * same transaction as the settlement, or makes a new `recorded` row when nobody asked; the trader then
+ * confirms or disputes it. No money moves here: the ledger and the payment stay the record.
+ */
+export const cashHandovers = pgTable(
+  "cash_handovers",
+  {
+    id: text().primaryKey(),
+    traderId: text()
+      .notNull()
+      .references(() => traders.id),
+    amountKobo: kobo().notNull(), // asked for while waiting; the amount taken once recorded
+    status: cashHandoverStatus().notNull(),
+    requestedAt: tstz(), // null: the officer took cash without the trader asking in the app first
+    officerId: text().references(() => officers.id),
+    paymentId: text().references(() => payments.id),
+    recordedAt: tstz(),
+    answeredAt: tstz(),
+    // The cash code (see src/server/cash/handovers.ts) proves the officer is standing with the trader.
+    codeAttempts: integer().notNull().default(0), // wrong codes typed; five cancels the request
+    expiresAt: tstz(), // a code an officer sent by SMS lasts ten minutes; a trader's own request lasts the day
+    createdAt: createdAt(),
+  },
+  (t) => [
+    uniqueIndex("cash_handovers_one_waiting").on(t.traderId).where(sql`${t.status} = 'waiting'`),
+    uniqueIndex().on(t.paymentId),
+    index().on(t.status, t.createdAt),
+    index().on(t.traderId, t.createdAt),
+    check("cash_handovers_amount_positive", sql`${t.amountKobo} > 0`),
+    check("cash_handovers_recorded_has_payment", sql`${t.status} NOT IN ('recorded', 'confirmed', 'disputed') OR (${t.paymentId} IS NOT NULL AND ${t.officerId} IS NOT NULL AND ${t.recordedAt} IS NOT NULL)`),
+  ],
 );
 
 export const admins = pgTable(

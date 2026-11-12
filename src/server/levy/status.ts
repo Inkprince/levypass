@@ -1,5 +1,5 @@
 import "server-only";
-import { and, desc, eq, gt, lte } from "drizzle-orm";
+import { and, desc, eq, gt, lte, sql } from "drizzle-orm";
 import { verifyToken } from "@/core/tokens";
 import type { Kobo } from "@/core/money";
 import { db } from "@/server/db/client";
@@ -33,12 +33,24 @@ export async function traderStatus(traderId: string, now = new Date()): Promise<
   return { trader: t, paidNow, current, owedKobo: owed.totalKobo, nextKobo: owed.nextKobo };
 }
 
+export type TokenCheck = { kind: "ok"; traderId: string } | { kind: "cancelled"; traderId: string } | { kind: "invalid" };
+
+/**
+ * A scanned trader QR: current (`ok`), genuinely signed but replaced by a newer card (`cancelled`,
+ * TR-08), or forged, malformed or for an unknown trader (`invalid`).
+ */
+export async function traderTokenCheck(token: string): Promise<TokenCheck> {
+  const claims = await verifyToken((await qrSigningKeys()).publicKey, token);
+  if (!claims || claims.kind !== "trader") return { kind: "invalid" };
+  const [t] = await db().select({ id: s.traders.id, tokenId: s.traders.qrTokenId }).from(s.traders).where(eq(s.traders.id, claims.subjectId));
+  if (!t) return { kind: "invalid" };
+  return t.tokenId === claims.tokenId ? { kind: "ok", traderId: t.id } : { kind: "cancelled", traderId: t.id };
+}
+
 /** Resolves a scanned QR token to a trader ID, or null when forged, malformed or re-issued (TR-08). */
 export async function traderFromToken(token: string): Promise<string | null> {
-  const claims = await verifyToken((await qrSigningKeys()).publicKey, token);
-  if (!claims || claims.kind !== "trader") return null;
-  const [t] = await db().select({ id: s.traders.id }).from(s.traders).where(and(eq(s.traders.id, claims.subjectId), eq(s.traders.qrTokenId, claims.tokenId)));
-  return t?.id ?? null;
+  const c = await traderTokenCheck(token);
+  return c.kind === "ok" ? c.traderId : null;
 }
 
 export async function officerFromToken(token: string) {
@@ -48,6 +60,13 @@ export async function officerFromToken(token: string) {
   return o ?? null;
 }
 
+/** The trader's latest receipts. `cashStaffId` names the officer for cash, so the trader sees who took it. */
 export async function recentReceipts(traderId: string, limit = 5) {
-  return db().select().from(s.receipts).where(eq(s.receipts.traderId, traderId)).orderBy(desc(s.receipts.issuedAt)).limit(limit);
+  return db()
+    .select({ id: s.receipts.id, number: s.receipts.number, amountKobo: s.receipts.amountKobo, issuedAt: s.receipts.issuedAt, cashStaffId: sql<string | null>`CASE WHEN ${s.payments.channel} = 'cash' THEN ${s.payments.providerData}->>'staffId' END` })
+    .from(s.receipts)
+    .leftJoin(s.payments, eq(s.payments.id, s.receipts.paymentId))
+    .where(eq(s.receipts.traderId, traderId))
+    .orderBy(desc(s.receipts.issuedAt))
+    .limit(limit);
 }

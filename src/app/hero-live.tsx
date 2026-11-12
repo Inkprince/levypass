@@ -6,16 +6,18 @@ import { formatNaira } from "@/core/money";
 import { BankStamp } from "@/app/_ui/illustrations";
 import { Icon, type IconName, buttonClass, channelLabel } from "@/app/_ui/kit";
 
-/** A real, settled payment from our own ledger. Fees are what the bank reported. */
-export type HeroPayment = { id: string; name: string; channel: string; at: string; amountKobo: number; feeKobo: number; receipt: string | null };
+/**
+ * A real, settled payment from our own ledger, anonymised on the server before it reaches the browser:
+ * no trader name, no receipt number and no payment ID. Fees are what the bank reported.
+ */
+export type HeroPayment = { key: string; channel: string; at: string; amountKobo: number; feeKobo: number };
+
+/** The shape of a receipt number, with every character hidden: a real one would open that trader's receipt. */
+const MASKED_RECEIPT = "LP-••••-•••••";
 
 const STEP_MS = 4200;
 const lagosTime = (iso: string) => new Date(iso).toLocaleTimeString("en-NG", { timeZone: "Africa/Lagos", hour: "2-digit", minute: "2-digit" });
 const lagosDay = (iso: string) => new Date(iso).toLocaleDateString("en-NG", { timeZone: "Africa/Lagos", day: "numeric", month: "short" });
-const shortName = (name: string) => {
-  const [first, ...rest] = name.split(" ");
-  return `${first} ${rest.at(-1)?.[0] ?? ""}.`;
-};
 
 const QUERY = "(prefers-reduced-motion: reduce)";
 const subscribe = (cb: () => void) => {
@@ -110,15 +112,15 @@ export function PaymentCarousel({ payments }: { payments: HeroPayment[] }) {
           <span aria-hidden="true">{formatNaira(amount)}</span>
           <span className="sr-only">{formatNaira(p.amountKobo)}</span>
         </p>
-        <p key={p.id} className="lp-slot mt-2 text-[14px] text-white/75">
-          {shortName(p.name)}, {channelLabel(p.channel)}, {today ? "" : `${lagosDay(p.at)}, `}
+        <p key={p.key} className="lp-slot mt-2 text-[14px] text-white/75">
+          A trader, {channelLabel(p.channel)}, {today ? "" : `${lagosDay(p.at)}, `}
           {lagosTime(p.at)}
         </p>
         {payments.length > 1 ? (
           <div className="-mx-1 mt-3 flex items-center">
             {payments.map((x, n) => (
               <button
-                key={x.id}
+                key={x.key}
                 type="button"
                 onClick={() => setI(n)}
                 aria-label={`Show payment ${n + 1} of ${payments.length}`}
@@ -126,7 +128,7 @@ export function PaymentCarousel({ payments }: { payments: HeroPayment[] }) {
                 className="group flex h-8 items-center px-1"
               >
                 <span className={`relative block h-1.5 overflow-hidden rounded-full transition-all duration-300 ${n === i ? "w-8 bg-white/20" : "w-1.5 bg-white/30 group-hover:bg-white/50"}`}>
-                  {n === i ? <span key={`${x.id}-${i}`} className="lp-progress absolute inset-0 origin-left rounded-full bg-lime" style={{ animationDuration: `${STEP_MS}ms`, animationPlayState: paused ? "paused" : "running" }} /> : null}
+                  {n === i ? <span key={`${x.key}-${i}`} className="lp-progress absolute inset-0 origin-left rounded-full bg-lime" style={{ animationDuration: `${STEP_MS}ms`, animationPlayState: paused ? "paused" : "running" }} /> : null}
                 </span>
               </button>
             ))}
@@ -141,12 +143,12 @@ export function PaymentCarousel({ payments }: { payments: HeroPayment[] }) {
           {formatNaira(net)}
         </Row>
         <Row icon="receipt" label="Receipt">
-          <span key={p.id} className="lp-slot inline-block font-mono text-[13px]">
-            {p.receipt}
+          <span className="inline-block font-mono text-[13px] text-ink-2" aria-label="Receipt number hidden">
+            {MASKED_RECEIPT}
           </span>
         </Row>
         <div className="mt-4 grid grid-cols-2 gap-2">
-          <Link href={p.receipt ? `/r/${p.receipt}` : "/r"} className={buttonClass("accent", "md", "w-full")}>
+          <Link href="/r" className={buttonClass("accent", "md", "w-full")}>
             Check receipt
           </Link>
           <Link href="/register" className={buttonClass("secondary", "md", "w-full")}>

@@ -1,5 +1,6 @@
 "use server";
 
+import { closeCase as closeOpenCase } from "@/server/admin/cases";
 import { randomBytes } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
@@ -14,6 +15,8 @@ import { createSession, endSession, requireSubject, revokeAllSessions } from "@/
 import { getBank } from "@/server/bank";
 import { db } from "@/server/db/client";
 import * as s from "@/server/db/schema";
+import { decideFloat } from "@/server/floats/floats";
+import { reissueCard } from "@/server/traders/reissue";
 
 export async function adminLogin(_: { error?: string }, form: FormData): Promise<{ error?: string }> {
   const email = String(form.get("email") ?? "").trim().toLowerCase();
@@ -99,9 +102,9 @@ export async function closeCase(form: FormData): Promise<void> {
   const kind = String(form.get("kind"));
   const id = String(form.get("id"));
   const status = form.get("status") === "dismissed" ? "dismissed" : "resolved";
-  const table = kind === "flag" ? s.fraudFlags : kind === "complaint" ? s.complaints : s.reviewItems;
-  await db().update(table).set({ status, resolvedAt: new Date(), resolvedBy: adminId }).where(eq(table.id, id));
-  await audit(adminId, `${kind}.${status}`, kind, id, { status: "open" }, { status });
+  // Closes it once and tells the trader who raised it (a complaint or a cash dispute) by SMS.
+  const closed = await closeOpenCase(adminId, kind === "flag" || kind === "complaint" ? kind : "review", id, status);
+  if (closed) await audit(adminId, `${kind}.${status}`, kind, id, { status: "open" }, { status });
   revalidatePath("/admin/fraud");
 }
 
@@ -146,4 +149,25 @@ export async function runFailure(scenario: string, raw: unknown = {}): Promise<f
 export async function requeryDrillPayment(paymentId: string): Promise<{ kind: string; settled: boolean }> {
   await requireSubject("admin");
   return failures.requeryNow(z.string().startsWith("pay_").max(64).parse(paymentId));
+}
+
+/** The revenue office approves or declines an officer's advance remittance request. Audited. */
+export async function decideFloatAction(form: FormData): Promise<void> {
+  const adminId = await requireSubject("admin");
+  const id = String(form.get("floatId"));
+  const decision = form.get("decision") === "declined" ? "declined" : "approved";
+  const reason = String(form.get("reason") ?? "").slice(0, 200);
+  const r = await decideFloat(adminId, id, decision, reason);
+  if (r.ok) await audit(adminId, `float.${decision === "approved" ? "approve" : "decline"}`, "float", id, { status: "requested" }, { status: decision, reason: reason || null });
+  revalidatePath("/admin/remittances");
+}
+
+/** TR-08: the revenue office replaces a trader's lost or damaged LevyPass card. Audited in reissueCard. */
+export async function reissueCardAction(form: FormData): Promise<void> {
+  const adminId = await requireSubject("admin");
+  const traderId = String(form.get("traderId"));
+  const q = String(form.get("q") ?? "");
+  await reissueCard(traderId, { type: "admin", id: adminId });
+  revalidatePath("/admin/stickers");
+  redirect(`/admin/stickers?format=card&q=${encodeURIComponent(q)}&done=${encodeURIComponent(traderId)}`);
 }

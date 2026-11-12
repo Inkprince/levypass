@@ -8,6 +8,7 @@ import { futureObligations } from "@/core/obligations";
 import { lagosDate } from "@/core/periods";
 import { newReceiptNumber } from "@/core/receipts";
 import { getBank, type VerifiedPayment } from "@/server/bank";
+import { closeWaitingInTx } from "@/server/cash/handovers";
 import { db, type Db } from "@/server/db/client";
 import * as s from "@/server/db/schema";
 import { env } from "@/server/env";
@@ -17,6 +18,9 @@ import { queueSms } from "@/server/notify/outbox";
 import { t, isLocale, type Locale } from "@/messages";
 
 type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
+
+/** Cash handed to an officer: recorded by `collectCash`, which also names the officer and the scan. */
+export type CashMeta = { officerId: string; staffId: string; scanId: string; purpose?: "ahead" };
 
 export type SettleOutcome =
   | { kind: "settled"; receiptNumber: string; doubleCharge: boolean }
@@ -64,6 +68,15 @@ export async function settlePayment(paymentId: string, now = new Date()): Promis
   return db().transaction((tx) => settleVerified(tx, paymentId, verified, now));
 }
 
+/**
+ * Settles a cash payment inside the caller's transaction. The caller has already checked the officer's
+ * float and locked it; the money is in the government account from the float deposit, which the bank
+ * verified (money rule 3), so nothing here calls the bank.
+ */
+export async function settleCashInTx(tx: Tx, paymentId: string, amountKobo: Kobo, now: Date): Promise<SettleOutcome> {
+  return settleVerified(tx, paymentId, { reference: paymentId, status: "successful", amountKobo, amountPaidKobo: amountKobo, feeKobo: 0, settlementKobo: amountKobo, channel: "cash", paidAt: now }, now);
+}
+
 async function settleVerified(tx: Tx, paymentId: string, v: VerifiedPayment, now: Date): Promise<SettleOutcome> {
   // Lock the row: a webhook and the poller can race for the same payment.
   const [p] = await tx.select().from(s.payments).where(eq(s.payments.id, paymentId)).for("update");
@@ -84,7 +97,7 @@ async function settleVerified(tx: Tx, paymentId: string, v: VerifiedPayment, now
         status: "successful",
         amountKobo: amount,
         feeKobo: v.feeKobo,
-        channel: (v.channel === "bank_transfer" || v.channel === "card" || v.channel === "ussd" || v.channel === "qr" ? v.channel : p.channel) as typeof p.channel,
+        channel: (v.channel === "bank_transfer" || v.channel === "card" || v.channel === "ussd" || v.channel === "qr" || v.channel === "cash" ? v.channel : p.channel) as typeof p.channel,
         paidAt: v.paidAt ?? now,
         verifiedAt: now,
         settledAt: now,
@@ -104,6 +117,24 @@ async function settleVerified(tx: Tx, paymentId: string, v: VerifiedPayment, now
       amountKobo: v.amountPaidKobo - amount,
       details: { note: "The bank reports more paid than it settles. The excess is not in our collection account.", amountPaidKobo: v.amountPaidKobo, settledKobo: amount },
     });
+  }
+
+  // An officer's float deposit: it loads their float once the bank has confirmed it.
+  const meta = (p.providerData ?? {}) as { purpose?: string; floatId?: string; officerId?: string };
+  if (!p.traderId && meta.purpose === "float" && meta.floatId) {
+    const [f] = await tx.select().from(s.floats).where(eq(s.floats.id, meta.floatId)).for("update");
+    const [officer] = f ? await tx.select({ authorityId: s.officers.authorityId }).from(s.officers).where(eq(s.officers.id, f.officerId)) : [];
+    if (f && officer && f.status === "approved" && f.paymentId === p.id) {
+      const collection = accounts.collection(officer.authorityId);
+      post({ kind: "float_load", debitAccount: collection, creditAccount: accounts.officerFloat(f.officerId), amountKobo: amount, memo: `float ${f.id}` });
+      if (v.feeKobo > 0) post({ kind: "fee", debitAccount: accounts.bankFees, creditAccount: collection, amountKobo: v.feeKobo, memo: "merchant fee read from the bank" });
+      await tx.insert(s.ledgerEntries).values(ledger);
+      await tx.update(s.floats).set({ status: "loaded", loadedAt: now }).where(eq(s.floats.id, f.id));
+      await finishPayment(null);
+      log("info", "float.loaded", { float_id: f.id, officer_id: f.officerId, payment_id: p.id, amount_kobo: amount, fee_kobo: v.feeKobo });
+      return { kind: "settled", receiptNumber: "", doubleCharge: false };
+    }
+    // A deposit for a float that is no longer waiting for it falls through to suspense and review (rule 7).
   }
 
   // Unmatched money (rule 7): book it to suspense and queue it for review.
@@ -157,7 +188,9 @@ async function settleVerified(tx: Tx, paymentId: string, v: VerifiedPayment, now
 
   const result = allocate({ amountKobo: amount, open, future });
   const collection = accounts.collection(trader.authorityId);
-  post({ kind: "inflow", debitAccount: collection, creditAccount: accounts.trader(traderId), amountKobo: amount });
+  const cash = p.channel === "cash" ? (p.providerData as CashMeta) : null;
+  if (cash) post({ kind: "cash_collection", debitAccount: accounts.officerFloat(cash.officerId), creditAccount: accounts.trader(traderId), amountKobo: amount, memo: `cash to ${cash.staffId}` });
+  else post({ kind: "inflow", debitAccount: collection, creditAccount: accounts.trader(traderId), amountKobo: amount });
   if (v.feeKobo > 0) post({ kind: "fee", debitAccount: accounts.bankFees, creditAccount: collection, amountKobo: v.feeKobo, memo: "merchant fee read from the bank" });
 
   const covered: { levyTypeId: string; periodStart: Date; amount: Kobo }[] = [];
@@ -209,6 +242,8 @@ async function settleVerified(tx: Tx, paymentId: string, v: VerifiedPayment, now
   const url = `${env().PUBLIC_BASE_URL}/r/${number}`;
   await tx.insert(s.receipts).values({ id: newId("rcp"), number, paymentId: p.id, traderId, amountKobo: amount, issuedAt: now, verificationUrl: url });
   await finishPayment(traderId);
+  // Paid through the bank while waiting for an officer: take the trader off the officers' cash list.
+  if (!cash) await closeWaitingInTx(tx, traderId);
 
   const locale = isLocale(trader.locale) ? trader.locale : "en";
   const first = covered[0];
@@ -218,7 +253,9 @@ async function settleVerified(tx: Tx, paymentId: string, v: VerifiedPayment, now
   const text = double
     ? t(locale, "sms.double_charge", { levy: levyName.get(double.levyTypeId) ?? "this levy", period: t(locale, "sms.today"), amount: formatNaira(amount), number })
     : covered.length
-      ? t(locale, "sms.receipt", { number, amount: formatNaira(amount), levy, period, url })
+      ? cash
+        ? t(locale, "sms.receipt_cash", { number, amount: formatNaira(amount), levy, period, url, staffId: cash.staffId, ussd: "*347*13#" })
+        : t(locale, "sms.receipt", { number, amount: formatNaira(amount), levy, period, url })
       : t(locale, "sms.receipt_credit", { number, amount: formatNaira(amount), credit: formatNaira(result.unallocatedKobo), url });
   await queueSms(tx, trader.phone, "sms.receipt", text, `receipt:${p.id}`);
 

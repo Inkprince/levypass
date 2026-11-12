@@ -1,12 +1,16 @@
 // Deterministic complaint triage (T20 fallback). No feature may fail because a model call failed.
-// Keyword rules cover English, Nigerian Pidgin and Yoruba markers.
+// Keyword rules cover English, Nigerian Pidgin, Yoruba, Igbo and Hausa markers.
 
-export type Triage = { summary: string; category: string; severity: "low" | "medium" | "high"; language: "en" | "pcm" | "yo" };
+export type Triage = { summary: string; category: string; severity: "low" | "medium" | "high"; language: "en" | "pcm" | "yo" | "ig" | "ha" };
 
 const has = (text: string, words: string[]) => words.some((w) => text.includes(w));
 
 export function detectLanguage(text: string): Triage["language"] {
   const t = ` ${text.toLowerCase()} `;
+  // Igbo and Hausa first: Igbo shares ọ with Yoruba, so the letters only Igbo (ị ụ ṅ) or only
+  // Hausa (ɓ ɗ ƙ ƴ) uses decide before the Yoruba rule sees the ọ.
+  if (/[ịụṅ]/.test(t) || has(t, [" onye ", " nwoke ", " ego m", " nyeghị ", " nyeghi "])) return "ig";
+  if (/[ɓɗƙƴ]/.test(t) || has(t, [" kudi ", " ya ce ", " biya ", " dubu ", " jami'", " bai ba "])) return "ha";
   if (/[ẹọṣ]/.test(t) || has(t, [" mo ", " owo ", " ti ", " kò ", " ko fun mi", " ẹni ", " gba "])) return "yo";
   if (has(t, [" wey ", " dey ", " no get ", " abeg ", " una ", " e no ", " im ", " oga ", " don "])) return "pcm";
   return "en";

@@ -14,7 +14,7 @@ import { acquireSlot } from "@/server/outbound";
 const answer = z.object({ summary: z.string().min(5).max(300), category: z.string().min(2).max(40), severity: z.enum(["low", "medium", "high"]) });
 
 const system =
-  "You triage complaints from Nigerian market traders about levy collectors. The text may be English, Nigerian Pidgin or Yoruba. " +
+  "You triage complaints from Nigerian market traders about levy collectors. The text may be English, Nigerian Pidgin, Yoruba, Igbo or Hausa. " +
   'Reply with JSON only: {"summary": one plain English sentence, "category": one of fake_collector, overcharge, no_receipt, harassment, other, "severity": low|medium|high}.';
 
 async function askModel(text: string): Promise<Omit<Triage, "language">> {

@@ -22,7 +22,10 @@ export const viewport: Viewport = { width: "device-width", initialScale: 1, them
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <html lang="en" className={jakarta.variable}>
-      <body className="min-h-dvh font-sans antialiased">{children}</body>
+      {/* Extensions (e.g. ColorZilla's cz-shortcut-listen) add attributes to <body> before hydration. */}
+      <body className="min-h-dvh font-sans antialiased" suppressHydrationWarning>
+        {children}
+      </body>
     </html>
   );
 }

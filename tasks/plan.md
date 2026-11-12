@@ -136,6 +136,13 @@ request id, outcome), `otp_codes`, `review_items`, `sessions`.
    the demo so the amounts are the seeded ones.)
 3. Officer Musa scans her QR on a real phone: **PAID**, under three seconds. He scans an unpaid
    trader: **NOT PAID**, with a pay-now code.
+   3b. No bank: Musa requests a ₦20,000 advance remittance, the admin approves it on `/admin/remittances`, Musa pays it
+   in (sandbox approve), then, after the scan, taps "Take cash": the trader's phone gets a 4-digit cash code by SMS (or already
+   shows it, if she tapped "Pay cash to an officer"), she reads it out, Musa types it: **PAID IN CASH**, an
+   SMS receipt naming OTT-001, his advance down by the levy, and her phone turns PAID and asks her to
+   confirm. Only the officer in front of her can get the code.
+   Optional: scan a trader who is already PAID, "Take cash to pay ahead", "Next 7 days". Hold up a
+   printed LevyPass card (bank-card size, from the stickers page) for riders with no stall.
 4. A judge scans Musa's officer ID with their own phone: genuine and active. The admin suspends
    him; the next scan shows **SUSPENDED** and a fraud flag appears.
 5. Someone types a made-up receipt number into the public check page: not genuine, flagged.

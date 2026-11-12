@@ -1,9 +1,11 @@
 import { eq } from "drizzle-orm";
 import Link from "next/link";
+import { formatNaira } from "@/core/money";
 import { Icon, Logo } from "@/app/_ui/kit";
 import { requireSubject } from "@/server/auth/session";
 import { db } from "@/server/db/client";
 import * as s from "@/server/db/schema";
+import { officerFloat } from "@/server/floats/floats";
 import { officerLogout } from "./actions";
 import { Scanner } from "./scanner";
 
@@ -13,6 +15,8 @@ export const metadata = { title: "Officer scan" };
 export default async function OfficerPage() {
   const officerId = await requireSubject("officer");
   const [o] = await db().select({ name: s.officers.name, staffId: s.officers.staffId }).from(s.officers).where(eq(s.officers.id, officerId));
+  const float = await officerFloat(officerId);
+  const waiting = float.open?.status === "requested" ? "Advance remittance requested, waiting for the revenue office" : float.open?.status === "approved" ? "Advance remittance approved: pay it in to start" : null;
   return (
     <div className="min-h-dvh bg-paper">
       <header className="bg-forest text-white">
@@ -37,7 +41,18 @@ export default async function OfficerPage() {
         <div>
           <h1 className="text-[40px] font-medium leading-none tracking-[-0.05em]">Scan a trader</h1>
         </div>
-        <Scanner />
+        <Link href="/officer/advance" className="flex items-center gap-3 rounded-2xl border border-line bg-paper px-4 py-3 hover:border-forest">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-mist-2 text-forest">
+            <Icon name="bank" size={20} />
+          </span>
+          <span className="min-w-0 flex-1 leading-tight">
+            <span className="block text-[13px] text-ink-3">Advance, already paid to the government</span>
+            <span className="money block text-[22px]">{formatNaira(float.balanceKobo)}</span>
+            {waiting ? <span className="mt-0.5 block text-[13px] font-semibold text-warn-fg">{waiting}</span> : null}
+          </span>
+          <span className="text-[14px] font-semibold text-forest">{float.balanceKobo > 0 ? "Details" : "Remit in advance"}</span>
+        </Link>
+        <Scanner floatKobo={float.balanceKobo} />
         <div className="mt-2 flex items-center justify-between text-[14px] font-semibold">
           <Link href="/officer/id" className="inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-forest hover:bg-fill">
             <Icon name="qr" size={17} />

@@ -9,6 +9,8 @@ export const accounts = {
   collection: (authorityId: string) => `collection:${authorityId}`,
   bankFees: "bank_fees",
   suspense: "suspense",
+  /** Money an officer paid into the government account ahead of taking cash from traders. */
+  officerFloat: (officerId: string) => `officer_float:${officerId}`,
 } as const;
 
 export type Posting = { debitAccount: string; creditAccount: string; amountKobo: Kobo };

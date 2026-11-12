@@ -13,6 +13,7 @@ const label: Record<string, string> = {
   reused_receipt: "Reused receipt",
   suspended_officer_scan: "Suspended officer seen",
   unknown_officer_scan: "Unknown officer seen",
+  cash_disputed: "Cash the trader denies",
 };
 const flagIcon: Record<string, IconName> = {
   double_charge: "refresh",
@@ -20,7 +21,9 @@ const flagIcon: Record<string, IconName> = {
   reused_receipt: "receipt",
   suspended_officer_scan: "user",
   unknown_officer_scan: "user",
+  cash_disputed: "receipt",
 };
+const languageName: Record<string, string> = { en: "English", pcm: "Pidgin", yo: "Yoruba", ig: "Igbo", ha: "Hausa" };
 const when = (d: Date) => d.toLocaleString("en-NG", { timeZone: "Africa/Lagos", day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
 
 function Close({ kind, id }: { kind: string; id: string }) {
@@ -31,7 +34,7 @@ function Close({ kind, id }: { kind: string; id: string }) {
           <input type="hidden" name="kind" value={kind} />
           <input type="hidden" name="id" value={id} />
           <input type="hidden" name="status" value={st} />
-          <button className={buttonClass(st === "resolved" ? "primary" : "outline", "sm")}>{st === "resolved" ? "Resolve" : "Dismiss"}</button>
+          <button className={buttonClass(st === "resolved" ? "primary" : "outline", "sm")}>{st === "resolved" ? "Dealt with" : "False alarm"}</button>
         </form>
       ))}
     </div>
@@ -86,7 +89,9 @@ export default async function FraudPage() {
                     ? `Someone showed a suspended officer ID (${String((f.details as { via?: string }).via ?? "")}).`
                     : f.type === "unknown_receipt"
                       ? "Someone checked a receipt number that LevyPass never issued."
-                      : ""}
+                      : f.type === "cash_disputed"
+                        ? `The officer recorded ${formatNaira(Number((f.details as { amountKobo?: number }).amountKobo ?? 0))} cash from this trader. The trader says they never handed it over. Ask both, and check the officer's other cash levies.`
+                        : ""}
               </p>
               <div className="mt-auto border-t border-ink/15 pt-3">
                 <Close kind="flag" id={f.id} />
@@ -113,7 +118,7 @@ export default async function FraudPage() {
               <blockquote className="border-l-2 border-line-2 pl-3 text-[14px] italic text-ink-2">{c.description}</blockquote>
               <p className="text-[12px] text-ink-3">
                 {officer ? `About officer ${officer}. ` : ""}
-                {c.triageSource ? `Summary by ${c.triageSource === "model" ? "Huawei MaaS" : "keyword rules (model unavailable)"}, language: ${c.triageLanguage}.` : ""}
+                {c.triageSource ? `Summary by ${c.triageSource === "model" ? "Huawei MaaS" : "keyword rules (model unavailable)"}, language: ${languageName[c.triageLanguage ?? ""] ?? c.triageLanguage}.` : ""}
               </p>
               <div className="mt-auto border-t border-ink/15 pt-3">
                 <Close kind="complaint" id={c.id} />

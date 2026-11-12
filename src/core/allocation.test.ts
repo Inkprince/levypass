@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { allocate, detectDoubleCharge, type OpenObligation, type FutureObligation } from "./allocation";
+import { aheadQuote, allocate, detectDoubleCharge, type OpenObligation, type FutureObligation } from "./allocation";
 
 const day = (d: number) => new Date(Date.UTC(2026, 10, d - 1, 23)); // Lagos midnight of 2026-11-<d>
 const open = (id: string, d: number, due = 50_000, paid = 0, levyTypeId = "lvt_daily"): OpenObligation => ({
@@ -110,5 +110,41 @@ describe("second payment for a paid period, end to end", () => {
     expect(detectDoubleCharge({ amountKobo: 50_000, now, open: [], current })).not.toBeNull();
     const r = allocate({ amountKobo: 50_000, open: [], future: [future(11)] });
     expect(r.allocations).toEqual([{ target: { kind: "new", obligation: future(11) }, amountKobo: 50_000, settles: true }]);
+  });
+});
+
+describe("aheadQuote", () => {
+  const weekly = (d: number): FutureObligation => ({ levyTypeId: "lvt_weekly", periodStart: day(d), periodEnd: day(d + 7), amountDueKobo: 200_000 });
+
+  it("tomorrow only: one daily period", () => {
+    const q = aheadQuote({ open: [], future: [future(13), future(14), future(15)], cutoff: day(14) });
+    expect(q).toEqual({ amountKobo: 50_000, periods: 1, throughEnd: day(14) });
+  });
+
+  it("a week ahead includes a weekly levy that starts inside it", () => {
+    const fut = [future(13), future(14), future(15), future(16), weekly(16), future(17), future(18), future(19), future(20)];
+    const q = aheadQuote({ open: [], future: fut, cutoff: day(20) });
+    expect(q.amountKobo).toBe(7 * 50_000 + 200_000);
+    expect(q.periods).toBe(8);
+  });
+
+  it("counts only what is still owed on a part-paid future period, and skips paid ones", () => {
+    const q = aheadQuote({ open: [open("obl_13", 13, 50_000, 30_000), open("obl_paid", 14, 50_000, 50_000)], future: [future(15)], cutoff: day(16) });
+    expect(q.amountKobo).toBe(20_000 + 50_000);
+  });
+
+  it("stops at the first period past the cutoff, in allocation order", () => {
+    const q = aheadQuote({ open: [open("obl_late", 30)], future: [future(13)], cutoff: day(14) });
+    expect(q).toEqual({ amountKobo: 0, periods: 0, throughEnd: null });
+  });
+
+  it("paying exactly the quote settles exactly the quoted periods and nothing else", () => {
+    const fut = [future(13), future(14), weekly(16), future(15), future(16), future(17)];
+    const input = { open: [open("obl_13", 13, 50_000, 10_000)], future: fut };
+    const q = aheadQuote({ ...input, cutoff: day(17) });
+    const r = allocate({ amountKobo: q.amountKobo, ...input });
+    expect(r.unallocatedKobo).toBe(0);
+    expect(r.allocations).toHaveLength(q.periods);
+    expect(r.allocations.every((a) => a.settles)).toBe(true);
   });
 });

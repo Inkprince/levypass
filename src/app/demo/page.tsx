@@ -7,6 +7,7 @@ const steps: [string, string, string, string][] = [
   ["Register Mama Bisi on her phone.", "The OTP lands in the phone simulator.", "/register", "Register"],
   ["She pays today's levy by USSD.", "*347*13#, option 1. The receipt SMS arrives in seconds.", "/sim", "Simulator"],
   ["Officer Musa scans her QR: PAID.", "Then an unpaid trader: NOT PAID, with a pay-now code.", "/officer", "Scanner"],
+  ["No bank? Musa takes cash.", "He requests an advance remittance, the admin approves it, he pays it in. Then, after a NOT PAID scan, he takes the cash and types the 4-digit cash code from the trader's phone: PAID IN CASH.", "/officer/advance", "Advance"],
   ["A judge scans Musa's officer ID.", "The admin suspends him. The next scan says SUSPENDED and raises a flag.", "/admin/officers", "Officers"],
   ["Type a made-up receipt number.", "NOT GENUINE, and the revenue office gets a fraud flag.", "/r", "Receipt check"],
   ["Charge Mama Bisi again for today.", "LevyPass flags a double charge and credits the money to tomorrow.", "/admin/failures", "Drills"],
@@ -14,7 +15,10 @@ const steps: [string, string, string, string][] = [
   ["The dashboard totals have gone up.", "Reconciliation shows a gap of ₦0.00.", "/admin/reconciliation", "Reconciliation"],
 ];
 
-const roles: [string, string, string, IconName][] = [
+// The cash step came late, so it keeps the plan's number 3b and the steps after it keep theirs.
+const stepNumber = (i: number) => (i === 3 ? "3b" : String(i < 3 ? i + 1 : i).padStart(2, "0"));
+
+const roles:[string, string, string, IconName][] = [
   ["Trader", "Register and see the pass", "/register", "user"],
   ["Phone simulator", "SMS inbox and USSD", "/sim", "phone"],
   ["Officer", "Scan a trader's QR", "/officer", "scan"],
@@ -44,13 +48,13 @@ export default function DemoPage() {
       <ol className="mt-4 overflow-hidden rounded-[var(--radius-card)] border border-line bg-paper">
         {steps.map(([title, body, href, cta], i) => (
           <li key={i} className="flex items-center gap-4 border-b border-line px-5 py-4 last:border-0 sm:px-6">
-            <span className="w-6 shrink-0 font-mono text-[13px] font-semibold text-ink-3">{String(i + 1).padStart(2, "0")}</span>
+            <span className="w-6 shrink-0 font-mono text-[13px] font-semibold text-ink-3">{stepNumber(i)}</span>
             <span className="min-w-0 flex-1">
               <span className="block text-[15px] font-semibold">{title}</span>
               <span className="text-[14px] text-ink-2">{body}</span>
             </span>
             <Link href={href} target="_blank" className="inline-flex min-h-10 shrink-0 items-center gap-1 rounded-full bg-fill px-3 text-[13px] font-semibold text-ink hover:bg-fill-2">
-              <span className="hidden sm:inline">{cta}</span>
+              <span className="sr-only sm:not-sr-only">{cta}</span>
               <Icon name="arrowRight" size={15} />
             </Link>
           </li>

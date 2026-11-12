@@ -55,12 +55,12 @@ export default async function OfficerPublicPage({ params }: { params: Promise<{ 
         </div>
         <p className="mt-5 flex items-start gap-2.5 rounded-xl bg-mist px-4 py-3 text-[14px] text-ink-2">
           <Icon name="info" size={18} className="mt-px text-forest" />
-          Officers never collect cash. Pay only by USSD *347*13#, transfer or card.
+          Pay by USSD *347*13#, transfer or card. If you pay an officer cash, you must get an SMS receipt naming their staff ID at once. No SMS means you have not paid: report it below.
         </p>
       </Card>
       <Card>
         <CardTitle>Report a problem with this officer</CardTitle>
-        <ReportForm officerId={officer.id} />
+        <ReportForm officerId={officer.id} submitLabel="Report this officer" />
       </Card>
     </PageShell>
   );

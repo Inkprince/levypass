@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { lagosDate } from "@/core/periods";
 import { Badge, Card, CardTitle, Icon, PageShell, StatusPanel } from "@/app/_ui/kit";
-import { traderFromToken, traderStatus } from "@/server/levy/status";
+import { traderStatus, traderTokenCheck } from "@/server/levy/status";
 import { allow, clientIp } from "@/server/ratelimit";
 
 export const dynamic = "force-dynamic";
@@ -11,8 +11,15 @@ export const metadata = { title: "Levy status", robots: { index: false } };
 export default async function TraderPublicPage({ params }: { params: Promise<{ token: string }> }) {
   if (!allow(`vt:${clientIp(await headers())}`, 60, 60_000)) return <PageShell title="Too many checks" lead="This connection has made too many checks. Try again in a minute." />;
   const { token } = await params;
-  const traderId = await traderFromToken(decodeURIComponent(token));
-  const status = traderId ? await traderStatus(traderId) : null;
+  const check = await traderTokenCheck(decodeURIComponent(token));
+  if (check.kind === "cancelled") {
+    return (
+      <PageShell>
+        <StatusPanel tone="warn" word="Cancelled card" sub="This LevyPass card was replaced with a new one and no longer works. Ask the trader for their current card." />
+      </PageShell>
+    );
+  }
+  const status = check.kind === "ok" ? await traderStatus(check.traderId) : null;
   if (!status) {
     return (
       <PageShell>

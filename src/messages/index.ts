@@ -1,12 +1,14 @@
 import { en, type MessageKey } from "./en";
 import { pcm } from "./pcm";
 import { yo } from "./yo";
+import { ig } from "./ig";
+import { ha } from "./ha";
 
-export const locales = ["en", "pcm", "yo"] as const;
+export const locales = ["en", "pcm", "yo", "ig", "ha"] as const;
 export type Locale = (typeof locales)[number];
 export type { MessageKey };
 
-const dictionaries = { en, pcm, yo } as const;
+const dictionaries = { en, pcm, yo, ig, ha } as const;
 
 export function isLocale(value: string): value is Locale {
   return (locales as readonly string[]).includes(value);
