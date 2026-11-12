@@ -25,7 +25,7 @@ export const en = {
   "sms.today": "today",
 
   // USSD (PY-03). CON keeps the session open, END closes it.
-  "ussd.menu": "LevyPass\n1. Pay levy\n2. What I owe\n3. Last receipt\n4. Check an officer\n5. Report a collector\n6. Language\n7. Pay cash to officer\n8. Confirm cash paid",
+  "ussd.menu": "LevyPass {stall}\n1. Pay levy\n2. What I owe\n3. Last receipt\n4. Check an officer\n5. Report a collector\n6. Language\n7. Pay cash to officer\n8. Confirm cash paid",
   "ussd.cash_asked": "Your cash code is {code}. Hand {amount} to the LevyPass officer in front of you, then tell them the code. Check their ID first (option 4). No SMS receipt means you have not paid.",
   "ussd.cash_confirm_ask": "Did you hand {amount} cash to officer {staffId} on {date}?\n1. Yes, I paid\n2. No, I did not",
   "ussd.cash_confirm_none": "No cash payment is waiting for your answer.",

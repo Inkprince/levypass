@@ -23,7 +23,7 @@ export const ig: Partial<Messages> = {
   "sms.period_yearly": "kwa afọ",
   "sms.today": "taa",
 
-  "ussd.menu": "LevyPass\n1. Kwụọ ụtụ\n2. Ụgwọ m ji\n3. Risiti ikpeazụ\n4. Lelee onye ọrụ\n5. Kpesa maka onye na-ana ụtụ\n6. Asụsụ\n7. Kwụọ ego n'aka onye ọrụ\n8. Kwado ego m kwụrụ",
+  "ussd.menu": "LevyPass {stall}\n1. Kwụọ ụtụ\n2. Ụgwọ m ji\n3. Risiti ikpeazụ\n4. Lelee onye ọrụ\n5. Kpesa maka onye na-ana ụtụ\n6. Asụsụ\n7. Kwụọ ego n'aka onye ọrụ\n8. Kwado ego m kwụrụ",
   "ussd.cash_asked": "Koodu ego gị bụ {code}. Nye onye ọrụ LevyPass nọ n'ihu gị {amount}, mgbe ahụ gwa ya koodu ahụ. Buru ụzọ lelee ID ya (nhọrọ 4). Ọ bụrụ na enweghị risiti SMS, ị kwụbeghị ụgwọ.",
   "ussd.cash_confirm_ask": "Ị nyere onye ọrụ {staffId} {amount} ego n'aka na {date}?\n1. Ee, akwụrụ m\n2. Mba, akwụghị m",
   "ussd.cash_confirm_none": "Enweghị ịkwụ ụgwọ ego n'aka na-eche azịza gị.",

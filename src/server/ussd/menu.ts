@@ -31,7 +31,7 @@ export async function ussdReply(input: { phoneNumber: string; text: string }): P
 
   switch (choice) {
     case undefined:
-      return CON(t(L, "ussd.menu"));
+      return CON(t(L, "ussd.menu", { stall: trader.stallOrVehicle }));
     case "1": {
       const owed = await amountOwed(trader.id);
       const amount = owed.totalKobo > 0 ? owed.totalKobo : owed.nextKobo;

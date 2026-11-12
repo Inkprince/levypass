@@ -24,7 +24,7 @@ export const ha: Partial<Messages> = {
   "sms.period_yearly": "shekara-shekara",
   "sms.today": "yau",
 
-  "ussd.menu": "LevyPass\n1. Biya haraji\n2. Bashin da ake bina\n3. Rasidi na ƙarshe\n4. Duba jami'i\n5. Kai ƙarar mai karɓar kuɗi\n6. Harshe\n7. Biya tsabar kuɗi ga jami'i\n8. Tabbatar da biyan kuɗi",
+  "ussd.menu": "LevyPass {stall}\n1. Biya haraji\n2. Bashin da ake bina\n3. Rasidi na ƙarshe\n4. Duba jami'i\n5. Kai ƙara\n6. Harshe\n7. Biya tsabar kuɗi ga jami'i\n8. Tabbatar da biyan kuɗi",
   "ussd.cash_asked": "Lambar kuɗinka ita ce {code}. Ba jami'in LevyPass da ke gabanka {amount}, sannan ka faɗa masa lambar. Fara duba ID ɗinsa (zaɓi 4). Idan babu rasidin SMS, ba ka biya ba.",
   "ussd.cash_confirm_ask": "Ka ba jami'i {staffId} tsabar kuɗi {amount} a ranar {date}?\n1. Eh, na biya\n2. A'a, ban biya ba",
   "ussd.cash_confirm_none": "Babu biyan tsabar kuɗi da ke jiran amsarka.",

@@ -22,7 +22,7 @@ export const pcm: Partial<Messages> = {
   "sms.period_yearly": "every year",
   "sms.today": "today",
 
-  "ussd.menu": "LevyPass\n1. Pay levy\n2. Wetin I owe\n3. Last receipt\n4. Check officer\n5. Report collector\n6. Language\n7. Pay cash give officer\n8. Confirm cash wey I pay",
+  "ussd.menu": "LevyPass {stall}\n1. Pay levy\n2. Wetin I owe\n3. Last receipt\n4. Check officer\n5. Report collector\n6. Language\n7. Pay cash give officer\n8. Confirm cash wey I pay",
   "ussd.cash_asked": "Your cash code na {code}. Give the LevyPass officer wey dey your front {amount}, then tell am the code. Check en ID first (option 4). If SMS receipt no come, you never pay.",
   "ussd.cash_confirm_ask": "You give officer {staffId} {amount} cash on {date}?\n1. Yes, I pay\n2. No, I no pay",
   "ussd.cash_confirm_none": "No cash payment dey wait for your answer.",

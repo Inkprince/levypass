@@ -24,7 +24,7 @@ export const yo: Partial<Messages> = {
   "sms.period_yearly": "ọdọọdún",
   "sms.today": "lónìí",
 
-  "ussd.menu": "LevyPass\n1. San owó orí\n2. Owó tí mo jẹ\n3. Rìsíìtì tó kẹ́yìn\n4. Ṣàyẹ̀wò òṣìṣẹ́\n5. Fi ẹjọ́ ẹni tó ń gba owó lọ́wọ́\n6. Èdè\n7. San owó fún òṣìṣẹ́\n8. Jẹ́rìí owó tí mo san",
+  "ussd.menu": "LevyPass {stall}\n1. San owó orí\n2. Owó tí mo jẹ\n3. Rìsíìtì tó kẹ́yìn\n4. Ṣàyẹ̀wò òṣìṣẹ́\n5. Fi ẹjọ́ ẹni tó ń gba owó lọ́wọ́\n6. Èdè\n7. San owó fún òṣìṣẹ́\n8. Jẹ́rìí owó tí mo san",
   "ussd.cash_asked": "Kóòdù owó rẹ ni {code}. Fún òṣìṣẹ́ LevyPass tó wà níwájú rẹ ní {amount}, lẹ́yìn náà sọ kóòdù náà fún un. Ṣàyẹ̀wò ID rẹ̀ kọ́kọ́ (àṣàyàn 4). Tí kò bá sí rìsíìtì SMS, o kò tíì sanwó.",
   "ussd.cash_confirm_ask": "Ṣé o fún òṣìṣẹ́ {staffId} ní {amount} owó ní {date}?\n1. Bẹ́ẹ̀ni, mo sanwó\n2. Rárá, n kò san",
   "ussd.cash_confirm_none": "Kò sí owó kankan tó ń dúró de ìdáhùn rẹ.",
